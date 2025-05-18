@@ -31,7 +31,7 @@ export default function SunCycleAge() {
     const url = process.env.NEXT_PUBLIC_URL || window.location.origin;
     const message = `Forget birthdays—I’ve completed ${days} rotations around the sun! Check your Sun Cycle Age: ${url} ☀️🌎`;
     try {
-      await sdk.actions.castMessage({ text: message });
+      await sdk.actions.composeCast({ text: message });
     } catch (err) {
       console.error(err);
     } finally {
