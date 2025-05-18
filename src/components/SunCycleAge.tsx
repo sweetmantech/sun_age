@@ -40,17 +40,22 @@ export default function SunCycleAge() {
   };
 
   return (
-    <div className="w-full max-w-md mx-auto p-4 space-y-4">
+    <div className="w-full max-w-md mx-auto p-4 space-y-4 bg-gradient-to-br from-yellow-100 via-pink-100 to-orange-100 rounded-lg shadow-lg">
+      <h1 className="text-3xl font-extrabold text-center text-yellow-700">☀️ Sun Cycle Age 🏖️</h1>
       {!isFramePinned && (
         <button
           onClick={pinFrame}
-          className="w-full px-4 py-2 bg-blue-600 text-white rounded-md"
+          className="px-3 py-1 bg-blue-600 text-white rounded-md text-sm inline-flex items-center space-x-1"
         >
-          Pin this Mini App
+          <span>📌</span>
+          <span>Pin Mini App</span>
         </button>
       )}
       {isFramePinned && (
-        <p className="text-green-600">App pinned! Notifications enabled.</p>
+        <p className="text-green-700 inline-flex items-center space-x-1">
+          <span>📌</span>
+          <span>App pinned! Notifications enabled.</span>
+        </p>
       )}
       {!days && (
         <div className="space-y-2">
@@ -66,9 +71,10 @@ export default function SunCycleAge() {
           />
           <button
             onClick={calculateAge}
-            className="w-full px-4 py-2 bg-yellow-400 text-black rounded-md animate-pulse"
+            className="w-full px-4 py-2 bg-yellow-400 hover:bg-yellow-500 text-black rounded-md animate-pulse text-sm inline-flex items-center justify-center space-x-1"
           >
-            Calculate Age
+            <span>🌞</span>
+            <span>Calculate Age</span>
           </button>
         </div>
       )}
@@ -100,9 +106,16 @@ export default function SunCycleAge() {
             <button
               onClick={onShare}
               disabled={isSharing}
-              className="px-4 py-2 bg-blue-600 text-white rounded-md"
+              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md text-sm inline-flex items-center justify-center space-x-1"
             >
-              {isSharing ? "Sharing..." : "Share your age"}
+              {isSharing ? (
+                "Sharing..."
+              ) : (
+                <>
+                  <span>📤</span>
+                  <span>Share your age</span>
+                </>
+              )}
             </button>
           </div>
         </div>
