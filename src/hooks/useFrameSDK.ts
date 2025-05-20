@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import sdk from "@farcaster/frame-sdk";
 import { FrameNotificationDetails } from "@farcaster/frame-node";
 import type { FrameContext } from "@farcaster/frame-core/src/context";
+import { getUserConsent, updateUserConsent, revokeUserConsent } from "~/lib/consent";
 
 interface AddFrameResult {
   added: boolean;
@@ -20,10 +21,71 @@ export function useFrameSDK() {
   const [lastEvent, setLastEvent] = useState("");
   const [pinFrameResponse, setPinFrameResponse] = useState("");
   const [loading, setLoading] = useState(false);
+  const [hasConsented, setHasConsented] = useState<boolean | null>(null);
+
+  const sendWelcomeNotification = useCallback(async (fid: string) => {
+    try {
+      const response = await fetch('/api/milestone-notification', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          fid,
+          milestone: 0,
+          days: 0,
+          isWelcome: true,
+        }),
+      });
+      if (!response.ok) {
+        console.error('Failed to send welcome notification');
+      }
+    } catch (error) {
+      console.error('Error sending welcome notification:', error);
+    }
+  }, []);
+
+  // Check user consent when context changes
+  useEffect(() => {
+    const checkConsent = async () => {
+      if (context?.user?.fid) {
+        const consent = await getUserConsent(context.user.fid.toString());
+        setHasConsented(consent?.hasConsented ?? false);
+      }
+    };
+    checkConsent();
+  }, [context?.user?.fid]);
+
+  const handleConsent = useCallback(async (consent: boolean) => {
+    if (!context?.user?.fid) return false;
+    
+    const success = await updateUserConsent(
+      context.user.fid.toString(),
+      consent,
+      notificationDetails ? {
+        token: notificationDetails.token,
+        url: notificationDetails.url
+      } : undefined
+    );
+
+    if (success) {
+      setHasConsented(consent);
+    }
+
+    return success;
+  }, [context?.user?.fid, notificationDetails]);
 
   useEffect(() => {
     const load = async () => {
-      console.log("LOAD", sdk.context);
+      if (typeof window === "undefined") return;
+      const frameSDK = (window as any).frameSDK;
+      if (!frameSDK) {
+        console.log("No frameSDK found in window");
+        return;
+      }
+
+      setIsInFrame(true);
+      const sdk = frameSDK;
       const frameContext = await sdk.context;
 
       if (!frameContext) {
@@ -31,7 +93,7 @@ export function useFrameSDK() {
         return;
       }
 
-      setContext(frameContext as unknown as FrameContext);
+      setContext(frameContext);
       setIsFramePinned(frameContext.client.added);
 
       sdk.on("frameAdded", ({ notificationDetails }) => {
@@ -39,7 +101,13 @@ export function useFrameSDK() {
           `frameAdded${notificationDetails ? ", notifications enabled" : ""}`,
         );
         setIsFramePinned(true);
-        if (notificationDetails) setNotificationDetails(notificationDetails);
+        if (notificationDetails) {
+          setNotificationDetails(notificationDetails);
+          // Only send welcome notification if user has consented
+          if (frameContext.user?.fid && hasConsented) {
+            sendWelcomeNotification(frameContext.user.fid.toString());
+          }
+        }
       });
 
       sdk.on("frameAddRejected", ({ reason }) => {
@@ -50,11 +118,20 @@ export function useFrameSDK() {
         setLastEvent("frameRemoved");
         setIsFramePinned(false);
         setNotificationDetails(null);
+        // Revoke consent when frame is removed
+        if (frameContext.user?.fid) {
+          revokeUserConsent(frameContext.user.fid.toString());
+          setHasConsented(false);
+        }
       });
 
       sdk.on("notificationsEnabled", ({ notificationDetails }) => {
         setLastEvent("notificationsEnabled");
         setNotificationDetails(notificationDetails);
+        // Only send welcome notification if user has consented
+        if (frameContext.user?.fid && hasConsented) {
+          sendWelcomeNotification(frameContext.user.fid.toString());
+        }
       });
 
       sdk.on("notificationsDisabled", () => {
@@ -68,11 +145,8 @@ export function useFrameSDK() {
     if (sdk && !isSDKLoaded) {
       setIsSDKLoaded(true);
       load();
-      return () => {
-        sdk.removeAllListeners();
-      };
     }
-  }, [isSDKLoaded]);
+  }, [isSDKLoaded, sdk, sendWelcomeNotification, hasConsented]);
 
   const pinFrame = useCallback(async () => {
     try {
@@ -115,5 +189,7 @@ export function useFrameSDK() {
     isAuthDialogOpen,
     setIsAuthDialogOpen,
     isInFrame,
+    hasConsented,
+    handleConsent,
   };
 }
