@@ -77,23 +77,19 @@ export function useFrameSDK() {
     const load = async () => {
       if (typeof window === "undefined") return;
       
-      // First, call ready() to ensure SDK is initialized
       try {
+        // First, call ready() to ensure SDK is initialized
         await sdk.actions.ready({ disableNativeGestures: true });
-      } catch (error) {
-        console.error("Error initializing SDK:", error);
-        return;
-      }
+        setIsSDKLoaded(true);
 
-      const frameSDK = (window as any).frameSDK;
-      if (!frameSDK) {
-        console.log("No frameSDK found in window");
-        return;
-      }
+        const frameSDK = (window as any).frameSDK;
+        if (!frameSDK) {
+          console.log("No frameSDK found in window");
+          return;
+        }
 
-      setIsInFrame(true);
-      
-      try {
+        setIsInFrame(true);
+        
         const frameContext = await frameSDK.context;
         if (!frameContext) {
           console.log("No frameContext from Farcaster");
@@ -146,10 +142,9 @@ export function useFrameSDK() {
           setLastEvent("notificationsDisabled");
           setNotificationDetails(null);
         });
-
-        setIsSDKLoaded(true);
       } catch (error) {
         console.error("Error setting up SDK:", error);
+        setIsSDKLoaded(false);
       }
     };
 

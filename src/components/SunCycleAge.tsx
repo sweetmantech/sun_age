@@ -34,7 +34,8 @@ export default function SunCycleAge() {
     context, 
     notificationDetails,
     hasConsented,
-    handleConsent
+    handleConsent,
+    isInFrame
   } = useFrameSDK();
   const [birthDate, setBirthDate] = useState<string>("");
   const [days, setDays] = useState<number | null>(null);
@@ -299,7 +300,35 @@ export default function SunCycleAge() {
   };
 
   if (!isSDKLoaded) {
-    return <div>Loading...</div>;
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+          <p className="text-gray-600 dark:text-gray-400">Loading Sun Cycle Age...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // If we're in a frame but not pinned, show a message
+  if (isInFrame && !isFramePinned) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center p-6">
+          <SunSVG />
+          <h2 className="text-xl font-serif font-bold mb-4">Pin to Farcaster</h2>
+          <p className="text-gray-600 dark:text-gray-400 mb-6">
+            Pin this app to your Farcaster profile to track your sun cycle age and receive milestone notifications.
+          </p>
+          <button
+            onClick={pinFrame}
+            className="px-6 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+          >
+            Pin App
+          </button>
+        </div>
+      </div>
+    );
   }
 
   return (
