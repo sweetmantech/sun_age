@@ -1,4 +1,6 @@
 {
+  "buildCommand": "npm run build",
+  "installCommand": "npm install",
   "framework": "nextjs",
-  "buildCommand": "npx turbo run build"
+  "outputDirectory": ".next"
 }
