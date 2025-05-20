@@ -255,6 +255,11 @@ export default function SunCycleAge() {
       const data = { days, approxYears, birthDate };
       localStorage.setItem("sunCycleBookmark", JSON.stringify(data));
       setBookmark(data);
+      
+      // Show consent dialog when bookmarking if not already consented
+      if (hasConsented === null) {
+        setShowConsentDialog(true);
+      }
     }
   };
 
@@ -283,13 +288,6 @@ export default function SunCycleAge() {
 
   // Consent dialog state
   const [showConsentDialog, setShowConsentDialog] = useState(false);
-
-  // Show consent dialog when frame is pinned
-  useEffect(() => {
-    if (isFramePinned && hasConsented === null) {
-      setShowConsentDialog(true);
-    }
-  }, [isFramePinned, hasConsented]);
 
   // Handle consent
   const handleConsentSubmit = async (consent: boolean) => {
@@ -350,14 +348,14 @@ export default function SunCycleAge() {
         <div className="fixed inset-0 flex items-center justify-center p-4">
           <Dialog.Panel className="mx-auto max-w-sm rounded bg-white dark:bg-neutral-900 p-6 shadow-xl">
             <Dialog.Title className="text-lg font-medium mb-4">
-              Enable Notifications & Data Storage
+              Track Your Milestones
             </Dialog.Title>
             <Dialog.Description className="text-sm text-gray-500 dark:text-gray-400 mb-6">
-              To provide you with milestone notifications and track your progress, we need your consent to store your data. This includes:
+              Would you like to receive notifications when you reach important milestones in your sun cycle age? We'll track:
               <ul className="list-disc list-inside mt-2 space-y-1">
-                <li>Your Farcaster ID (FID)</li>
-                <li>Notification preferences</li>
-                <li>Milestone progress</li>
+                <li>Every 1,000 rotations milestone</li>
+                <li>Special angel number milestones</li>
+                <li>Your next milestone progress</li>
               </ul>
             </Dialog.Description>
             <div className="flex justify-end space-x-4">
@@ -365,13 +363,13 @@ export default function SunCycleAge() {
                 onClick={() => handleConsentSubmit(false)}
                 className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md"
               >
-                Decline
+                No Thanks
               </button>
               <button
                 onClick={() => handleConsentSubmit(true)}
                 className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md"
               >
-                Accept
+                Track Milestones
               </button>
             </div>
           </Dialog.Panel>
