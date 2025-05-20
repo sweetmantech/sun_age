@@ -19,7 +19,7 @@ export async function GET() {
       buttonTitle: "Check your Sun Age!",
       splashImageUrl: `${appUrl}/splash.png`,
       splashBackgroundColor: "#f7f7f7",
-      webhookUrl: `${appUrl}/api/webhook`,
+      webhookUrl: "https://api.neynar.com/f/app/846d59ed-e2ad-4464-ae2e-35237dfa7b07/event",
     },
   };
 
