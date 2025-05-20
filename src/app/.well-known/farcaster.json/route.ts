@@ -4,14 +4,11 @@ export async function GET() {
   const appUrl = "https://sun-age.vercel.app";
 
   const config = {
-    accountAssociation: {
-      header:
-        "eyJmaWQiOjEzNTk2LCJ0eXBlIjoiY3VzdG9keSIsImtleSI6IjB4ODE3MzE4RDZmRkY2NkExOGQ4M0ExMzc2QTc2RjZlMzBCNDNjODg4OSJ9",
-      payload:
-        "eyJkb21haW4iOiJmYXJjYXN0ZXItbWluaWFwcC10ZW1wbGF0ZS52ZXJjZWwuYXBwIn0",
-      signature:
-        "MHg5ZjkyZTdkNjRmZTNhNTE4YTEzOTBmZTdlYzAwOWQzODUzZWM2N2RmOTZiYjg1MzAwOGRlZDExNjVmOGE5OGVlNDQyYmI0MDU3OTI0ZmEzOGE3N2NlYWRiYThiMTRiN2IzMTY5N2ZjYWVlZGM3MTE1YWNiMTFmYjc2Y2EzYTc0YzFj",
-    },
+      "accountAssociation": {
+        "header": "eyJmaWQiOjU1NDMsInR5cGUiOiJjdXN0b2R5Iiwia2V5IjoiMHg3QUNjNjBhNTVkMDgxRjhhRGEwODU0NzAwMjY3QTNjNjBhZTFFOUMxIn0",
+        "payload": "eyJkb21haW4iOiJzdW4tYWdlLnZlcmNlbC5hcHAifQ",
+        "signature": "MHhkZjQ4Yjg2YTJkNzkxYzJjNDZjMTdmMGNlMTJhNWE4NTlmODcxZmEzZDQ1Y2E3ZTcyMGYyNTQ0MzBlMzQyOWY4NTlkNGIwNGUwMDM3NzQ5Y2JkYjBmODRmYzQ3NDMxNGRhMTRjNTAwNzYwOWNkN2U1M2IzZGY0MTk5MWRjYmYwMzFi"
+      },
     frame: {
       version: "1",
       name: PROJECT_TITLE,
