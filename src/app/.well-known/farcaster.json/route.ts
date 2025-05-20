@@ -21,7 +21,7 @@ export async function GET() {
       homeUrl: appUrl,
       imageUrl: `${appUrl}/suncycles_og.png`,
       ogImageUrl: `${appUrl}/suncycles_og.png`,
-      buttonTitle: "Launch Frame",
+      buttonTitle: "Check your Sun Age!",
       splashImageUrl: `${appUrl}/splash.png`,
       splashBackgroundColor: "#f7f7f7",
       webhookUrl: `${appUrl}/api/webhook`,

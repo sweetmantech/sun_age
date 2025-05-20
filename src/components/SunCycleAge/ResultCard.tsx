@@ -4,6 +4,7 @@ import Image from "next/image";
 import { toPng } from "html-to-image";
 import ResultCardExport from "./ResultCardExport";
 import { useFrameSDK } from "~/hooks/useFrameSDK";
+import { createRoot } from "react-dom/client";
 
 interface ResultCardProps {
   days: number;
@@ -39,8 +40,8 @@ const ResultCard: React.FC<ResultCardProps> = ({
   handleBookmark,
 }) => {
   const cardRef = useRef<HTMLDivElement>(null);
-  const { frameContext } = useFrameSDK();
-  const displayName = frameContext?.user?.displayName;
+  const { context } = useFrameSDK();
+  const displayName = context?.user?.displayName;
 
   const handleSaveImage = async () => {
     // Create a container for the export card
@@ -63,24 +64,22 @@ const ResultCard: React.FC<ResultCardProps> = ({
       />
     );
     // Use ReactDOM to render
-    // @ts-ignore
-    import("react-dom").then(ReactDOM => {
-      ReactDOM.render(exportCard, exportContainer);
-      setTimeout(async () => {
-        try {
-          if (exportContainer.firstChild && exportContainer.firstChild instanceof HTMLElement) {
-            const dataUrl = await toPng(exportContainer.firstChild, { cacheBust: true, backgroundColor: "#fffbe6" });
-            const link = document.createElement("a");
-            link.download = "sun-cycle-bookmark.png";
-            link.href = dataUrl;
-            link.click();
-          }
-        } finally {
-          ReactDOM.unmountComponentAtNode(exportContainer);
-          document.body.removeChild(exportContainer);
+    const root = createRoot(exportContainer);
+    root.render(exportCard);
+    setTimeout(async () => {
+      try {
+        if (exportContainer.firstChild && exportContainer.firstChild instanceof HTMLElement) {
+          const dataUrl = await toPng(exportContainer.firstChild, { cacheBust: true, backgroundColor: "#fffbe6" });
+          const link = document.createElement("a");
+          link.download = "sun-cycle-bookmark.png";
+          link.href = dataUrl;
+          link.click();
         }
-      }, 100);
-    });
+      } finally {
+        root.unmount();
+        document.body.removeChild(exportContainer);
+      }
+    }, 100);
   };
 
   return (
