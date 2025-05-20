@@ -9,25 +9,20 @@ export interface UserConsent {
 }
 
 export async function getUserConsent(fid: string): Promise<UserConsent | null> {
-  const startTime = performance.now();
-  console.log("Starting Supabase fetch at:", new Date().toISOString());
-
+  console.log("Fetching consent for FID:", fid);
+  
   const { data, error } = await supabase
     .from('user_consent')
     .select('*')
     .eq('fid', fid)
     .single();
 
-  const endTime = performance.now();
-  const duration = endTime - startTime;
-
   if (error) {
     console.error('Error fetching user consent:', error);
-    console.log(`Operation failed after ${duration.toFixed(2)}ms`);
     return null;
   }
 
-  console.log(`Successfully fetched user consent after ${duration.toFixed(2)}ms`);
+  console.log("Found consent data:", data);
   return data;
 }
 
@@ -36,14 +31,10 @@ export async function updateUserConsent(
   hasConsented: boolean,
   notificationDetails?: { token: string; url: string }
 ): Promise<boolean> {
-  const startTime = performance.now();
-  console.log("Starting Supabase update at:", new Date().toISOString());
-
-  console.log("Updating user consent in Supabase:", {
-    fid,
-    hasConsented,
-    hasNotificationDetails: !!notificationDetails
-  });
+  console.log("=== Updating User Consent ===");
+  console.log("FID:", fid);
+  console.log("Has Consented:", hasConsented);
+  console.log("Has Notification Details:", !!notificationDetails);
 
   const consentData = {
     fid,
@@ -55,7 +46,7 @@ export async function updateUserConsent(
     })
   };
 
-  console.log("Consent data to be stored:", consentData);
+  console.log("Storing consent data:", consentData);
 
   const { error } = await supabase
     .from('user_consent')
@@ -63,20 +54,20 @@ export async function updateUserConsent(
       onConflict: 'fid'
     });
 
-  const endTime = performance.now();
-  const duration = endTime - startTime;
-
   if (error) {
-    console.error('Error updating user consent in Supabase:', error);
-    console.log(`Operation failed after ${duration.toFixed(2)}ms`);
+    console.error('Error updating user consent:', error);
+    console.log("=== End Update (Failed) ===");
     return false;
   }
 
-  console.log(`Successfully updated user consent in Supabase after ${duration.toFixed(2)}ms`);
+  console.log("=== End Update (Success) ===");
   return true;
 }
 
 export async function revokeUserConsent(fid: string): Promise<boolean> {
+  console.log("=== Revoking User Consent ===");
+  console.log("FID:", fid);
+
   const { error } = await supabase
     .from('user_consent')
     .update({
@@ -89,8 +80,10 @@ export async function revokeUserConsent(fid: string): Promise<boolean> {
 
   if (error) {
     console.error('Error revoking user consent:', error);
+    console.log("=== End Revoke (Failed) ===");
     return false;
   }
 
+  console.log("=== End Revoke (Success) ===");
   return true;
 } 
