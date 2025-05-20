@@ -11,13 +11,11 @@ interface AddFrameResult {
 
 export function useFrameSDK() {
   const [isAuthDialogOpen, setIsAuthDialogOpen] = useState(false);
-
   const [isSDKLoaded, setIsSDKLoaded] = useState(false);
   const [isInFrame, setIsInFrame] = useState(false);
   const [context, setContext] = useState<FrameContext>();
   const [isFramePinned, setIsFramePinned] = useState(false);
-  const [notificationDetails, setNotificationDetails] =
-    useState<FrameNotificationDetails | null>(null);
+  const [notificationDetails, setNotificationDetails] = useState<FrameNotificationDetails | null>(null);
   const [lastEvent, setLastEvent] = useState("");
   const [pinFrameResponse, setPinFrameResponse] = useState("");
   const [loading, setLoading] = useState(false);
@@ -78,6 +76,15 @@ export function useFrameSDK() {
   useEffect(() => {
     const load = async () => {
       if (typeof window === "undefined") return;
+      
+      // First, call ready() to ensure SDK is initialized
+      try {
+        await sdk.actions.ready({ disableNativeGestures: true });
+      } catch (error) {
+        console.error("Error initializing SDK:", error);
+        return;
+      }
+
       const frameSDK = (window as any).frameSDK;
       if (!frameSDK) {
         console.log("No frameSDK found in window");
@@ -85,68 +92,71 @@ export function useFrameSDK() {
       }
 
       setIsInFrame(true);
-      const sdk = frameSDK;
-      const frameContext = await sdk.context;
+      
+      try {
+        const frameContext = await frameSDK.context;
+        if (!frameContext) {
+          console.log("No frameContext from Farcaster");
+          return;
+        }
 
-      if (!frameContext) {
-        // has no frameContext from Farcaster
-        return;
-      }
+        setContext(frameContext);
+        setIsFramePinned(frameContext.client.added);
 
-      setContext(frameContext);
-      setIsFramePinned(frameContext.client.added);
+        // Set up event listeners
+        frameSDK.on("frameAdded", ({ notificationDetails }) => {
+          setLastEvent(
+            `frameAdded${notificationDetails ? ", notifications enabled" : ""}`,
+          );
+          setIsFramePinned(true);
+          if (notificationDetails) {
+            setNotificationDetails(notificationDetails);
+            // Only send welcome notification if user has consented
+            if (frameContext.user?.fid && hasConsented) {
+              sendWelcomeNotification(frameContext.user.fid.toString());
+            }
+          }
+        });
 
-      sdk.on("frameAdded", ({ notificationDetails }) => {
-        setLastEvent(
-          `frameAdded${notificationDetails ? ", notifications enabled" : ""}`,
-        );
-        setIsFramePinned(true);
-        if (notificationDetails) {
+        frameSDK.on("frameAddRejected", ({ reason }) => {
+          setLastEvent(`frameAddRejected, reason ${reason}`);
+        });
+
+        frameSDK.on("frameRemoved", () => {
+          setLastEvent("frameRemoved");
+          setIsFramePinned(false);
+          setNotificationDetails(null);
+          // Revoke consent when frame is removed
+          if (frameContext.user?.fid) {
+            revokeUserConsent(frameContext.user.fid.toString());
+            setHasConsented(false);
+          }
+        });
+
+        frameSDK.on("notificationsEnabled", ({ notificationDetails }) => {
+          setLastEvent("notificationsEnabled");
           setNotificationDetails(notificationDetails);
           // Only send welcome notification if user has consented
           if (frameContext.user?.fid && hasConsented) {
             sendWelcomeNotification(frameContext.user.fid.toString());
           }
-        }
-      });
+        });
 
-      sdk.on("frameAddRejected", ({ reason }) => {
-        setLastEvent(`frameAddRejected, reason ${reason}`);
-      });
+        frameSDK.on("notificationsDisabled", () => {
+          setLastEvent("notificationsDisabled");
+          setNotificationDetails(null);
+        });
 
-      sdk.on("frameRemoved", () => {
-        setLastEvent("frameRemoved");
-        setIsFramePinned(false);
-        setNotificationDetails(null);
-        // Revoke consent when frame is removed
-        if (frameContext.user?.fid) {
-          revokeUserConsent(frameContext.user.fid.toString());
-          setHasConsented(false);
-        }
-      });
-
-      sdk.on("notificationsEnabled", ({ notificationDetails }) => {
-        setLastEvent("notificationsEnabled");
-        setNotificationDetails(notificationDetails);
-        // Only send welcome notification if user has consented
-        if (frameContext.user?.fid && hasConsented) {
-          sendWelcomeNotification(frameContext.user.fid.toString());
-        }
-      });
-
-      sdk.on("notificationsDisabled", () => {
-        setLastEvent("notificationsDisabled");
-        setNotificationDetails(null);
-      });
-
-      sdk.actions.ready({ disableNativeGestures: true });
+        setIsSDKLoaded(true);
+      } catch (error) {
+        console.error("Error setting up SDK:", error);
+      }
     };
 
-    if (sdk && !isSDKLoaded) {
-      setIsSDKLoaded(true);
+    if (!isSDKLoaded) {
       load();
     }
-  }, [isSDKLoaded, sdk, sendWelcomeNotification, hasConsented]);
+  }, [isSDKLoaded, sendWelcomeNotification, hasConsented]);
 
   const pinFrame = useCallback(async () => {
     try {
