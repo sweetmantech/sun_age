@@ -92,20 +92,23 @@ export default function SunCycleAge() {
       }
 
       // Check if we've reached a milestone and should send notification
-      if (isFramePinned && context?.user?.fid && hasConsented && days % 1000 === 0 && days !== lastMilestoneNotified) {
-        fetch('/api/milestone-notification', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            fid: context.user.fid,
-            milestone: days,
-            days: days,
-          }),
-        }).then(() => {
-          setLastMilestoneNotified(days);
-        }).catch(console.error);
+      if (isFramePinned && context?.user?.fid) {
+        // Send notification for every 1000 days milestone
+        if (days % 1000 === 0 && days !== lastMilestoneNotified) {
+          fetch('/api/milestone-notification', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              fid: context.user.fid,
+              milestone: days,
+              days: days,
+            }),
+          }).then(() => {
+            setLastMilestoneNotified(days);
+          }).catch(console.error);
+        }
       }
     } else {
       setNextMilestone(null);
@@ -113,7 +116,7 @@ export default function SunCycleAge() {
       setMilestoneDate(null);
       setQuote(quotes[0]);
     }
-  }, [days, quotes, isFramePinned, context?.user?.fid, lastMilestoneNotified, birthDate, hasConsented]);
+  }, [days, quotes, isFramePinned, context?.user?.fid, lastMilestoneNotified, birthDate]);
 
   // Animation state: only animate after calculation
   const isAnimated = days !== null;
@@ -258,7 +261,7 @@ export default function SunCycleAge() {
       setBookmark(data);
       
       // Send welcome notification when bookmarking
-      if (isFramePinned && context?.user?.fid && notificationDetails) {
+      if (isFramePinned && context?.user?.fid) {
         fetch('/api/milestone-notification', {
           method: 'POST',
           headers: {
