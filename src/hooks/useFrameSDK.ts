@@ -128,38 +128,39 @@ export function useFrameSDK() {
           );
           setIsFramePinned(true);
           
-          if (notificationDetails && frameContext.user?.fid) {
-            console.log("Attempting to store in Supabase...");
-            setNotificationDetails(notificationDetails);
+          if (frameContext.user?.fid) {
+            console.log("Attempting to store FID...");
             
             try {
-              // Automatically store FID and notification details in Supabase
-              const success = await updateUserConsent(
-                frameContext.user.fid.toString(),
-                true,
-                {
-                  token: notificationDetails.token,
-                  url: notificationDetails.url
-                }
-              );
-              
-              if (success) {
-                console.log("✅ Successfully stored in Supabase");
-                setHasConsented(true);
-                // Send welcome notification
-                await sendWelcomeNotification(frameContext.user.fid.toString());
+              // Make a direct API call to store the FID
+              const response = await fetch('/api/milestone-notification', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                  fid: frameContext.user.fid.toString(),
+                  milestone: 0,
+                  days: 0,
+                  isWelcome: true,
+                  forceWelcome: true
+                }),
+              });
+
+              if (!response.ok) {
+                console.error("Failed to store FID:", await response.text());
               } else {
-                console.error("❌ Failed to store in Supabase");
+                console.log("Successfully stored FID");
+                if (notificationDetails) {
+                  setNotificationDetails(notificationDetails);
+                  setHasConsented(true);
+                }
               }
             } catch (error) {
-              console.error("❌ Error storing in Supabase:", error);
+              console.error("Error storing FID:", error);
             }
           } else {
-            console.log("❌ Missing required data:", {
-              hasNotificationDetails: !!notificationDetails,
-              hasFid: !!frameContext.user?.fid,
-              fid: frameContext.user?.fid
-            });
+            console.log("❌ No FID available in frame context");
           }
           console.log("=== End Frame Added Event ===");
         });
