@@ -44,7 +44,14 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Sun Age",
     siteName: "Sun Age",
-    images: ["https://sun-age.vercel.app/suncycles_og.png"],
+    images: [
+      {
+        url: "https://sun-age.vercel.app/suncycles_og.png",
+        width: 1200,
+        height: 630,
+        type: "image/png",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
