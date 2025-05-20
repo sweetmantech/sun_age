@@ -1,0 +1,13 @@
+{
+  "frame": {
+    "version": "1",
+    "name": "Sun Cycle Age",
+    "iconUrl": "https://sun-age.vercel.app/icon.png",
+    "homeUrl": "https://sun-age.vercel.app",
+    "imageUrl": "https://sun-age.vercel.app/image.png",
+    "buttonTitle": "Calculate Your Sun Age",
+    "splashImageUrl": "https://sun-age.vercel.app/splash.png",
+    "splashBackgroundColor": "#000000",
+    "webhookUrl": "https://sun-age.vercel.app/api/webhook"
+  }
+} 
