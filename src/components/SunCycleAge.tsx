@@ -284,12 +284,12 @@ export default function SunCycleAge() {
   // Consent dialog state
   const [showConsentDialog, setShowConsentDialog] = useState(false);
 
-  // Show consent dialog when frame is pinned and notifications are enabled
+  // Show consent dialog when frame is pinned
   useEffect(() => {
-    if (isFramePinned && notificationDetails && hasConsented === null) {
+    if (isFramePinned && hasConsented === null) {
       setShowConsentDialog(true);
     }
-  }, [isFramePinned, notificationDetails, hasConsented]);
+  }, [isFramePinned, hasConsented]);
 
   // Handle consent
   const handleConsentSubmit = async (consent: boolean) => {

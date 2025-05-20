@@ -68,10 +68,14 @@ export function useFrameSDK() {
 
     if (success) {
       setHasConsented(consent);
+      // Send welcome notification when consent is granted
+      if (consent && notificationDetails) {
+        sendWelcomeNotification(context.user.fid.toString());
+      }
     }
 
     return success;
-  }, [context?.user?.fid, notificationDetails]);
+  }, [context?.user?.fid, notificationDetails, sendWelcomeNotification]);
 
   useEffect(() => {
     const load = async () => {
