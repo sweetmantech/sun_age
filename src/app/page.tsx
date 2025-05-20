@@ -8,9 +8,9 @@ const appUrl =
 
 const frame = {
   version: "next",
-  imageUrl: `${appUrl}/opengraph-image`,
+  imageUrl: `${appUrl}/suncycles_og.png`,
   button: {
-    title: "Launch Frame",
+    title: "Check your Sun Age",
     action: {
       type: "launch_frame",
       name: PROJECT_TITLE,
