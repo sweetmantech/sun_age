@@ -100,16 +100,28 @@ export function useFrameSDK() {
           return;
         }
 
+        console.log("=== Frame Context Initialized ===");
+        console.log("Frame Context:", {
+          hasUser: !!frameContext.user,
+          fid: frameContext.user?.fid,
+          username: frameContext.user?.username,
+          added: frameContext.client.added
+        });
+        console.log("=== End Frame Context ===");
+
         setContext(frameContext);
         setIsFramePinned(frameContext.client.added);
 
         // Set up event listeners
         frameSDK.on("frameAdded", async ({ notificationDetails }) => {
-          console.log("Frame added event received:", {
-            hasNotificationDetails: !!notificationDetails,
-            hasFid: !!frameContext.user?.fid,
-            fid: frameContext.user?.fid
+          console.log("=== Frame Added Event ===");
+          console.log("Frame Context:", {
+            hasUser: !!frameContext.user,
+            fid: frameContext.user?.fid,
+            username: frameContext.user?.username,
+            added: frameContext.client.added
           });
+          console.log("Notification Details:", notificationDetails);
 
           setLastEvent(
             `frameAdded${notificationDetails ? ", notifications enabled" : ""}`,
@@ -117,7 +129,7 @@ export function useFrameSDK() {
           setIsFramePinned(true);
           
           if (notificationDetails && frameContext.user?.fid) {
-            console.log("Storing FID and notification details in Supabase");
+            console.log("Attempting to store in Supabase...");
             setNotificationDetails(notificationDetails);
             
             try {
@@ -131,24 +143,25 @@ export function useFrameSDK() {
                 }
               );
               
-              console.log("Supabase storage result:", success);
-              
               if (success) {
+                console.log("✅ Successfully stored in Supabase");
                 setHasConsented(true);
                 // Send welcome notification
                 await sendWelcomeNotification(frameContext.user.fid.toString());
               } else {
-                console.error("Failed to store FID in Supabase");
+                console.error("❌ Failed to store in Supabase");
               }
             } catch (error) {
-              console.error("Error storing FID in Supabase:", error);
+              console.error("❌ Error storing in Supabase:", error);
             }
           } else {
-            console.log("Missing required data for Supabase storage:", {
+            console.log("❌ Missing required data:", {
               hasNotificationDetails: !!notificationDetails,
-              hasFid: !!frameContext.user?.fid
+              hasFid: !!frameContext.user?.fid,
+              fid: frameContext.user?.fid
             });
           }
+          console.log("=== End Frame Added Event ===");
         });
 
         frameSDK.on("frameAddRejected", ({ reason }) => {
