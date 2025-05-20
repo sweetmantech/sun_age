@@ -43,13 +43,13 @@ export default function SunCycleAge() {
   const [isSharing, setIsSharing] = useState(false);
 
   // Quotes for the result card
-  const quotes = [
+  const quotes = useMemo(() => [
     "Sun cycle age measures your existence through rotations around our star. One day = one rotation.",
     "You are a child of the cosmos, a way for the universe to know itself.",
     "Every day is a new journey around the sun.",
     "The sun watches over all your rotations.",
     "Your orbit is uniquely yours—shine on."
-  ];
+  ], []);
   const [quote, setQuote] = useState(quotes[0]);
 
   // Header date (client only)
