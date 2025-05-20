@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useFrameSDK } from "~/hooks/useFrameSDK";
+import type { FrameContext } from "~/types/frame";
 import Image from "next/image";
 import Header from "./SunCycleAge/Header";
 import SolarSystemGraphic from "./SunCycleAge/SolarSystemGraphic";
