@@ -9,7 +9,7 @@ import SolarSystemGraphic from "./SunCycleAge/SolarSystemGraphic";
 import ResultCard from "./SunCycleAge/ResultCard";
 import FormSection from "./SunCycleAge/FormSection";
 import MilestoneOrbit from "./SunCycleAge/MilestoneOrbit";
-import { MILESTONE_STEP, getNextMilestone, getProgressToNextMilestone } from "~/lib/milestones";
+import { getNextMilestone, getProgressToNextMilestone } from "~/lib/milestones";
 import { Dialog } from "@headlessui/react";
 
 function WarpcastEmbed({ url }: { url: string }) {
