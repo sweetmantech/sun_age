@@ -24,7 +24,7 @@ function WarpcastEmbed({ url }: { url: string }) {
 }
 
 export default function SunCycleAge() {
-  const { isSDKLoaded, sdk, pinFrame, isFramePinned } = useFrameSDK();
+  const { isSDKLoaded, sdk, pinFrame, isFramePinned, context, notificationDetails } = useFrameSDK();
   const [birthDate, setBirthDate] = useState<string>("");
   const [days, setDays] = useState<number | null>(null);
   const [approxYears, setApproxYears] = useState<number | null>(null);
@@ -254,6 +254,13 @@ export default function SunCycleAge() {
 
   return (
     <div className="relative w-full min-h-screen flex flex-col justify-between z-0">
+      {/* Debug info - only show in development */}
+      {process.env.NODE_ENV === "development" && (
+        <div className="fixed top-0 left-0 bg-black/80 text-white p-2 text-xs font-mono z-50">
+          SDK: {isSDKLoaded ? '✓' : '✗'} | Frame: {isFramePinned ? '✓' : '✗'} | Context: {context ? '✓' : '✗'} | Notifications: {notificationDetails ? '✓' : '✗'}
+        </div>
+      )}
+      
       {/* Main Content: Header, Orbits, Form (fade out when result is shown) */}
       <div className={`z-10 transition-opacity duration-500 ${showMain ? 'opacity-100' : 'opacity-0 pointer-events-none h-0 overflow-hidden'}`}>
         {/* Show bookmark if exists and showBookmark is true */}
