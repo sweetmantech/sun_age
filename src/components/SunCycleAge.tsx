@@ -11,6 +11,7 @@ import FormSection from "./SunCycleAge/FormSection";
 import MilestoneOrbit from "./SunCycleAge/MilestoneOrbit";
 import { getNextMilestone, getProgressToNextMilestone } from "~/lib/milestones";
 import { Dialog } from "@headlessui/react";
+import { revokeUserConsent } from "~/lib/consent";
 
 function WarpcastEmbed({ url }: { url: string }) {
   const [embedHtml, setEmbedHtml] = useState<string | null>(null);
@@ -256,9 +257,20 @@ export default function SunCycleAge() {
       localStorage.setItem("sunCycleBookmark", JSON.stringify(data));
       setBookmark(data);
       
-      // Show consent dialog when bookmarking if not already consented
-      if (hasConsented === null) {
-        setShowConsentDialog(true);
+      // Send welcome notification when bookmarking
+      if (isFramePinned && context?.user?.fid && notificationDetails) {
+        fetch('/api/milestone-notification', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            fid: context.user.fid,
+            milestone: 0,
+            days: days,
+            isWelcome: true,
+          }),
+        }).catch(console.error);
       }
     }
   };
@@ -285,17 +297,6 @@ export default function SunCycleAge() {
       milestoneDate,
     };
   }
-
-  // Consent dialog state
-  const [showConsentDialog, setShowConsentDialog] = useState(false);
-
-  // Handle consent
-  const handleConsentSubmit = async (consent: boolean) => {
-    const success = await handleConsent(consent);
-    if (success) {
-      setShowConsentDialog(false);
-    }
-  };
 
   if (!isSDKLoaded) {
     return (
@@ -334,47 +335,9 @@ export default function SunCycleAge() {
       {/* Debug info - only show in development */}
       {process.env.NODE_ENV === "development" && (
         <div className="fixed top-0 left-0 bg-black/80 text-white p-2 text-xs font-mono z-50">
-          SDK: {isSDKLoaded ? '✓' : '✗'} | Frame: {isFramePinned ? '✓' : '✗'} | Context: {context ? '✓' : '✗'} | Notifications: {notificationDetails ? '✓' : '✗'} | Consent: {hasConsented ? '✓' : '✗'}
+          SDK: {isSDKLoaded ? '✓' : '✗'} | Frame: {isFramePinned ? '✓' : '✗'} | Context: {context ? '✓' : '✗'} | Notifications: {notificationDetails ? '✓' : '✗'}
         </div>
       )}
-      
-      {/* Consent Dialog */}
-      <Dialog
-        open={showConsentDialog}
-        onClose={() => setShowConsentDialog(false)}
-        className="relative z-50"
-      >
-        <div className="fixed inset-0 bg-black/30" aria-hidden="true" />
-        <div className="fixed inset-0 flex items-center justify-center p-4">
-          <Dialog.Panel className="mx-auto max-w-sm rounded bg-white dark:bg-neutral-900 p-6 shadow-xl">
-            <Dialog.Title className="text-lg font-medium mb-4">
-              Track Your Milestones
-            </Dialog.Title>
-            <Dialog.Description className="text-sm text-gray-500 dark:text-gray-400 mb-6">
-              Would you like to receive notifications when you reach important milestones in your sun cycle age? We'll track:
-              <ul className="list-disc list-inside mt-2 space-y-1">
-                <li>Every 1,000 rotations milestone</li>
-                <li>Special angel number milestones</li>
-                <li>Your next milestone progress</li>
-              </ul>
-            </Dialog.Description>
-            <div className="flex justify-end space-x-4">
-              <button
-                onClick={() => handleConsentSubmit(false)}
-                className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md"
-              >
-                No Thanks
-              </button>
-              <button
-                onClick={() => handleConsentSubmit(true)}
-                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md"
-              >
-                Track Milestones
-              </button>
-            </div>
-          </Dialog.Panel>
-        </div>
-      </Dialog>
       
       {/* Main Content: Header, Orbits, Form (fade out when result is shown) */}
       <div className={`z-10 transition-opacity duration-500 ${showMain ? 'opacity-100' : 'opacity-0 pointer-events-none h-0 overflow-hidden'}`}>
@@ -411,6 +374,35 @@ export default function SunCycleAge() {
                 <button onClick={handleClearBookmark} className="text-gray-500 dark:text-blue-300 underline underline-offset-2 hover:text-blue-700 dark:hover:text-blue-200 transition-all px-0 py-0 bg-transparent border-none shadow-none font-sans text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-400">Clear Bookmark</button>
                 <button onClick={() => setShowBookmark(false)} className="text-gray-500 dark:text-blue-300 underline underline-offset-2 hover:text-blue-700 dark:hover:text-blue-200 transition-all px-0 py-0 bg-transparent border-none shadow-none font-sans text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-400">Recalculate</button>
               </div>
+
+              {/* Settings section */}
+              {isFramePinned && (
+                <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700 w-full">
+                  <h3 className="text-sm font-medium text-gray-900 dark:text-white mb-2">Settings</h3>
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-gray-600 dark:text-gray-300">Milestone Notifications</span>
+                      <span className="text-xs text-gray-500 dark:text-gray-400">
+                        {notificationDetails ? 'Enabled' : 'Disabled'}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-gray-600 dark:text-gray-300">Data Storage</span>
+                      <button 
+                        onClick={() => {
+                          if (context?.user?.fid) {
+                            revokeUserConsent(context.user.fid.toString());
+                            handleClearBookmark();
+                          }
+                        }}
+                        className="text-xs text-red-500 hover:text-red-600 dark:text-red-400 dark:hover:text-red-300"
+                      >
+                        Clear All Data
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
             {/* Box 2: Next Milestone */}
             {bookmarkMilestone && (
