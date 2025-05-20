@@ -33,6 +33,12 @@ export async function updateUserConsent(
   hasConsented: boolean,
   notificationDetails?: { token: string; url: string }
 ): Promise<boolean> {
+  console.log("Updating user consent in Supabase:", {
+    fid,
+    hasConsented,
+    hasNotificationDetails: !!notificationDetails
+  });
+
   const consentData = {
     fid,
     has_consented: hasConsented,
@@ -43,6 +49,8 @@ export async function updateUserConsent(
     })
   };
 
+  console.log("Consent data to be stored:", consentData);
+
   const { error } = await supabase
     .from('user_consent')
     .upsert(consentData, {
@@ -50,10 +58,11 @@ export async function updateUserConsent(
     });
 
   if (error) {
-    console.error('Error updating user consent:', error);
+    console.error('Error updating user consent in Supabase:', error);
     return false;
   }
 
+  console.log('Successfully updated user consent in Supabase');
   return true;
 }
 

@@ -105,24 +105,49 @@ export function useFrameSDK() {
 
         // Set up event listeners
         frameSDK.on("frameAdded", async ({ notificationDetails }) => {
+          console.log("Frame added event received:", {
+            hasNotificationDetails: !!notificationDetails,
+            hasFid: !!frameContext.user?.fid,
+            fid: frameContext.user?.fid
+          });
+
           setLastEvent(
             `frameAdded${notificationDetails ? ", notifications enabled" : ""}`,
           );
           setIsFramePinned(true);
+          
           if (notificationDetails && frameContext.user?.fid) {
+            console.log("Storing FID and notification details in Supabase");
             setNotificationDetails(notificationDetails);
-            // Automatically store FID and notification details in Supabase
-            await updateUserConsent(
-              frameContext.user.fid.toString(),
-              true,
-              {
-                token: notificationDetails.token,
-                url: notificationDetails.url
+            
+            try {
+              // Automatically store FID and notification details in Supabase
+              const success = await updateUserConsent(
+                frameContext.user.fid.toString(),
+                true,
+                {
+                  token: notificationDetails.token,
+                  url: notificationDetails.url
+                }
+              );
+              
+              console.log("Supabase storage result:", success);
+              
+              if (success) {
+                setHasConsented(true);
+                // Send welcome notification
+                await sendWelcomeNotification(frameContext.user.fid.toString());
+              } else {
+                console.error("Failed to store FID in Supabase");
               }
-            );
-            setHasConsented(true);
-            // Send welcome notification
-            sendWelcomeNotification(frameContext.user.fid.toString());
+            } catch (error) {
+              console.error("Error storing FID in Supabase:", error);
+            }
+          } else {
+            console.log("Missing required data for Supabase storage:", {
+              hasNotificationDetails: !!notificationDetails,
+              hasFid: !!frameContext.user?.fid
+            });
           }
         });
 
