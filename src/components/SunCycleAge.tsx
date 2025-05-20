@@ -262,6 +262,7 @@ export default function SunCycleAge() {
       
       // Send welcome notification when bookmarking
       if (isFramePinned && context?.user?.fid) {
+        // First ensure we have consent
         fetch('/api/milestone-notification', {
           method: 'POST',
           headers: {
@@ -272,6 +273,7 @@ export default function SunCycleAge() {
             milestone: 0,
             days: days,
             isWelcome: true,
+            forceWelcome: true // Add this flag to ensure welcome notification is sent
           }),
         }).catch(console.error);
       }

@@ -104,17 +104,25 @@ export function useFrameSDK() {
         setIsFramePinned(frameContext.client.added);
 
         // Set up event listeners
-        frameSDK.on("frameAdded", ({ notificationDetails }) => {
+        frameSDK.on("frameAdded", async ({ notificationDetails }) => {
           setLastEvent(
             `frameAdded${notificationDetails ? ", notifications enabled" : ""}`,
           );
           setIsFramePinned(true);
-          if (notificationDetails) {
+          if (notificationDetails && frameContext.user?.fid) {
             setNotificationDetails(notificationDetails);
-            // Only send welcome notification if user has consented
-            if (frameContext.user?.fid && hasConsented) {
-              sendWelcomeNotification(frameContext.user.fid.toString());
-            }
+            // Automatically store FID and notification details in Supabase
+            await updateUserConsent(
+              frameContext.user.fid.toString(),
+              true,
+              {
+                token: notificationDetails.token,
+                url: notificationDetails.url
+              }
+            );
+            setHasConsented(true);
+            // Send welcome notification
+            sendWelcomeNotification(frameContext.user.fid.toString());
           }
         });
 

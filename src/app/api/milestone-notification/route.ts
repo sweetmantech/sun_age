@@ -4,7 +4,7 @@ import { getUserConsent } from '~/lib/consent';
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { fid, milestone, days, isWelcome } = body;
+    const { fid, milestone, days, isWelcome, forceWelcome } = body;
 
     if (!fid) {
       return NextResponse.json({ error: 'FID is required' }, { status: 400 });
@@ -12,7 +12,9 @@ export async function POST(request: Request) {
 
     // Get user consent
     const consent = await getUserConsent(fid.toString());
-    if (!consent?.hasConsented) {
+    
+    // For welcome notifications, we can force send if requested
+    if (!consent?.hasConsented && !forceWelcome) {
       return NextResponse.json({ error: 'User has not consented to notifications' }, { status: 403 });
     }
 
@@ -24,8 +26,8 @@ export async function POST(request: Request) {
         'api_key': process.env.NEYNAR_API_KEY || '',
       },
       body: JSON.stringify({
-        notification_token: consent.notificationToken,
-        notification_url: consent.notificationUrl,
+        notification_token: consent?.notificationToken,
+        notification_url: consent?.notificationUrl,
         message: isWelcome 
           ? "Welcome to Sun Cycle Age! Track your journey around the sun and receive milestone notifications."
           : `Congratulations! You've completed ${milestone} rotations around the sun. Keep shining!`,
