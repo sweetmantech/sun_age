@@ -42,11 +42,13 @@ export const metadata: Metadata = {
   },
   manifest: "/site.webmanifest",
   openGraph: {
-    images: ["/suncycles_og.png"],
+    title: "Sun Age",
+    siteName: "Sun Age",
+    images: ["https://sun-age.vercel.app/suncycles_og.png"],
   },
   twitter: {
     card: "summary_large_image",
-    images: ["/suncycles_og.png"],
+    images: ["https://sun-age.vercel.app/suncycles_og.png"],
   },
 };
 
