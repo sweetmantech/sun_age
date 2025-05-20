@@ -3,6 +3,11 @@ import sdk from "@farcaster/frame-sdk";
 import { FrameNotificationDetails } from "@farcaster/frame-node";
 import type { FrameContext } from "@farcaster/frame-core/src/context";
 
+interface AddFrameResult {
+  added: boolean;
+  notificationDetails?: FrameNotificationDetails;
+}
+
 export function useFrameSDK() {
   const [isAuthDialogOpen, setIsAuthDialogOpen] = useState(false);
 
@@ -14,6 +19,7 @@ export function useFrameSDK() {
     useState<FrameNotificationDetails | null>(null);
   const [lastEvent, setLastEvent] = useState("");
   const [pinFrameResponse, setPinFrameResponse] = useState("");
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -71,22 +77,29 @@ export function useFrameSDK() {
   const pinFrame = useCallback(async () => {
     try {
       setNotificationDetails(null);
+      setLoading(true);
 
-      const result = await sdk.actions.addFrame();
+      const result = await sdk.actions.addFrame() as AddFrameResult;
       console.log("addFrame result", result);
-      // @ts-expect-error - result type mixup
+      
       if (result.added) {
+        setIsFramePinned(true);
         if (result.notificationDetails) {
           setNotificationDetails(result.notificationDetails);
         }
         setPinFrameResponse(
           result.notificationDetails
-            ? `Added, got notificaton token ${result.notificationDetails.token} and url ${result.notificationDetails.url}`
+            ? `Added, got notification token ${result.notificationDetails.token} and url ${result.notificationDetails.url}`
             : "Added, got no notification details",
         );
+      } else {
+        setPinFrameResponse("Failed to add frame");
       }
     } catch (error) {
-      setPinFrameResponse(`Error: ${error}`);
+      console.error("Error pinning frame:", error);
+      setPinFrameResponse(`Error: ${error instanceof Error ? error.message : String(error)}`);
+    } finally {
+      setLoading(false);
     }
   }, []);
 

@@ -14,7 +14,7 @@ async function initializeFonts() {
   try {
     imageOptions = {
       width: 1200,
-      height: 800,
+      height: 630,
     };
 
     return imageOptions;
@@ -26,29 +26,40 @@ async function initializeFonts() {
 export default async function Image() {
   const options = await initializeFonts();
 
-  const BACKGROUND_GRADIENT_START = "#c026d3";
-  const BACKGROUND_GRADIENT_END = "#ef4444";
-  const BACKGROUND_GRADIENT_STYLE = {
-    backgroundImage: `linear-gradient(to bottom, ${BACKGROUND_GRADIENT_START}, ${BACKGROUND_GRADIENT_END})`,
-    color: "white",
-  };
-
-  /*
-this Image is rendered using vercel/satori.
-
-Satori supports a limited subset of HTML and CSS features, due to its special use cases. In general, only these static and visible elements and properties that are implemented.
-For example, the <input> HTML element, the cursor CSS property are not in consideration. And you can't use <style> tags or external resources via <link> or <script>.
-Also, Satori does not guarantee that the SVG will 100% match the browser-rendered HTML output since Satori implements its own layout engine based on the SVG 1.1 spec.
-Please refer to Satori’s documentation for a list of supported HTML and CSS features. https://github.com/vercel/satori#css
-*/
   return new ImageResponse(
     (
       <div
         tw="h-full w-full flex flex-col justify-center items-center relative"
-        style={BACKGROUND_GRADIENT_STYLE}
+        style={{
+          background: "linear-gradient(to bottom, #1a1a2e, #16213e)",
+          color: "white",
+        }}
       >
-        <h1 tw="text-9xl text-center font-semibold">{PROJECT_TITLE}</h1>
-        <h3 tw="text-4xl font-normal">{PROJECT_DESCRIPTION}</h3>
+        {/* Sun rays background */}
+        <div
+          tw="absolute inset-0 opacity-20"
+          style={{
+            backgroundImage: "radial-gradient(circle at center, #ffd700 0%, transparent 70%)",
+          }}
+        />
+        
+        {/* Main content */}
+        <div tw="flex flex-col items-center justify-center p-8">
+          <h1 tw="text-8xl font-bold mb-4 text-center" style={{ color: "#ffd700" }}>
+            {PROJECT_TITLE}
+          </h1>
+          <p tw="text-3xl text-center text-gray-300 max-w-2xl">
+            {PROJECT_DESCRIPTION}
+          </p>
+        </div>
+
+        {/* Decorative elements */}
+        <div
+          tw="absolute bottom-8 right-8 w-32 h-32 opacity-30"
+          style={{
+            backgroundImage: "radial-gradient(circle at center, #ffd700 0%, transparent 70%)",
+          }}
+        />
       </div>
     ),
     options,

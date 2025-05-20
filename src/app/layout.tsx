@@ -24,6 +24,37 @@ export const metadata: Metadata = {
       "en-US": "/en-US",
     },
   },
+  icons: {
+    icon: [
+      { url: "/favicon.ico" },
+      { url: "/icon.png", type: "image/png" },
+    ],
+    apple: [
+      { url: "/apple-touch-icon.png" },
+    ],
+    other: [
+      {
+        rel: "mask-icon",
+        url: "/safari-pinned-tab.svg",
+        color: "#ffd700",
+      },
+    ],
+  },
+  manifest: "/site.webmanifest",
+  openGraph: {
+    images: ["/suncycles_og.png"],
+  },
+  twitter: {
+    card: "summary_large_image",
+    images: ["/suncycles_og.png"],
+  },
+};
+
+export const viewport = {
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#ffd700" },
+    { media: "(prefers-color-scheme: dark)", color: "#1a1a2e" },
+  ],
 };
 
 export default async function RootLayout({
