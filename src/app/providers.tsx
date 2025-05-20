@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import posthog from "posthog-js";
 import { PostHogProvider as PHProvider } from "posthog-js/react";
 import { useFrameSDK } from "~/hooks/useFrameSDK";
+import { getUUID } from "~/lib/utils";
 
 const WagmiProvider = dynamic(
   () => import("~/components/providers/WagmiProvider"),
@@ -23,7 +24,7 @@ export function PostHogProvider({ children }: { children: React.ReactNode }) {
       person_profiles: "identified_only",
       loaded: (ph) => {
         // Generate anonymous session ID without identifying
-        const sessionId = ph.get_distinct_id() || crypto.randomUUID();
+        const sessionId = ph.get_distinct_id() || getUUID();
         ph.register({ session_id: sessionId });
 
         // Temporary distinct ID that will be aliased later

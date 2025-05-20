@@ -10,6 +10,7 @@ import {
   useCallback,
   useContext,
 } from "react";
+import Image from "next/image";
 
 export const formatBytes = (
   bytes: number,
@@ -131,9 +132,11 @@ const DropzoneContent = ({ className }: { className?: string }) => {
           >
             {file.type.startsWith("image/") ? (
               <div className="h-10 w-10 rounded border border-neutral-200 overflow-hidden shrink-0 bg-neutral-100 flex items-center justify-center dark:border-neutral-800 dark:bg-neutral-800">
-                <img
-                  src={file.preview}
+                <Image
+                  src={file.preview || ''}
                   alt={file.name}
+                  width={40}
+                  height={40}
                   className="object-cover"
                 />
               </div>

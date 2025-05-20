@@ -1,6 +1,7 @@
 import React, { useRef, useEffect, useState, useCallback } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "~/components/ui/card";
 import { createSupabaseClientWithToken } from "~/lib/supabase";
+import Image from "next/image";
 
 interface StorageObject {
   name: string;
@@ -153,9 +154,11 @@ export default function BucketExplorer() {
                 <div className="font-semibold">{file.name}</div>
                 {file.metadata.mimetype?.startsWith("image/") &&
                 file?.publicUrl ? (
-                  <img
+                  <Image
                     src={file.publicUrl}
                     alt={file.name}
+                    width={128}
+                    height={128}
                     className="mt-2 h-32 w-auto object-cover rounded"
                   />
                 ) : (

@@ -10,6 +10,7 @@ export default function ForwardPage() {
   const { sdk } = useFrameSDK();
 
   const url = useMemo(() => {
+    if (!searchParams) return null;
     let url = searchParams.get("url");
     if (!url) return null;
 
@@ -20,10 +21,17 @@ export default function ForwardPage() {
   }, [searchParams]);
 
   useEffect(() => {
-    if (sdk && url) {
-      sdk.actions.openUrl(url);
-    } else if (url) {
-      window.location.replace(url);
+    if (!url) return;
+    if (sdk) {
+      Promise.resolve(sdk.actions.openUrl(url)).catch(err => {
+        console.error("SDK redirect error:", err);
+      });
+    } else {
+      try {
+        window.location.replace(url);
+      } catch (err) {
+        console.error("Window redirect error:", err);
+      }
     }
   }, [url, sdk]);
 

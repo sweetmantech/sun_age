@@ -1,7 +1,26 @@
 "use client";
 
-import { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useFrameSDK } from "~/hooks/useFrameSDK";
+import Image from "next/image";
+import Header from "./SunCycleAge/Header";
+import SolarSystemGraphic from "./SunCycleAge/SolarSystemGraphic";
+import ResultCard from "./SunCycleAge/ResultCard";
+import FormSection from "./SunCycleAge/FormSection";
+import MilestoneOrbit from "./SunCycleAge/MilestoneOrbit";
+
+function WarpcastEmbed({ url }: { url: string }) {
+  const [embedHtml, setEmbedHtml] = useState<string | null>(null);
+  useEffect(() => {
+    fetch(`/api/warpcast-oembed?url=${encodeURIComponent(url)}`)
+      .then(res => res.json())
+      .then(data => setEmbedHtml(data.html));
+  }, [url]);
+  if (!embedHtml) return <div className="text-xs text-gray-400 font-mono text-center my-4">Loading cast…</div>;
+  return (
+    <div className="flex justify-center my-4" dangerouslySetInnerHTML={{ __html: embedHtml }} />
+  );
+}
 
 export default function SunCycleAge() {
   const { isSDKLoaded, sdk, pinFrame, isFramePinned } = useFrameSDK();
@@ -10,9 +29,64 @@ export default function SunCycleAge() {
   const [approxYears, setApproxYears] = useState<number | null>(null);
   const [isSharing, setIsSharing] = useState(false);
 
-  if (!isSDKLoaded) {
-    return <div>Loading...</div>;
-  }
+  // Quotes for the result card
+  const quotes = [
+    "Sun cycle age measures your existence through rotations around our star. One day = one rotation.",
+    "You are a child of the cosmos, a way for the universe to know itself.",
+    "Every day is a new journey around the sun.",
+    "The sun watches over all your rotations.",
+    "Your orbit is uniquely yours—shine on."
+  ];
+  const [quote, setQuote] = useState(quotes[0]);
+
+  // Header date (client only)
+  const [formattedDate, setFormattedDate] = useState("");
+  useEffect(() => {
+    const today = new Date();
+    setFormattedDate(
+      today.toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+      }).replace(/\//g, ".")
+    );
+  }, []);
+
+  // Solar milestone calculation (client only)
+  const milestoneStep = 1000;
+  const [nextMilestone, setNextMilestone] = useState<number | null>(null);
+  const [daysToMilestone, setDaysToMilestone] = useState<number | null>(null);
+  const [milestoneDate, setMilestoneDate] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (days !== null) {
+      // Randomize quote on result
+      setQuote(quotes[Math.floor(Math.random() * quotes.length)]);
+      // Calculate milestone
+      const next = Math.ceil((days + 1) / milestoneStep) * milestoneStep;
+      const toNext = next - days;
+      setNextMilestone(next);
+      setDaysToMilestone(toNext);
+      const d = new Date();
+      d.setDate(d.getDate() + toNext);
+      setMilestoneDate(
+        d.toLocaleDateString("en-US", { year: "numeric", month: "2-digit", day: "2-digit" }).replace(/\//g, ".")
+      );
+    } else {
+      setNextMilestone(null);
+      setDaysToMilestone(null);
+      setMilestoneDate(null);
+      setQuote(quotes[0]);
+    }
+  }, [days, quotes]);
+
+  // Animation state: only animate after calculation
+  const isAnimated = days !== null;
+
+  // Save to phone (placeholder)
+  const onSaveToPhone = () => {
+    alert('Save to phone functionality coming soon!');
+  };
 
   const calculateAge = () => {
     if (!birthDate) return;
@@ -29,7 +103,7 @@ export default function SunCycleAge() {
     if (days === null) return;
     setIsSharing(true);
     const url = process.env.NEXT_PUBLIC_URL || window.location.origin;
-    const message = `Forget birthdays—I’ve completed ${days} rotations around the sun! Check your Sun Cycle Age: ${url} ☀️🌎`;
+    const message = `Forget birthdays—I've completed ${days} rotations around the sun! Check your Sun Cycle Age: ${url} ☀️🌎`;
     try {
       await sdk.actions.composeCast({ text: message });
     } catch (err) {
@@ -39,87 +113,221 @@ export default function SunCycleAge() {
     }
   };
 
+  // Progressive disclosure state
+  const [showDetails, setShowDetails] = useState(false);
+
+  // Example astronomy facts
+  const facts = [
+    "The Earth travels about 940 million kilometers in one orbit around the Sun.",
+    "A year on Mercury is just 88 Earth days.",
+    "The Sun makes up 99.8% of the mass in our solar system.",
+    "It takes sunlight about 8 minutes and 20 seconds to reach Earth.",
+    "The Earth's axis is tilted 23.5 degrees, giving us seasons."
+  ];
+  const randomFact = facts[Math.floor(days !== null ? days % facts.length : 0)];
+
+  // Main content (header, orbits, form) container
+  const showMain = days === null;
+
+  // Add this before the component
+  function SunSVG() {
+    return (
+      <svg
+        width="80"
+        height="80"
+        viewBox="0 0 80 80"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        className="mx-auto mb-2 drop-shadow-lg"
+      >
+        <circle
+          cx="40"
+          cy="40"
+          r="16"
+          fill="url(#sun-gradient)"
+          stroke="#FFD700"
+          strokeWidth="2"
+          filter="url(#glow)"
+        />
+        {/* Rays */}
+        {[...Array(12)].map((_, i) => {
+          const angle = (i * 30) * (Math.PI / 180);
+          const x1 = 40 + Math.cos(angle) * 22;
+          const y1 = 40 + Math.sin(angle) * 22;
+          const x2 = 40 + Math.cos(angle) * 32;
+          const y2 = 40 + Math.sin(angle) * 32;
+          return (
+            <line
+              key={i}
+              x1={x1}
+              y1={y1}
+              x2={x2}
+              y2={y2}
+              stroke="#FFD700"
+              strokeWidth="2"
+              strokeLinecap="round"
+              opacity="0.8"
+            />
+          );
+        })}
+        <defs>
+          <radialGradient id="sun-gradient" cx="0.5" cy="0.5" r="0.5" fx="0.5" fy="0.5">
+            <stop offset="0%" stopColor="#FFF9C4" />
+            <stop offset="100%" stopColor="#FFD700" />
+          </radialGradient>
+          <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+            <feGaussianBlur stdDeviation="4" result="coloredBlur" />
+            <feMerge>
+              <feMergeNode in="coloredBlur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+        </defs>
+      </svg>
+    );
+  }
+
+  useEffect(() => {
+    setDays(null);
+    setApproxYears(null);
+  }, []);
+
+  // Bookmark state
+  const [bookmark, setBookmark] = useState<{
+    days: number;
+    approxYears: number;
+    birthDate: string;
+  } | null>(null);
+
+  // Add a state to control showing the bookmark card or calculation page
+  const [showBookmark, setShowBookmark] = useState(true);
+
+  // Update useEffect to only show bookmark if it exists
+  useEffect(() => {
+    const saved = localStorage.getItem("sunCycleBookmark");
+    if (saved) {
+      try {
+        setBookmark(JSON.parse(saved));
+        setShowBookmark(true);
+      } catch {}
+    } else {
+      setShowBookmark(false);
+    }
+  }, []);
+
+  // Save bookmark
+  const handleBookmark = () => {
+    if (days !== null && approxYears !== null && birthDate) {
+      const data = { days, approxYears, birthDate };
+      localStorage.setItem("sunCycleBookmark", JSON.stringify(data));
+      setBookmark(data);
+    }
+  };
+
+  // Clear bookmark
+  const handleClearBookmark = () => {
+    localStorage.removeItem("sunCycleBookmark");
+    setBookmark(null);
+  };
+
+  // Calculate milestone for bookmark
+  let bookmarkMilestone: { nextMilestone: number; daysToMilestone: number; milestoneDate: string } | null = null;
+  if (bookmark) {
+    const bDays = bookmark.days;
+    const bBirthDate = bookmark.birthDate;
+    const next = Math.ceil((bDays + 1) / milestoneStep) * milestoneStep;
+    const toNext = next - bDays;
+    const d = new Date(bBirthDate);
+    d.setDate(d.getDate() + bDays + toNext);
+    const milestoneDate = d.toLocaleDateString("en-US", { year: "numeric", month: "2-digit", day: "2-digit" }).replace(/\//g, ".");
+    bookmarkMilestone = {
+      nextMilestone: next,
+      daysToMilestone: toNext,
+      milestoneDate,
+    };
+  }
+
+  if (!isSDKLoaded) {
+    return <div>Loading...</div>;
+  }
+
   return (
-    <div className="w-full max-w-md mx-auto p-4 space-y-4 bg-gradient-to-br from-yellow-100 via-pink-100 to-orange-100 rounded-lg shadow-lg">
-      <h1 className="text-3xl font-extrabold text-center text-yellow-700">☀️ Sun Cycle Age 🏖️</h1>
-      {!isFramePinned && (
-        <button
-          onClick={pinFrame}
-          className="px-3 py-1 bg-blue-600 text-white rounded-md text-sm inline-flex items-center space-x-1"
-        >
-          <span>📌</span>
-          <span>Pin Mini App</span>
-        </button>
-      )}
-      {isFramePinned && (
-        <p className="text-green-700 inline-flex items-center space-x-1">
-          <span>📌</span>
-          <span>App pinned! Notifications enabled.</span>
-        </p>
-      )}
-      {!days && (
-        <div className="space-y-2">
-          <label htmlFor="birth" className="block text-sm font-medium text-gray-700">
-            Select your birthday
-          </label>
-          <input
-            id="birth"
-            type="date"
-            value={birthDate}
-            onChange={(e) => setBirthDate(e.target.value)}
-            className="w-full px-3 py-2 border rounded-md border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-          <button
-            onClick={calculateAge}
-            className="w-full px-4 py-2 bg-yellow-400 hover:bg-yellow-500 text-black rounded-md animate-pulse text-sm inline-flex items-center justify-center space-x-1"
-          >
-            <span>🌞</span>
-            <span>Calculate Age</span>
-          </button>
-        </div>
-      )}
+    <div className="relative w-full min-h-screen flex flex-col justify-between z-0">
+      {/* Main Content: Header, Orbits, Form (fade out when result is shown) */}
+      <div className={`z-10 transition-opacity duration-500 ${showMain ? 'opacity-100' : 'opacity-0 pointer-events-none h-0 overflow-hidden'}`}>
+        {/* Show bookmark if exists and showBookmark is true */}
+        {bookmark && showBookmark ? (
+          <>
+            {/* Box 1: Main Info */}
+            <div className="mb-4 p-6 rounded border border-gray-300 dark:border-gray-700 bg-white dark:bg-neutral-900 shadow-sm flex flex-col items-center max-w-lg mx-auto">
+              <div className="mb-2 text-xs tracking-widest text-gray-500 dark:text-gray-300 font-mono uppercase">Welcome back!</div>
+              <div className="text-3xl font-serif font-bold text-gray-900 dark:text-white mb-1">{bookmark.days} rotations</div>
+              <div className="text-lg font-serif text-gray-700 dark:text-gray-200 mb-1">~ {bookmark.approxYears} years</div>
+              <div className="text-xs font-mono text-gray-400 dark:text-gray-400 mb-4">Birth date: {bookmark.birthDate}</div>
+              <div className="text-center text-gray-600 dark:text-gray-300 font-sans mb-4 max-w-xs">
+                This is your last saved Sun Cycle Age. You can recalculate or clear your bookmark below.
+              </div>
+              <div className="flex gap-4 mt-2">
+                <button onClick={handleClearBookmark} className="text-gray-500 dark:text-blue-300 underline underline-offset-2 hover:text-blue-700 dark:hover:text-blue-200 transition-all px-0 py-0 bg-transparent border-none shadow-none font-sans text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-400">Clear Bookmark</button>
+                <button onClick={() => setShowBookmark(false)} className="text-gray-500 dark:text-blue-300 underline underline-offset-2 hover:text-blue-700 dark:hover:text-blue-200 transition-all px-0 py-0 bg-transparent border-none shadow-none font-sans text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-400">Recalculate</button>
+              </div>
+            </div>
+            {/* Box 2: Next Milestone */}
+            {bookmarkMilestone && (
+              <div className="mb-6 p-6 rounded border border-gray-300 dark:border-gray-700 bg-white dark:bg-neutral-900 shadow-sm flex flex-col sm:flex-row items-center justify-center gap-6 max-w-lg mx-auto">
+                <div className="flex-shrink-0 flex items-center justify-center min-w-[200px]">
+                  <MilestoneOrbit />
+                </div>
+                <div className="flex flex-col items-center sm:items-start justify-center">
+                  <div className="text-xs font-mono text-blue-700 dark:text-blue-300 mb-1">Next milestone</div>
+                  <div className="text-xl font-serif font-bold text-blue-700 dark:text-blue-200 mb-1">{bookmarkMilestone.nextMilestone} rotations</div>
+                  <div className="text-xs font-mono text-gray-500 dark:text-gray-300">in {bookmarkMilestone.daysToMilestone} days ({bookmarkMilestone.milestoneDate})</div>
+                </div>
+              </div>
+            )}
+          </>
+        ) : (
+          <>
+            <Header formattedDate={formattedDate} />
+            <div className="border-b border-gray-200 dark:border-gray-800 mt-4 mb-2" />
+
+            <SolarSystemGraphic />
+
+            <FormSection birthDate={birthDate} setBirthDate={setBirthDate} calculateAge={calculateAge} />
+          </>
+        )}
+      </div>
+
+      {/* Result Card (fade in, replaces main content) */}
       {days !== null && (
-        <div className="text-center space-y-4">
-          <div className="mx-auto w-40 h-40 flex items-center justify-center bg-yellow-400 rounded-full animate-pulse">
-            <span className="text-2xl font-bold">{days}</span>
-          </div>
-          <p className="text-sm text-gray-600">
-            That&apos;s how many times you&apos;ve rotated around the sun!
-          </p>
-          {approxYears !== null && (
-            <p className="text-xs text-gray-500">
-              For comparison, your conventional age is approximately {approxYears} years (which is{" "}
-              {Math.floor(approxYears * 365.25)} days)
-            </p>
-          )}
-          <div className="flex justify-center space-x-2">
-            <button
-              onClick={() => {
-                setBirthDate("");
-                setDays(null);
-                setApproxYears(null);
-              }}
-              className="px-4 py-2 bg-gray-200 rounded-md"
-            >
-              Calculate again
-            </button>
-            <button
-              onClick={onShare}
-              disabled={isSharing}
-              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md text-sm inline-flex items-center justify-center space-x-1"
-            >
-              {isSharing ? (
-                "Sharing..."
-              ) : (
-                <>
-                  <span>📤</span>
-                  <span>Share your age</span>
-                </>
-              )}
-            </button>
-          </div>
-        </div>
+        <ResultCard
+          days={days}
+          approxYears={approxYears!}
+          nextMilestone={nextMilestone}
+          daysToMilestone={daysToMilestone}
+          milestoneDate={milestoneDate}
+          quote={quote}
+          showDetails={showDetails}
+          setShowDetails={setShowDetails}
+          onShare={onShare}
+          isSharing={isSharing}
+          onSaveToPhone={onSaveToPhone}
+          onRecalculate={() => {
+            setBirthDate("");
+            setDays(null);
+            setApproxYears(null);
+            setShowDetails(false);
+          }}
+          bookmark={bookmark}
+          handleBookmark={handleBookmark}
+        />
       )}
+
+      {/* Footer */}
+      <footer className="z-50 w-full text-center text-xs font-mono pb-4 border-t border-gray-200 dark:border-gray-800 bg-transparent text-gray-500 dark:text-gray-400" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.08)' }}>
+        Your data is not stored or shared.
+      </footer>
     </div>
   );
 }
+
