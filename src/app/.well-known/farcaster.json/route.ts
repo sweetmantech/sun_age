@@ -1,9 +1,7 @@
 import { PROJECT_TITLE } from "~/lib/constants";
 
 export async function GET() {
-  const appUrl =
-    process.env.NEXT_PUBLIC_URL ||
-    `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`;
+  const appUrl = "https://sun-age.vercel.app";
 
   const config = {
     accountAssociation: {
