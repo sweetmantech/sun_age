@@ -9,11 +9,18 @@ export async function POST(request: NextRequest) {
     }
     const supabase = await createClient();
     const updateObj: any = { bookmarked: true, user_type };
-    if (fid) updateObj.fid = fid.toString();
-    if (anon_id) updateObj.anon_id = anon_id;
+    let conflictColumn = '';
+    if (fid) {
+      updateObj.fid = fid.toString();
+      conflictColumn = 'fid';
+    }
+    if (anon_id) {
+      updateObj.anon_id = anon_id;
+      conflictColumn = 'anon_id';
+    }
     const { error } = await supabase
       .from('user_notification_details')
-      .upsert(updateObj);
+      .upsert(updateObj, { onConflict: conflictColumn });
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
