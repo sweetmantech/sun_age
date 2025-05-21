@@ -11,7 +11,7 @@ import FormSection from "./SunCycleAge/FormSection";
 import MilestoneOrbit from "./SunCycleAge/MilestoneOrbit";
 import { getNextMilestone, getProgressToNextMilestone } from "~/lib/milestones";
 import { Dialog } from "@headlessui/react";
-import { revokeUserConsent } from "~/lib/consent";
+// import { revokeUserConsent } from "~/lib/consent";
 
 function WarpcastEmbed({ url }: { url: string }) {
   const [embedHtml, setEmbedHtml] = useState<string | null>(null);
@@ -406,12 +406,12 @@ export default function SunCycleAge({ initialConsentData }: SunCycleAgeProps) {
                     <div className="flex items-center justify-between">
                       <span className="text-sm text-gray-600 dark:text-gray-300">Data Storage</span>
                       <button 
-                        onClick={() => {
-                          if (context?.user?.fid) {
-                            revokeUserConsent(context.user.fid.toString());
-                            handleClearBookmark();
-                          }
-                        }}
+                        // onClick={() => {
+                        //   if (context?.user?.fid) {
+                        //     revokeUserConsent(context.user.fid.toString());
+                        //     handleClearBookmark();
+                        //   }
+                        // }}
                         className="text-xs text-red-500 hover:text-red-600 dark:text-red-400 dark:hover:text-red-300"
                       >
                         Clear All Data

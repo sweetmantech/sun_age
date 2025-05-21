@@ -48,9 +48,9 @@ export default async function Page() {
   // Fetch user consent data
   console.log("Fetching user consent data...");
   const { data: userConsent, error } = await supabase
-    .from('user_consent')
+    .from('user_notification_details')
     .select('*')
-    .order('consent_date', { ascending: false })
+    .order('created_at', { ascending: false })
     .limit(10);
 
   if (error) {

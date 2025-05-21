@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import sdk from "@farcaster/frame-sdk";
 import type { FrameContext } from "@farcaster/frame-core/src/context";
-import { updateUserConsent } from "~/lib/consent";
+// import { updateUserConsent } from "~/lib/consent";
 
 export function useFrameSDK() {
   const [isSDKLoaded, setIsSDKLoaded] = useState(false);
@@ -47,19 +47,19 @@ export function useFrameSDK() {
           console.log("Frame added");
           setIsFramePinned(true);
           
-          if (frameContext.user?.fid) {
-            console.log("Storing FID:", frameContext.user.fid);
-            try {
-              await updateUserConsent(
-                frameContext.user.fid.toString(),
-                true,
-                undefined
-              );
-              console.log("Successfully stored FID");
-            } catch (error) {
-              console.error("Error storing FID:", error);
-            }
-          }
+          // if (frameContext.user?.fid) {
+          //   console.log("Storing FID:", frameContext.user.fid);
+          //   try {
+          //     await updateUserConsent(
+          //       frameContext.user.fid.toString(),
+          //       true,
+          //       undefined
+          //     );
+          //     console.log("Successfully stored FID");
+          //   } catch (error) {
+          //     console.error("Error storing FID:", error);
+          //   }
+          // }
         });
 
         frameSDK.on("frameRemoved", () => {
