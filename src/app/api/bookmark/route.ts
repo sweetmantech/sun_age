@@ -10,13 +10,15 @@ export async function POST(request: NextRequest) {
     if (fid) payload.fid = fid.toString();
     if (anon_id) payload.anon_id = anon_id;
 
-    const response = await fetch('https://nigfjlrnoggqcsladzpv.supabase.co/rest/v1/user_notification_details', {
+    // Use upsert with on_conflict=anon_id for browser users
+    const conflictKey = fid ? 'fid' : 'anon_id';
+    const response = await fetch(`https://nigfjlrnoggqcsladzpv.supabase.co/rest/v1/user_notification_details?on_conflict=${conflictKey}`, {
       method: 'POST',
       headers: {
         'apikey': process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
         'Authorization': `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!}`,
         'Content-Type': 'application/json',
-        'Prefer': 'return=representation',
+        'Prefer': 'resolution=merge-duplicates,return=representation',
       },
       body: JSON.stringify(payload),
     });
