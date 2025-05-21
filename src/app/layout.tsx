@@ -13,6 +13,7 @@ import { Info } from "lucide-react";
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "~/components/ui/tooltip";
 import { Dialog, DialogTrigger, DialogContent, DialogTitle } from "~/components/ui/dialog";
 import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
+import Header from "../components/SunCycleAge/Header";
 
 const appUrl =
   process.env.NEXT_PUBLIC_URL ||
@@ -46,8 +47,8 @@ export const metadata: Metadata = {
   },
   manifest: "/site.webmanifest",
   openGraph: {
-    title: "Sun Age",
-    siteName: "Sun Age",
+    title: "Solara",
+    siteName: "Solara",
     images: [
       {
         url: "https://sun-age.vercel.app/suncycles_og.png",
@@ -75,6 +76,13 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // Get today's date formatted as MM.DD.YYYY
+  const today = new Date();
+  const formattedDate = today.toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).replace(/\//g, ".");
   return (
     <html lang="en" suppressHydrationWarning>
       <body>
@@ -119,7 +127,7 @@ export default async function RootLayout({
               <PinMiniAppButton />
             </div>
             {/* App header */}
-            <header className="sr-only">Sun Cycle Age App</header>
+            <Header formattedDate={formattedDate} />
             {/* Main content and footer, flex column, sticky footer */}
             <div className="min-h-screen flex flex-col bg-white dark:bg-black/60">
               <main className="flex-1 flex flex-col justify-between min-h-screen">{children}</main>

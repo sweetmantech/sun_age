@@ -1,62 +1,55 @@
-# vibes engineering mini app template
+# Solara: A Cosmic Age Calculator
 
-**TL;DR:** A developer‑friendly Farcaster Mini App starter kit built with Next.js, React, TypeScript, Tailwind CSS, and the Mini Apps SDK. Comes with out‑of‑the‑box wallet auth, file uploads (Supabase), notifications, webhooks, and reusable UI components.
+**Solara** visually represents your age in solar rotations (days) and celebrates your journey around the sun. Built for a beautiful, accessible, and mobile-friendly experience.
 
-![image](https://github.com/user-attachments/assets/778893f9-ef65-48bd-a3d0-5e2b3e4b3453)
+---
 
-contains a developer-ready template for Farcaster Mini Apps (formerly Frames v2) with out-of-the-box features:
+## Project History
 
-- shadcn/ui and Tailwind CSS for UI and styling
-- Mini Apps SDK integration via the `useFrameSDK` hook
-- Wallet authentication powered by Wagmi
-- Supabase file uploads with `FileUpload` and `FileUploadCard` components
-- Notification API endpoint (`/api/send-notification`)
-- Webhook handling route (`/api/webhook`)
-- `BucketExplorer` component for browsing Supabase storage
-- Optimized Open Graph image generation
-- Drag‑and‑drop Dropzone UI component
-- Theme support and toggle via `ThemeProvider` & `ThemeToggle`
+Solara began as an experiment on [vibes.engineering](https://warpcast.com/vibes.engineering) to create a Farcaster Mini App. While it started from the vibes.engineering mini app template, Solara is not a direct fork or base build. Over time, it has evolved into a robust, standalone project with a unique design, features, and architecture.
 
-## Architecture
+---
 
-This template is organized into several logical layers:
+## Features
 
-- Providers Layer: Wraps the application with global providers (`WagmiProvider`, `ThemeProvider`, `QueryClientProvider`, `DaimoPayProvider`), managing wallet authentication, theming, and SDK context.
-- Components Layer: Houses reusable UI elements (e.g., `FileUpload`, `FileUploadCard`, `BucketExplorer`, `Dropzone`, navigation actions, switchers) built with shadcn/ui and Tailwind CSS.
-- Hooks & Utilities: Offers custom hooks like `useFrameSDK`, `useSupabaseUpload`, `useToast`, and `useMobile` for interacting with the Mini Apps SDK, Supabase storage, toasts, and responsive state.
-- API Routes: Implements serverless endpoints under `src/app/api` for file uploads (`/api/upload`), notifications (`/api/send-notification`), and webhook processing (`/api/webhook`).
-- Configuration: Controlled via environment variables (`NEXT_PUBLIC_VIBES_ENGINEERING_PROJECT_ID`, `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`). These must be set to your Vibes Engineering Project ID and Supabase credentials for production deployments to enable secure file storage and API access.
+- **Solar Age Calculation:** Enter your birth date to see your age in days (solar rotations).
+- **Milestone Tracking:** Discover and bookmark your next solar milestone.
+- **Animated Solar System:** See your journey visualized as an orbit around the sun.
+- **Farcaster Integration:** Pin Solara to your Farcaster profile and receive milestone notifications.
+- **Modern UI:** Responsive, accessible, and visually polished for all devices.
+- **Privacy-First:** Your data is not stored or shared.
 
-Note: To run in production, ensure you have configured the Vibes Engineering Project ID and Supabase endpoint variables; without these, storage uploads and APIs will not function correctly.
+## Tech Stack
 
-## Recent Changes
+- Next.js, React, TypeScript
+- Tailwind CSS for styling
+- shadcn/ui for UI components
+- Supabase for optional storage
+- Radix UI for accessible dialogs
+- Mini Apps SDK for Farcaster integration
 
-- Added file upload feature with Supabase, including FileUpload components, and an `/api/upload` endpoint.
-- Implemented notification API with `/api/send-notification` endpoint.
-- Added webhook handling via `/api/webhook` route.
-- Introduced BucketExplorer component for listing Supabase bucket objects.
-- Improved Open Graph image generation with `src/app/opengraph-image.tsx`.
-- Added Dropzone UI component for drag-and-drop uploads.
-- Integrated team switcher and navigation actions UI (`nav-actions.tsx` and `team-switcher.tsx`).
-- Enhanced providers: `WagmiProvider` configuration and `theme-provider.tsx`.
-- Updated hooks including `useSupabaseUpload` and `useFrameSDK`.
-
-## Run
-
-To run the application, execute the following commands:
+## Getting Started
 
 ```bash
 pnpm install
 pnpm dev
 ```
 
-## Integrate changes from Farcaster official template repo
+Visit [http://localhost:3000](http://localhost:3000) in your browser.
 
-```bash
-git remote add upstream https://github.com/farcasterxyz/frames.git
-git fetch upstream
-git checkout main
-git merge upstream/main
-```
+## Environment Variables
 
-You can use git rebase upstream/main instead of git merge upstream/main to keep a cleaner git history.
+Set these in your `.env.local` for full functionality:
+
+- `NEXT_PUBLIC_SUPABASE_URL`
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- `NEXT_PUBLIC_VIBES_ENGINEERING_PROJECT_ID`
+- (Optional) `NEXT_PUBLIC_URL` for canonical URLs
+
+## Contributing
+
+Pull requests are welcome! For major changes, please open an issue first.
+
+## License
+
+MIT

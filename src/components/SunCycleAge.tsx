@@ -10,7 +10,13 @@ import ResultCard from "./SunCycleAge/ResultCard";
 import FormSection from "./SunCycleAge/FormSection";
 import MilestoneOrbit from "./SunCycleAge/MilestoneOrbit";
 import { getNextMilestone, getProgressToNextMilestone } from "~/lib/milestones";
-import { Dialog } from "@headlessui/react";
+import {
+  Dialog as RadixDialog,
+  DialogContent,
+  DialogTitle,
+  DialogClose,
+  DialogOverlay,
+} from "../components/ui/dialog";
 // import { revokeUserConsent } from "~/lib/consent";
 
 function WarpcastEmbed({ url }: { url: string }) {
@@ -28,6 +34,81 @@ function WarpcastEmbed({ url }: { url: string }) {
 
 interface SunCycleAgeProps {
   initialConsentData?: any[] | null;
+}
+
+function BookmarkCard({ bookmark, milestone, milestoneDate, daysToMilestone, onRecalculate, onClear, isRecalculating }) {
+  const [tab, setTab] = useState<'age' | 'reflections' | 'signature'>('age');
+  return (
+    <div className="bg-[rgba(255,252,242,0.3)] dark:bg-[rgba(24,24,28,0.3)] border border-gray-200 dark:border-gray-700 rounded-none shadow p-8 max-w-md w-full flex flex-col items-center space-y-6 relative mt-0">
+      <Image
+        src="/sunsun.png"
+        alt="Sun"
+        width={72}
+        height={72}
+        className="w-20 h-20 object-contain mx-auto mb-2"
+        style={{ filter: 'drop-shadow(0 0 40px #FFD700cc) drop-shadow(0 0 16px #FFB30099)' }}
+        priority
+      />
+      <div className="text-xs font-mono tracking-widest text-gray-500 dark:text-gray-300 text-center uppercase mb-2">WELCOME BACK TRAVELER...</div>
+      <div className="text-5xl font-serif font-extrabold tracking-tight text-gray-800 dark:text-white text-center mb-1">{bookmark.days} <span className="font-serif">Sol Age</span></div>
+      <div className="text-xs font-mono text-gray-500 dark:text-gray-400 text-center mb-2">+23 since your last visit</div>
+      {/* Tabs */}
+      <div className="flex w-full border-b border-gray-300 dark:border-gray-700 mb-4">
+        <button onClick={() => setTab('age')} className={`flex-1 py-2 text-xs font-mono uppercase tracking-widest ${tab==='age' ? 'border-b-2 border-black dark:border-white font-bold' : 'text-gray-400'}`}>Age</button>
+        <button onClick={() => setTab('reflections')} className={`flex-1 py-2 text-xs font-mono uppercase tracking-widest ${tab==='reflections' ? 'border-b-2 border-black dark:border-white font-bold' : 'text-gray-400'}`}>Reflections</button>
+        <button onClick={() => setTab('signature')} className={`flex-1 py-2 text-xs font-mono uppercase tracking-widest ${tab==='signature' ? 'border-b-2 border-black dark:border-white font-bold' : 'text-gray-400'}`}>Signature</button>
+      </div>
+      {/* Tab Content */}
+      {tab === 'age' && (
+        <div className="w-full text-sm font-mono space-y-2">
+          <div className="flex justify-between items-center">
+            <span className="text-gray-500">FROM BIRTH</span>
+            <span className="font-bold text-right">{bookmark.days.toLocaleString()} DAYS</span>
+          </div>
+          <div className="flex justify-between items-center">
+            <span className="text-gray-500">NEXT MILESTONE</span>
+            <span className="font-bold text-right">{milestone} <span className="font-normal">(in {daysToMilestone} days)</span></span>
+          </div>
+          {/* Milestone callout box */}
+          <div className="w-full mt-1">
+            <div className="bg-white/80 dark:bg-neutral-900/80 border border-gray-400 dark:border-gray-700 px-4 py-2 text-xs font-mono text-gray-800 dark:text-gray-100 rounded-none w-full text-center">
+              <span className="font-semibold">Solar Return <span role='img' aria-label='sun'>🌞</span></span><br />
+              <span className="text-xs">({milestoneDate})</span>
+            </div>
+          </div>
+          <div className="flex justify-between items-center">
+            <span className="text-gray-500">BIRTH DATE</span>
+            <span className="font-bold text-right">{bookmark.birthDate.replace(/-/g, ".")}</span>
+          </div>
+          {/* Divider before quote */}
+          <div className="border-t border-gray-300 dark:border-gray-700 my-4" />
+          <div className="text-xs font-sans text-gray-400 italic text-left">Your journey began {bookmark.days.toLocaleString()} days ago. Each rotation represents both repetition and change.</div>
+        </div>
+      )}
+      {tab === 'reflections' && (
+        <div className="w-full text-center text-xs font-mono text-gray-500 py-8 border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-neutral-900/80">Reflections coming soon.</div>
+      )}
+      {tab === 'signature' && (
+        <div className="w-full text-center text-xs font-mono text-gray-500 py-8 border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-neutral-900/80">Signature coming soon.</div>
+      )}
+      {/* Actions */}
+      <div className="flex w-full gap-2 mt-6">
+        <button
+          onClick={onRecalculate}
+          disabled={isRecalculating}
+          className="flex-1 border border-black dark:border-white bg-transparent dark:bg-black text-black dark:text-white uppercase tracking-widest font-mono py-2.5 px-2 text-sm transition-colors hover:bg-gray-100 dark:hover:bg-gray-900 rounded-none"
+        >
+          {isRecalculating ? "RECALCULATING..." : "RECALCULATE"}
+        </button>
+        <button
+          onClick={onClear}
+          className="flex-1 border border-black dark:border-white bg-black dark:bg-white text-white dark:text-black uppercase tracking-widest font-mono py-2.5 px-2 text-sm transition-colors hover:bg-gray-900 dark:hover:bg-gray-100 rounded-none"
+        >
+          CLEAR BOOKMARK
+        </button>
+      </div>
+    </div>
+  );
 }
 
 export default function SunCycleAge({ initialConsentData }: SunCycleAgeProps) {
@@ -315,6 +396,10 @@ export default function SunCycleAge({ initialConsentData }: SunCycleAgeProps) {
     };
   }
 
+  // Add state for recalc and clear confirmation:
+  const [isRecalculating, setIsRecalculating] = useState(false);
+  const [showConfirmClear, setShowConfirmClear] = useState(false);
+
   if (!isSDKLoaded) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -355,127 +440,81 @@ export default function SunCycleAge({ initialConsentData }: SunCycleAgeProps) {
           SDK: {isSDKLoaded ? '✓' : '✗'} | Frame: {isFramePinned ? '✓' : '✗'} | Context: {context ? '✓' : '✗'}
         </div>
       )}
-      
-      {/* Main Content: Header, Orbits, Form (fade out when result is shown) */}
-      <div className={`z-10 transition-opacity duration-500 ${showMain ? 'opacity-100' : 'opacity-0 pointer-events-none h-0 overflow-hidden'}`}>
-        {/* Show bookmark if exists and showBookmark is true */}
-        {bookmark && showBookmark ? (
-          <>
-            {/* Box 1: Main Info */}
-            <div className="mb-4 p-6 rounded border border-gray-300 dark:border-gray-700 bg-white dark:bg-neutral-900 shadow-sm flex flex-col items-center max-w-lg mx-auto">
-              <div className="mb-2 text-xs tracking-widest text-gray-500 dark:text-gray-300 font-mono uppercase">Welcome back!</div>
-              <div className="text-3xl font-serif font-bold text-gray-900 dark:text-white mb-1">{bookmark.days} rotations</div>
-              <div className="text-lg font-serif text-gray-700 dark:text-gray-200 mb-1">~ {bookmark.approxYears} years</div>
-              <div className="text-xs font-mono text-gray-400 dark:text-gray-400 mb-4">Birth date: {bookmark.birthDate}</div>
-              
-              {/* Progress to next milestone */}
-              {days !== null && (
-                <div className="w-full mt-4">
-                  <div className="flex justify-between text-xs font-mono text-gray-500 dark:text-gray-400 mb-2">
-                    <span>Progress to next milestone</span>
-                    <span>{Math.round(getProgressToNextMilestone(days, getNextMilestone(days, new Date(birthDate))))}%</span>
-                  </div>
-                  <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-                    <div 
-                      className="h-full bg-blue-500 dark:bg-blue-400 transition-all duration-500"
-                      style={{ width: `${getProgressToNextMilestone(days, getNextMilestone(days, new Date(birthDate)))}%` }}
-                    />
-                  </div>
-                </div>
-              )}
-
-              <div className="text-center text-gray-600 dark:text-gray-300 font-sans mb-4 max-w-xs mt-4">
-                This is your last saved Sun Cycle Age. You can recalculate or clear your bookmark below.
-              </div>
-              <div className="flex gap-4 mt-2">
-                <button onClick={handleClearBookmark} className="text-gray-500 dark:text-blue-300 underline underline-offset-2 hover:text-blue-700 dark:hover:text-blue-200 transition-all px-0 py-0 bg-transparent border-none shadow-none font-sans text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-400">Clear Bookmark</button>
-                <button onClick={() => setShowBookmark(false)} className="text-gray-500 dark:text-blue-300 underline underline-offset-2 hover:text-blue-700 dark:hover:text-blue-200 transition-all px-0 py-0 bg-transparent border-none shadow-none font-sans text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-400">Recalculate</button>
-              </div>
-
-              {/* Settings section */}
-              {isFramePinned && (
-                <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700 w-full">
-                  <h3 className="text-sm font-medium text-gray-900 dark:text-white mb-2">Settings</h3>
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-600 dark:text-gray-300">Milestone Notifications</span>
-                      <span className="text-xs text-gray-500 dark:text-gray-400">
-                        {isFramePinned ? 'Enabled' : 'Disabled'}
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-600 dark:text-gray-300">Data Storage</span>
-                      <button 
-                        // onClick={() => {
-                        //   if (context?.user?.fid) {
-                        //     revokeUserConsent(context.user.fid.toString());
-                        //     handleClearBookmark();
-                        //   }
-                        // }}
-                        className="text-xs text-red-500 hover:text-red-600 dark:text-red-400 dark:hover:text-red-300"
-                      >
-                        Clear All Data
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-            {/* Box 2: Next Milestone */}
-            {bookmarkMilestone && (
-              <div className="mb-6 p-6 rounded border border-gray-300 dark:border-gray-700 bg-white dark:bg-neutral-900 shadow-sm flex flex-col sm:flex-row items-center justify-center gap-6 max-w-lg mx-auto">
-                <div className="flex-shrink-0 flex items-center justify-center min-w-[200px]">
-                  <MilestoneOrbit />
-                </div>
-                <div className="flex flex-col items-center sm:items-start justify-center">
-                  <div className="text-xs font-mono text-blue-700 dark:text-blue-300 mb-1">Next milestone</div>
-                  <div className="text-xl font-serif font-bold text-blue-700 dark:text-blue-200 mb-1">{bookmarkMilestone.nextMilestone} rotations</div>
-                  <div className="text-xs font-mono text-gray-500 dark:text-gray-300">in {bookmarkMilestone.daysToMilestone} days ({bookmarkMilestone.milestoneDate})</div>
-                </div>
-              </div>
-            )}
-          </>
-        ) : (
-          <>
-            <Header formattedDate={formattedDate} />
-            <div className="border-b border-gray-200 dark:border-gray-800 mt-4 mb-2" />
-
-            <SolarSystemGraphic />
-
-            <FormSection birthDate={birthDate} setBirthDate={setBirthDate} calculateAge={calculateAge} />
-          </>
-        )}
-      </div>
-
-      {/* Result Card (fade in, replaces main content) */}
-      {days !== null && (
-        <ResultCard
-          days={days}
-          approxYears={approxYears!}
-          nextMilestone={nextMilestone}
-          daysToMilestone={daysToMilestone}
-          milestoneDate={milestoneDate}
-          quote={quote}
-          showDetails={showDetails}
-          setShowDetails={setShowDetails}
-          onShare={onShare}
-          isSharing={isSharing}
-          onSaveToPhone={onSaveToPhone}
-          onRecalculate={() => {
-            setBirthDate("");
-            setDays(null);
-            setApproxYears(null);
-            setShowDetails(false);
-          }}
-          bookmark={bookmark}
-          handleBookmark={handleBookmark}
-        />
+      {/* Main Content: Only one of calculator, results, or bookmark card is shown */}
+      {days !== null ? (
+        <div className="flex-1 flex flex-col items-center justify-center w-full">
+          <ResultCard
+            days={days}
+            approxYears={approxYears!}
+            nextMilestone={nextMilestone}
+            daysToMilestone={daysToMilestone}
+            milestoneDate={milestoneDate}
+            quote={quote}
+            showDetails={showDetails}
+            setShowDetails={setShowDetails}
+            onShare={onShare}
+            isSharing={isSharing}
+            onRecalculate={() => {
+              setBirthDate("");
+              setDays(null);
+              setApproxYears(null);
+              setShowDetails(false);
+            }}
+            bookmark={bookmark}
+            handleBookmark={handleBookmark}
+            formattedDate={formattedDate}
+          />
+        </div>
+      ) : bookmark && showBookmark ? (
+        <div className="flex-1 flex items-center justify-center w-full">
+          <BookmarkCard
+            bookmark={bookmark}
+            milestone={bookmarkMilestone?.nextMilestone}
+            milestoneDate={bookmarkMilestone?.milestoneDate}
+            daysToMilestone={bookmarkMilestone?.daysToMilestone}
+            onRecalculate={async () => {
+              setIsRecalculating(true);
+              await new Promise(r => setTimeout(r, 1200));
+              calculateAge();
+              setIsRecalculating(false);
+            }}
+            onClear={() => setShowConfirmClear(true)}
+            isRecalculating={isRecalculating}
+          />
+        </div>
+      ) : (
+        <div className="flex-1 flex flex-col items-center justify-center w-full">
+          <Header formattedDate={formattedDate} />
+          <div className="border-b border-gray-200 dark:border-gray-800 mt-4 mb-2 w-full mx-0 sm:mx-4" />
+          <SolarSystemGraphic />
+          <div className="mb-10" />
+          <FormSection birthDate={birthDate} setBirthDate={setBirthDate} calculateAge={calculateAge} />
+        </div>
       )}
-
+      {/* Confirmation dialog: */}
+      {showConfirmClear && (
+        <RadixDialog open={showConfirmClear} onOpenChange={setShowConfirmClear}>
+          <DialogOverlay />
+          <DialogContent className="max-w-md w-full border border-gray-400 bg-[rgba(255,252,242,0.3)] dark:bg-[rgba(24,24,28,0.3)] p-6 rounded-none shadow-md backdrop-blur-sm" style={{ boxShadow: '0 4px 24px 0 rgba(0,0,0,0.08)' }}>
+            <DialogTitle className="text-lg font-serif font-bold mb-2">Clear Bookmark?</DialogTitle>
+            <div className="mb-6 text-sm text-gray-600 dark:text-gray-300">Are you sure you want to remove your bookmark? This cannot be undone.</div>
+            <div className="flex gap-4 justify-center">
+              <DialogClose asChild>
+                <button className="px-6 py-2 border border-gray-400 dark:border-gray-700 bg-gray-100 dark:bg-neutral-800 text-gray-700 dark:text-gray-200 rounded-none uppercase tracking-widest font-mono text-sm">CANCEL</button>
+              </DialogClose>
+              <button onClick={() => { handleClearBookmark(); setShowConfirmClear(false); setShowBookmark(false); }} className="px-6 py-2 bg-black dark:bg-white text-white dark:text-black border border-black dark:border-white rounded-none uppercase tracking-widest font-mono text-sm">CLEAR</button>
+            </div>
+          </DialogContent>
+        </RadixDialog>
+      )}
       {/* Footer */}
-      <footer className="z-50 w-full text-center text-xs font-mono pb-4 border-t border-gray-200 dark:border-gray-800 bg-transparent text-gray-500 dark:text-gray-400" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.08)' }}>
-        Your data is not stored or shared.
-      </footer>
+      <div className="flex justify-center items-center w-full mb-8">
+        <div className="bg-gray-50 dark:bg-neutral-900 border border-gray-400 dark:border-gray-700 px-6 py-4 text-center text-xs font-mono text-gray-700 dark:text-gray-300 w-full max-w-md mx-auto">
+          <div>Your data is not stored or shared.<br />
+            Solara is made for <a href="https://warpcast.com/~/channel/occulture" target="_blank" rel="noopener noreferrer" className="underline hover:text-blue-600 transition-colors">/occulture</a>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
