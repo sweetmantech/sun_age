@@ -231,7 +231,7 @@ export default function SunCycleAge({ initialConsentData }: SunCycleAgeProps) {
     if (days === null) return;
     setIsSharing(true);
     const url = process.env.NEXT_PUBLIC_URL || window.location.origin;
-    const message = `Forget birthdays—I've completed ${days} rotations around the sun! Check your Sun Cycle Age: ${url} ☀️🌎`;
+    const message = `Forget birthdays—I've completed ${days} rotations around the sun ☀️🌎 What's your Sol Age? ${url}`;
     try {
       await sdk.actions.composeCast({ text: message });
     } catch (err) {
