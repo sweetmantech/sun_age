@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from '~/utils/supabase/server';
 
 export async function POST(request: NextRequest) {
   try {
@@ -7,25 +6,26 @@ export async function POST(request: NextRequest) {
     if (!fid && !anon_id) {
       return NextResponse.json({ error: 'No FID or anon_id provided' }, { status: 400 });
     }
-    const supabase = await createClient();
-    const updateObj: any = { bookmarked: true, user_type };
-    let conflictColumn = '';
-    if (fid) {
-      updateObj.fid = fid.toString();
-      conflictColumn = 'fid';
+    const payload: any = { bookmarked: true, user_type };
+    if (fid) payload.fid = fid.toString();
+    if (anon_id) payload.anon_id = anon_id;
+
+    const response = await fetch('https://nigfjlrnoggqcsladzpv.supabase.co/rest/v1/user_notification_details', {
+      method: 'POST',
+      headers: {
+        'apikey': process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+        'Authorization': `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!}`,
+        'Content-Type': 'application/json',
+        'Prefer': 'return=representation',
+      },
+      body: JSON.stringify(payload),
+    });
+    const data = await response.json();
+    if (!response.ok) {
+      console.error('Supabase REST error:', data);
+      return NextResponse.json({ error: data }, { status: response.status });
     }
-    if (anon_id) {
-      updateObj.anon_id = anon_id;
-      conflictColumn = 'anon_id';
-    }
-    const { error } = await supabase
-      .from('user_notification_details')
-      .upsert(updateObj, { onConflict: conflictColumn });
-    if (error) {
-      console.error("Supabase error:", error);
-      return NextResponse.json({ error: error.message }, { status: 500 });
-    }
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true, data });
   } catch (error) {
     console.error("API error:", error);
     return NextResponse.json({ error: 'Failed to update bookmark', details: String(error) }, { status: 500 });
