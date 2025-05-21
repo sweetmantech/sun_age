@@ -4,7 +4,7 @@ import { getUserConsent, updateUserConsent } from '~/lib/consent';
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { fid, type, message, timestamp } = body;
+    const { fid, type, message, timestamp, notificationToken, notificationUrl } = body;
 
     console.log("=== Milestone Notification Request ===");
     console.log("Request data:", { fid, type, message, timestamp });
@@ -12,6 +12,11 @@ export async function POST(request: Request) {
     if (!fid) {
       console.log("❌ No FID provided");
       return NextResponse.json({ error: 'FID is required' }, { status: 400 });
+    }
+
+    if (!notificationToken || !notificationUrl) {
+      console.log("❌ Missing notification details");
+      return NextResponse.json({ error: 'Notification details are required' }, { status: 400 });
     }
 
     // Get user consent
@@ -23,7 +28,9 @@ export async function POST(request: Request) {
     await updateUserConsent(fid.toString(), type, {
       type,
       message,
-      timestamp
+      timestamp,
+      notificationToken,
+      notificationUrl
     });
 
     // Send notification using Neynar API
@@ -35,6 +42,8 @@ export async function POST(request: Request) {
         'api_key': process.env.NEYNAR_API_KEY || '',
       },
       body: JSON.stringify({
+        notification_token: notificationToken,
+        notification_url: notificationUrl,
         message,
       }),
     });

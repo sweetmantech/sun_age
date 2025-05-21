@@ -113,7 +113,9 @@ export default function SunCycleAge({ initialConsentData }: SunCycleAgeProps) {
               fid: context.user.fid,
               type: 'milestone',
               message: `Congratulations! You've completed ${days} rotations around the sun!`,
-              timestamp: new Date().toISOString()
+              timestamp: new Date().toISOString(),
+              notificationToken: notificationDetails?.token,
+              notificationUrl: notificationDetails?.url
             }),
           }).then(() => {
             setLastMilestoneNotified(days);
@@ -126,7 +128,7 @@ export default function SunCycleAge({ initialConsentData }: SunCycleAgeProps) {
       setMilestoneDate(null);
       setQuote(quotes[0]);
     }
-  }, [days, quotes, isFramePinned, context?.user?.fid, lastMilestoneNotified, birthDate]);
+  }, [days, quotes, isFramePinned, context?.user?.fid, lastMilestoneNotified, birthDate, notificationDetails]);
 
   // Animation state: only animate after calculation
   const isAnimated = days !== null;
@@ -283,7 +285,9 @@ export default function SunCycleAge({ initialConsentData }: SunCycleAgeProps) {
         fid: context.user.fid,
         type: 'welcome',
         message: 'Welcome to Sun Cycle Age! Track your journey around the sun.',
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        notificationToken: notificationDetails?.token,
+        notificationUrl: notificationDetails?.url
       }),
     }).catch(console.error);
   };

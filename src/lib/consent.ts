@@ -8,6 +8,8 @@ export interface UserConsent {
     type: 'welcome' | 'milestone';
     message: string;
     timestamp: string;
+    notificationToken?: string;
+    notificationUrl?: string;
   };
 }
 
@@ -39,6 +41,8 @@ export async function updateUserConsent(
     type: 'welcome' | 'milestone';
     message: string;
     timestamp: string;
+    notificationToken?: string;
+    notificationUrl?: string;
   }
 ): Promise<boolean> {
   console.log('Updating consent for FID:', fid, 'Type:', consentType);
