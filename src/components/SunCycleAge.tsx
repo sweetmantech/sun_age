@@ -268,22 +268,25 @@ export default function SunCycleAge({ initialConsentData }: SunCycleAgeProps) {
       const data = { days, approxYears, birthDate };
       localStorage.setItem("sunCycleBookmark", JSON.stringify(data));
       setBookmark(data);
-      
-      // Send welcome notification when bookmarking
-      if (isFramePinned && context?.user?.fid) {
-        // First ensure we have consent
-        fetch('/api/milestone-notification', {
+
+      // Farcaster user
+      if (context?.user?.fid) {
+        fetch('/api/bookmark', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            fid: context.user.fid,
-            milestone: 0,
-            days: days,
-            isWelcome: true,
-            forceWelcome: true // Add this flag to ensure welcome notification is sent
-          }),
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ fid: context.user.fid, user_type: 'farcaster' }),
+        }).catch(console.error);
+      } else {
+        // Browser user: generate/store anon_id
+        let anon_id = localStorage.getItem('sunCycleAnonId');
+        if (!anon_id) {
+          anon_id = crypto.randomUUID();
+          localStorage.setItem('sunCycleAnonId', anon_id);
+        }
+        fetch('/api/bookmark', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ anon_id, user_type: 'browser' }),
         }).catch(console.error);
       }
     }
