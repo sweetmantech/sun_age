@@ -5,6 +5,7 @@ import { toPng } from "html-to-image";
 import ResultCardExport from "./ResultCardExport";
 import { useFrameSDK } from "~/hooks/useFrameSDK";
 import { createRoot } from "react-dom/client";
+import Header from "./Header";
 
 interface ResultCardProps {
   days: number;
@@ -17,10 +18,10 @@ interface ResultCardProps {
   setShowDetails: (v: boolean) => void;
   onShare: () => void;
   isSharing: boolean;
-  onSaveToPhone: () => void;
   onRecalculate: () => void;
   bookmark: any;
   handleBookmark: () => void;
+  formattedDate: string;
 }
 
 const ResultCard: React.FC<ResultCardProps> = ({
@@ -34,10 +35,10 @@ const ResultCard: React.FC<ResultCardProps> = ({
   setShowDetails,
   onShare,
   isSharing,
-  onSaveToPhone,
   onRecalculate,
   bookmark,
   handleBookmark,
+  formattedDate,
 }) => {
   const cardRef = useRef<HTMLDivElement>(null);
   const { context } = useFrameSDK();
@@ -83,89 +84,62 @@ const ResultCard: React.FC<ResultCardProps> = ({
   };
 
   return (
-    <div aria-live="polite" className="flex flex-col items-center justify-center min-h-[60vh] w-full px-4 transition-opacity duration-500 opacity-100">
-      <div ref={cardRef} className="bg-white/80 dark:bg-black/40 border border-gray-200 dark:border-gray-700 rounded-xl shadow-lg p-8 max-w-md w-full flex flex-col items-center space-y-6 relative bookmark-ui">
-        {/* Sun image illustration */}
-        {/* Next.js 13+ Image supports className and style. Linter errors here may be a false positive. */}
+    <div className="flex flex-col items-center justify-center min-h-[60vh] w-full px-2 sm:px-0">
+      {/* Results Card Box */}
+      <div ref={cardRef} className="bg-[rgba(255,252,242,0.3)] dark:bg-[rgba(24,24,28,0.3)] border border-gray-200 dark:border-gray-700 rounded-none shadow p-8 max-w-md w-full flex flex-col items-center space-y-6 relative mt-0">
+        {/* Sun image */}
         <Image
           src="/sunsun.png"
           alt="Sun"
-          width={96}
-          height={96}
-          className="w-24 h-24 object-contain"
+          width={72}
+          height={72}
+          className="w-20 h-20 object-contain mx-auto mb-2"
           style={{ filter: 'drop-shadow(0 0 40px #FFD700cc) drop-shadow(0 0 16px #FFB30099)' }}
           priority
         />
-        <div className="text-5xl font-serif font-extrabold tracking-tight text-gray-800 dark:text-white drop-shadow-lg">{days}</div>
-        <div className="text-sm font-mono text-gray-500 dark:text-gray-400">solar rotations</div>
-        <div className="text-lg font-serif text-gray-700 dark:text-gray-300">~ {approxYears} years</div>
+        {/* Story intro */}
+        <div className="text-xs font-mono tracking-widest text-gray-500 dark:text-gray-300 text-center uppercase mb-2">DEAR TRAVELER, YOU HAVE</div>
+        <div className="text-5xl font-serif font-extrabold tracking-tight text-gray-800 dark:text-white text-center mb-1">{days}</div>
+        <div className="text-sm font-mono text-gray-500 dark:text-gray-400 text-center mb-2">SOLAR ROTATIONS</div>
+        <div className="text-lg font-serif text-gray-700 dark:text-gray-300 text-center mb-2">~ {approxYears} years old</div>
+        {/* Milestone box */}
         {nextMilestone && daysToMilestone !== null && milestoneDate && (
-          <div className="mt-2 text-xs font-mono text-blue-700 dark:text-blue-300 text-center">
-            Your next milestone: <span className="font-semibold">{nextMilestone}</span> rotations<br />
-            in <span className="font-semibold">{daysToMilestone}</span> days ({milestoneDate})
-          </div>
-        )}
-        <div className="mt-4 text-xs font-sans text-gray-400 italic text-center">{quote}</div>
-
-        {/* Learn More Toggle */}
-        <button
-          onClick={() => setShowDetails(!showDetails)}
-          className="mt-4 text-xs font-mono text-blue-300 underline underline-offset-2 focus:outline-none hover:text-blue-500"
-        >
-          {showDetails ? 'Hide Details' : 'Learn More'}
-        </button>
-        <div
-          className={`transition-all duration-500 overflow-hidden w-full ${showDetails ? 'max-h-96 opacity-100 mt-4' : 'max-h-0 opacity-0'}`}
-        >
-          <div className="bg-gray-900/80 rounded-md p-4 text-xs text-gray-300 space-y-2 font-mono">
-            <div>
-              <span className="font-semibold text-white">How is this calculated?</span><br />
-              <span>Days = Today - Your Birthday<br />Years = Days / 365.25</span>
-            </div>
-            <div>
-              <span className="font-semibold text-white">Astronomy Fact:</span><br />
-              <span>{quote}</span>
-            </div>
-            <div>
-              <span className="font-semibold text-white">More Stats:</span><br />
-              <span>Total rotations: {days}</span><br />
-              <span>Next milestone: {nextMilestone} ({daysToMilestone} days left)</span>
+          <div className="w-full flex justify-center mb-2">
+            <div className="bg-white/80 dark:bg-neutral-900/80 border border-gray-400 dark:border-gray-700 px-4 py-3 text-center text-xs font-mono text-gray-800 dark:text-gray-100 rounded-none max-w-xs mx-auto">
+              <span className="font-semibold">Solar Return <span role='img' aria-label='sun'>🌞</span></span><br />
+              Your next milestone: <span className="font-bold">{nextMilestone}</span> rotations<br />
+              in <span className="font-bold">{daysToMilestone}</span> days ({milestoneDate})
             </div>
           </div>
-        </div>
-
-        <div className="flex flex-col w-full space-y-2 mt-6">
-          <button
-            onClick={onShare}
-            disabled={isSharing}
-            className="w-full border border-black dark:border-white bg-transparent dark:bg-black text-black dark:text-white uppercase tracking-widest font-mono py-3 px-8 text-base transition-colors hover:bg-gray-100 dark:hover:bg-gray-900 rounded-none"
-          >
-            {isSharing ? "SHARING..." : "SHARE"}
-          </button>
-          <button
-            onClick={handleSaveImage}
-            className="w-full border border-black dark:border-white bg-transparent dark:bg-black text-black dark:text-white uppercase tracking-widest font-mono py-3 px-8 text-base transition-colors hover:bg-gray-100 dark:hover:bg-gray-900 rounded-none"
-          >
-            SAVE TO PHONE
-          </button>
-          <button
-            onClick={onRecalculate}
-            className="w-full border border-black dark:border-white bg-transparent dark:bg-black text-black dark:text-white uppercase tracking-widest font-mono py-3 px-8 text-base transition-colors hover:bg-gray-100 dark:hover:bg-gray-900 rounded-none mt-2"
-          >
-            CALCULATE AGAIN
-          </button>
-        </div>
-
-        {/* Bookmark button */}
-        {!bookmark && (
-          <button
-            onClick={handleBookmark}
-            className="w-full bg-black dark:bg-white text-white dark:text-black uppercase tracking-widest font-mono py-3 px-8 text-base transition-colors hover:bg-gray-900 dark:hover:bg-gray-100 rounded-none mt-2"
-          >
-            Bookmark My Sun Age
-          </button>
         )}
+        {/* Randomized quote */}
+        <div className="mt-2 text-xs font-sans text-gray-400 italic text-center">{quote}</div>
       </div>
+      {/* Main CTA buttons outside the card */}
+      <div className="flex w-full max-w-md gap-2 mt-6">
+        <button
+          onClick={onShare}
+          disabled={isSharing}
+          className="flex-1 border border-black dark:border-white bg-transparent dark:bg-black text-black dark:text-white uppercase tracking-widest font-mono py-3 px-2 text-base transition-colors hover:bg-gray-100 dark:hover:bg-gray-900 rounded-none"
+        >
+          {isSharing ? "SHARING..." : "SHARE SOL AGE"}
+        </button>
+        <button
+          onClick={onRecalculate}
+          className="flex-1 border border-black dark:border-white bg-transparent dark:bg-black text-black dark:text-white uppercase tracking-widest font-mono py-3 px-2 text-base transition-colors hover:bg-gray-100 dark:hover:bg-gray-900 rounded-none"
+        >
+          CALCULATE AGAIN
+        </button>
+      </div>
+      {/* Bookmark button */}
+      {!bookmark && (
+        <button
+          onClick={handleBookmark}
+          className="w-full max-w-md bg-black dark:bg-white text-white dark:text-black uppercase tracking-widest font-mono py-3 px-8 text-base transition-colors hover:bg-gray-900 dark:hover:bg-gray-100 rounded-none mt-4"
+        >
+          BOOKMARK MY SOL AGE
+        </button>
+      )}
     </div>
   );
 };

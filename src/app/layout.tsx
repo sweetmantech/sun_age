@@ -9,6 +9,11 @@ import { Providers } from "~/app/providers";
 import { NavActions } from "~/components/nav-actions";
 import { SidebarInset, SidebarProvider } from "~/components/ui/sidebar";
 import { PinMiniAppButton } from "~/components/ui/pin-mini-app-button";
+import { Info } from "lucide-react";
+import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "~/components/ui/tooltip";
+import { Dialog, DialogTrigger, DialogContent, DialogTitle } from "~/components/ui/dialog";
+import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
+import Header from "../components/SunCycleAge/Header";
 
 const appUrl =
   process.env.NEXT_PUBLIC_URL ||
@@ -42,8 +47,8 @@ export const metadata: Metadata = {
   },
   manifest: "/site.webmanifest",
   openGraph: {
-    title: "Sun Age",
-    siteName: "Sun Age",
+    title: "Solara",
+    siteName: "Solara",
     images: [
       {
         url: "https://sun-age.vercel.app/suncycles_og.png",
@@ -71,6 +76,13 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // Get today's date formatted as MM.DD.YYYY
+  const today = new Date();
+  const formattedDate = today.toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).replace(/\//g, ".");
   return (
     <html lang="en" suppressHydrationWarning>
       <body>
@@ -85,15 +97,40 @@ export default async function RootLayout({
             <div className="pointer-events-none fixed inset-0 z-0 hidden dark:block" style={{ background: "linear-gradient(180deg, #23232a 0%, #18181c 100%)" }} />
             <CosmicBackground />
             {/* Floating Theme Toggle and Pin in top-right */}
+            <div className="fixed top-4 left-4 z-50 flex gap-2 items-center">
+              <Dialog>
+                <DialogTrigger asChild>
+                  <button
+                    type="button"
+                    aria-label="About Solara"
+                    className="p-2 border border-gray-200 dark:border-gray-700 bg-white/80 dark:bg-gray-900/80 shadow transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-400 dark:focus-visible:outline-blue-300 text-gray-500 dark:text-gray-400 rounded-none"
+                  >
+                    <Info className="w-5 h-5" />
+                  </button>
+                </DialogTrigger>
+                <DialogContent className="max-w-md w-full border border-gray-400 bg-[rgba(255,252,242,0.3)] dark:bg-[rgba(24,24,28,0.3)] p-6 rounded-none shadow-md backdrop-blur-sm" style={{ boxShadow: '0 4px 24px 0 rgba(0,0,0,0.08)' }}>
+                  <DialogTitle className="sr-only">About Solara</DialogTitle>
+                  <div className="text-4xl font-serif font-light text-gray-700 dark:text-gray-100 uppercase tracking-[0.18em] mb-1 leading-tight text-center">Solara</div>
+                  <div className="text-xs font-semibold uppercase tracking-[0.22em] text-gray-500 dark:text-gray-300 mb-4 leading-tight text-center" style={{ letterSpacing: '0.18em' }}>
+                    Measure your solar self
+                  </div>
+                  <div className="text-base text-gray-800 dark:text-gray-200 font-sans leading-normal mb-4 text-left">
+                    Solara measures your existence through rotations around our star SOL. One day = one rotation.<br /><br />
+                    Enter your birth date to see how many solar rotations (days) you have completed. Bookmark your current rotation and track when your next solar milestone appears. More features coming soon.<br /><br />
+                    Embrace your inner warmth and let SOL in. <span role="img" aria-label="sun">🌞</span>
+                  </div>
+                </DialogContent>
+              </Dialog>
+            </div>
             <div className="fixed top-4 right-4 z-50 flex gap-2 items-center">
               <ThemeToggle />
               <PinMiniAppButton />
             </div>
             {/* App header */}
-            <header className="sr-only">Sun Cycle Age App</header>
+            <Header formattedDate={formattedDate} />
             {/* Main content and footer, flex column, sticky footer */}
             <div className="min-h-screen flex flex-col bg-white dark:bg-black/60">
-              <main id="main-content" className="flex-1 flex flex-col">{children}</main>
+              <main id="main-content" className="flex-1 flex flex-col justify-between min-h-screen">{children}</main>
             </div>
             {/* Footer is handled in SunCycleAge.tsx */}
           </Providers>

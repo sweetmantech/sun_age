@@ -7,7 +7,7 @@ interface FormSectionProps {
 }
 
 const FormSection: React.FC<FormSectionProps> = ({ birthDate, setBirthDate, calculateAge }) => (
-  <div className="flex flex-col items-center w-full px-4 pb-16">
+  <div className="flex flex-col items-center w-full px-2 sm:px-4 pb-16">
     <form className="w-full max-w-md mx-auto">
       <label htmlFor="birth" className="block text-xs tracking-widest font-mono uppercase mb-2" style={{ color: '#6c6f7d' }}>
         ENTER BIRTH DATE
@@ -30,9 +30,6 @@ const FormSection: React.FC<FormSectionProps> = ({ birthDate, setBirthDate, calc
         CALCULATE
       </button>
     </form>
-    <p className="text-xs font-mono text-gray-700 dark:text-gray-400 text-center mt-8 max-w-md">
-      Sun cycle age measures your existence through rotations around our star. One day = one rotation.
-    </p>
   </div>
 );
 
