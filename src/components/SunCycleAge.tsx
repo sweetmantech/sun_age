@@ -36,7 +36,7 @@ interface SunCycleAgeProps {
   initialConsentData?: any[] | null;
 }
 
-function BookmarkCard({ bookmark, milestone, milestoneDate, daysToMilestone, onRecalculate, onClear, isRecalculating }) {
+function BookmarkCard({ bookmark, milestone, milestoneDate, daysToMilestone, onRecalculate, onClear, isRecalculating, sinceLastVisit }) {
   const [tab, setTab] = useState<'age' | 'reflections' | 'signature'>('age');
   return (
     <div className="bg-[rgba(255,252,242,0.3)] dark:bg-[rgba(24,24,28,0.3)] border border-gray-200 dark:border-gray-700 rounded-none shadow p-8 max-w-md w-full flex flex-col items-center space-y-6 relative mt-0">
@@ -51,7 +51,7 @@ function BookmarkCard({ bookmark, milestone, milestoneDate, daysToMilestone, onR
       />
       <div className="text-xs font-mono tracking-widest text-gray-500 dark:text-gray-300 text-center uppercase mb-2">WELCOME BACK TRAVELER...</div>
       <div className="text-5xl font-serif font-extrabold tracking-tight text-gray-800 dark:text-white text-center mb-1">{bookmark.days} <span className="font-serif">Sol Age</span></div>
-      <div className="text-xs font-mono text-gray-500 dark:text-gray-400 text-center mb-2">+23 since your last visit</div>
+      <div className="text-xs font-mono text-gray-500 dark:text-gray-400 text-center mb-2">+{sinceLastVisit} since your last visit</div>
       {/* Tabs */}
       <div className="flex w-full border-b border-gray-300 dark:border-gray-700 mb-4">
         <button onClick={() => setTab('age')} className={`flex-1 py-2 text-xs font-mono uppercase tracking-widest ${tab==='age' ? 'border-b-2 border-black dark:border-white font-bold' : 'text-gray-400'}`}>Age</button>
@@ -325,6 +325,8 @@ export default function SunCycleAge({ initialConsentData }: SunCycleAgeProps) {
     days: number;
     approxYears: number;
     birthDate: string;
+    lastVisitDays?: number;
+    lastVisitDate?: string;
   } | null>(null);
 
   // Add a state to control showing the bookmark card or calculation page
@@ -335,7 +337,8 @@ export default function SunCycleAge({ initialConsentData }: SunCycleAgeProps) {
     const saved = localStorage.getItem("sunCycleBookmark");
     if (saved) {
       try {
-        setBookmark(JSON.parse(saved));
+        const parsed = JSON.parse(saved);
+        setBookmark(parsed);
         setShowBookmark(true);
       } catch {}
     } else {
@@ -346,7 +349,14 @@ export default function SunCycleAge({ initialConsentData }: SunCycleAgeProps) {
   // Save bookmark
   const handleBookmark = () => {
     if (days !== null && approxYears !== null && birthDate) {
-      const data = { days, approxYears, birthDate };
+      const now = new Date();
+      const data = {
+        days,
+        approxYears,
+        birthDate,
+        lastVisitDays: days,
+        lastVisitDate: now.toISOString(),
+      };
       localStorage.setItem("sunCycleBookmark", JSON.stringify(data));
       setBookmark(data);
 
@@ -380,20 +390,42 @@ export default function SunCycleAge({ initialConsentData }: SunCycleAgeProps) {
   };
 
   // Calculate milestone for bookmark
-  let bookmarkMilestone: { nextMilestone: number; daysToMilestone: number; milestoneDate: string } | null = null;
+  type MilestoneObj = { nextMilestone: number; daysToMilestone: number; milestoneDate: string; type?: string };
+  let bookmarkMilestone: MilestoneObj | null = null;
   if (bookmark) {
     const bDays = bookmark.days;
     const bBirthDate = bookmark.birthDate;
-    const next = Math.ceil((bDays + 1) / milestoneStep) * milestoneStep;
-    const toNext = next - bDays;
-    const d = new Date(bBirthDate);
-    d.setDate(d.getDate() + bDays + toNext);
-    const milestoneDate = d.toLocaleDateString("en-US", { year: "numeric", month: "2-digit", day: "2-digit" }).replace(/\//g, ".");
-    bookmarkMilestone = {
-      nextMilestone: next,
-      daysToMilestone: toNext,
-      milestoneDate,
-    };
+    // Use getNextMilestone to get all possible milestones
+    const allMilestones = [] as MilestoneObj[];
+    // 1. Next 1000-day interval
+    const nextInterval = Math.ceil((bDays + 1) / milestoneStep) * milestoneStep;
+    const toNextInterval = nextInterval - bDays;
+    const dInterval = new Date(bBirthDate);
+    dInterval.setDate(dInterval.getDate() + bDays + toNextInterval);
+    allMilestones.push({
+      type: 'interval',
+      nextMilestone: nextInterval,
+      daysToMilestone: toNextInterval,
+      milestoneDate: dInterval.toLocaleDateString("en-US", { year: "numeric", month: "2-digit", day: "2-digit" }).replace(/\//g, ".")
+    });
+    // 2. Next birthday (solar return)
+    const today = new Date();
+    const nextBirthday = new Date(bBirthDate);
+    nextBirthday.setFullYear(today.getFullYear());
+    if (nextBirthday < today) {
+      nextBirthday.setFullYear(today.getFullYear() + 1);
+    }
+    const daysToBirthday = Math.ceil((nextBirthday.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+    const cyclesAtBirthday = bDays + daysToBirthday;
+    allMilestones.push({
+      type: 'solar_return',
+      nextMilestone: cyclesAtBirthday,
+      daysToMilestone: daysToBirthday,
+      milestoneDate: nextBirthday.toLocaleDateString("en-US", { year: "numeric", month: "2-digit", day: "2-digit" }).replace(/\//g, ".")
+    });
+    // 3. Find the soonest milestone
+    const soonest: MilestoneObj = allMilestones.reduce((a, b) => (a.daysToMilestone < b.daysToMilestone ? a : b));
+    bookmarkMilestone = soonest;
   }
 
   // Add state for recalc and clear confirmation:
@@ -472,10 +504,17 @@ export default function SunCycleAge({ initialConsentData }: SunCycleAgeProps) {
             milestone={bookmarkMilestone?.nextMilestone}
             milestoneDate={bookmarkMilestone?.milestoneDate}
             daysToMilestone={bookmarkMilestone?.daysToMilestone}
+            sinceLastVisit={bookmark && bookmark.lastVisitDays !== undefined ? Math.max(0, bookmark.days - bookmark.lastVisitDays) : 0}
             onRecalculate={async () => {
               setIsRecalculating(true);
               await new Promise(r => setTimeout(r, 1200));
               calculateAge();
+              // After recalculation, update lastVisitDays to the new days value
+              setBookmark(prev => prev && days !== null ? {
+                ...prev,
+                lastVisitDays: days,
+                lastVisitDate: new Date().toISOString(),
+              } : prev);
               setIsRecalculating(false);
             }}
             onClear={() => setShowConfirmClear(true)}
@@ -509,7 +548,7 @@ export default function SunCycleAge({ initialConsentData }: SunCycleAgeProps) {
       )}
       {/* Footer */}
       <div className="flex justify-center items-center w-full mb-8">
-        <div className="bg-gray-50 dark:bg-neutral-900 border border-gray-400 dark:border-gray-700 px-6 py-4 text-center text-xs font-mono text-gray-700 dark:text-gray-300 w-full max-w-md mx-auto">
+        <div className="bg-gray-50 dark:bg-neutral-900 border border-gray-400 dark:border-gray-700 p-2 mx-1 text-center text-xs font-mono text-gray-700 dark:text-gray-300 w-full max-w-md mx-auto">
           <div>Your data is not stored or shared.<br />
             Solara is made for <a href="https://warpcast.com/~/channel/occulture" target="_blank" rel="noopener noreferrer" className="underline hover:text-blue-600 transition-colors">/occulture</a>
           </div>

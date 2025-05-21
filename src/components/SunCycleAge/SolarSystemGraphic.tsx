@@ -7,7 +7,7 @@ interface SolarSystemGraphicProps {
 
 const SolarSystemGraphic: React.FC<SolarSystemGraphicProps> = ({ profilePhotoUrl }) => (
   <div className="flex flex-col items-center justify-center flex-1 mt-4">
-    <div className="relative w-full sm:w-[130%] md:w-[130%] aspect-square flex items-center justify-center">
+    <div className="relative w-[90%] sm:w-[130%] md:w-[130%] aspect-square flex items-center justify-center">
       {/* Solar System SVG Background */}
       <Image
         src="/solar_system.svg"
