@@ -37,9 +37,6 @@ export default function SunCycleAge({ initialConsentData }: SunCycleAgeProps) {
     pinFrame, 
     isFramePinned, 
     context, 
-    notificationDetails,
-    hasConsented,
-    handleConsent,
     isInFrame
   } = useFrameSDK();
   const [birthDate, setBirthDate] = useState<string>("");
@@ -113,8 +110,9 @@ export default function SunCycleAge({ initialConsentData }: SunCycleAgeProps) {
             },
             body: JSON.stringify({
               fid: context.user.fid,
-              milestone: days,
-              days: days,
+              type: 'milestone',
+              message: `Congratulations! You've completed ${days} rotations around the sun!`,
+              timestamp: new Date().toISOString()
             }),
           }).then(() => {
             setLastMilestoneNotified(days);

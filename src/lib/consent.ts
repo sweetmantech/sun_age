@@ -1,4 +1,4 @@
-import { supabase } from '~/utils/supabase/client';
+import { createClient } from '~/utils/supabase/client';
 
 export interface UserConsent {
   fid: string;
@@ -11,6 +11,7 @@ export interface UserConsent {
 export async function getUserConsent(fid: string): Promise<UserConsent | null> {
   console.log("Fetching consent for FID:", fid);
   
+  const supabase = createClient();
   const { data, error } = await supabase
     .from('user_consent')
     .select('*')
@@ -36,6 +37,7 @@ export async function updateUserConsent(
   console.log("Has Consented:", hasConsented);
   console.log("Has Notification Details:", !!notificationDetails);
 
+  const supabase = createClient();
   const consentData = {
     fid,
     has_consented: hasConsented,
@@ -68,6 +70,7 @@ export async function revokeUserConsent(fid: string): Promise<boolean> {
   console.log("=== Revoking User Consent ===");
   console.log("FID:", fid);
 
+  const supabase = createClient();
   const { error } = await supabase
     .from('user_consent')
     .update({
