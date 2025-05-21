@@ -22,10 +22,12 @@ export async function POST(request: NextRequest) {
       .from('user_notification_details')
       .upsert(updateObj, { onConflict: conflictColumn });
     if (error) {
+      console.error("Supabase error:", error);
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
     return NextResponse.json({ success: true });
   } catch (error) {
-    return NextResponse.json({ error: 'Failed to update bookmark' }, { status: 500 });
+    console.error("API error:", error);
+    return NextResponse.json({ error: 'Failed to update bookmark', details: String(error) }, { status: 500 });
   }
 } 
