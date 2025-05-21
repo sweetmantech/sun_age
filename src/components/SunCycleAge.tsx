@@ -38,8 +38,6 @@ export default function SunCycleAge({ initialConsentData }: SunCycleAgeProps) {
     isFramePinned, 
     context, 
     notificationDetails,
-    hasConsented,
-    handleConsent,
     isInFrame
   } = useFrameSDK();
   const [birthDate, setBirthDate] = useState<string>("");
@@ -113,8 +111,9 @@ export default function SunCycleAge({ initialConsentData }: SunCycleAgeProps) {
             },
             body: JSON.stringify({
               fid: context.user.fid,
-              milestone: days,
-              days: days,
+              type: 'milestone',
+              message: `Congratulations! You've completed ${days} rotations around the sun!`,
+              timestamp: new Date().toISOString()
             }),
           }).then(() => {
             setLastMilestoneNotified(days);
@@ -266,29 +265,27 @@ export default function SunCycleAge({ initialConsentData }: SunCycleAgeProps) {
 
   // Save bookmark
   const handleBookmark = () => {
-    if (days !== null && approxYears !== null && birthDate) {
-      const data = { days, approxYears, birthDate };
-      localStorage.setItem("sunCycleBookmark", JSON.stringify(data));
-      setBookmark(data);
-      
-      // Send welcome notification when bookmarking
-      if (isFramePinned && context?.user?.fid) {
-        // First ensure we have consent
-        fetch('/api/milestone-notification', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            fid: context.user.fid,
-            milestone: 0,
-            days: days,
-            isWelcome: true,
-            forceWelcome: true // Add this flag to ensure welcome notification is sent
-          }),
-        }).catch(console.error);
-      }
-    }
+    if (days === null || !context?.user?.fid) return;
+    
+    setBookmark({
+      days,
+      approxYears: approxYears || 0,
+      birthDate,
+    });
+
+    // Send welcome notification
+    fetch('/api/milestone-notification', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        fid: context.user.fid,
+        type: 'welcome',
+        message: 'Welcome to Sun Cycle Age! Track your journey around the sun.',
+        timestamp: new Date().toISOString()
+      }),
+    }).catch(console.error);
   };
 
   // Clear bookmark

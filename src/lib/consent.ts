@@ -1,20 +1,26 @@
-import { supabase } from '~/utils/supabase/client';
+import { createClient } from '~/utils/supabase/client';
 
 export interface UserConsent {
   fid: string;
-  hasConsented: boolean;
-  consentDate: string;
-  notificationToken?: string;
-  notificationUrl?: string;
+  consent_date: string;
+  consent_type: 'welcome' | 'milestone';
+  notification_details?: {
+    type: 'welcome' | 'milestone';
+    message: string;
+    timestamp: string;
+  };
 }
 
 export async function getUserConsent(fid: string): Promise<UserConsent | null> {
-  console.log("Fetching consent for FID:", fid);
+  console.log('Fetching consent for FID:', fid);
+  const supabase = createClient();
   
   const { data, error } = await supabase
     .from('user_consent')
     .select('*')
     .eq('fid', fid)
+    .order('consent_date', { ascending: false })
+    .limit(1)
     .single();
 
   if (error) {
@@ -22,68 +28,58 @@ export async function getUserConsent(fid: string): Promise<UserConsent | null> {
     return null;
   }
 
-  console.log("Found consent data:", data);
+  console.log('Found consent data:', data);
   return data;
 }
 
 export async function updateUserConsent(
   fid: string,
-  hasConsented: boolean,
-  notificationDetails?: { token: string; url: string }
+  consentType: 'welcome' | 'milestone',
+  notificationDetails?: {
+    type: 'welcome' | 'milestone';
+    message: string;
+    timestamp: string;
+  }
 ): Promise<boolean> {
-  console.log("=== Updating User Consent ===");
-  console.log("FID:", fid);
-  console.log("Has Consented:", hasConsented);
-  console.log("Has Notification Details:", !!notificationDetails);
-
+  console.log('Updating consent for FID:', fid, 'Type:', consentType);
+  const supabase = createClient();
+  
   const consentData = {
     fid,
-    has_consented: hasConsented,
     consent_date: new Date().toISOString(),
-    ...(notificationDetails && {
-      notification_token: notificationDetails.token,
-      notification_url: notificationDetails.url
-    })
+    consent_type: consentType,
+    notification_details: notificationDetails
   };
 
-  console.log("Storing consent data:", consentData);
+  console.log('Storing consent data:', consentData);
 
   const { error } = await supabase
     .from('user_consent')
-    .upsert(consentData, {
-      onConflict: 'fid'
-    });
+    .insert([consentData]);
 
   if (error) {
-    console.error('Error updating user consent:', error);
-    console.log("=== End Update (Failed) ===");
+    console.error('Error storing user consent:', error);
     return false;
   }
 
-  console.log("=== End Update (Success) ===");
+  console.log('Successfully stored consent data');
   return true;
 }
 
 export async function revokeUserConsent(fid: string): Promise<boolean> {
-  console.log("=== Revoking User Consent ===");
-  console.log("FID:", fid);
-
+  console.log('Revoking consent for FID:', fid);
+  const supabase = createClient();
+  
   const { error } = await supabase
     .from('user_consent')
-    .update({
-      has_consented: false,
-      consent_date: new Date().toISOString(),
-      notification_token: null,
-      notification_url: null
-    })
+    .delete()
     .eq('fid', fid);
 
   if (error) {
     console.error('Error revoking user consent:', error);
-    console.log("=== End Revoke (Failed) ===");
     return false;
   }
 
-  console.log("=== End Revoke (Success) ===");
+  console.log('Successfully revoked consent');
   return true;
 } 

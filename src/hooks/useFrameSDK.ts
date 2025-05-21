@@ -19,63 +19,6 @@ export function useFrameSDK() {
   const [lastEvent, setLastEvent] = useState("");
   const [pinFrameResponse, setPinFrameResponse] = useState("");
   const [loading, setLoading] = useState(false);
-  const [hasConsented, setHasConsented] = useState<boolean | null>(null);
-
-  const sendWelcomeNotification = useCallback(async (fid: string) => {
-    try {
-      const response = await fetch('/api/milestone-notification', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          fid,
-          milestone: 0,
-          days: 0,
-          isWelcome: true,
-        }),
-      });
-      if (!response.ok) {
-        console.error('Failed to send welcome notification');
-      }
-    } catch (error) {
-      console.error('Error sending welcome notification:', error);
-    }
-  }, []);
-
-  // Check user consent when context changes
-  useEffect(() => {
-    const checkConsent = async () => {
-      if (context?.user?.fid) {
-        const consent = await getUserConsent(context.user.fid.toString());
-        setHasConsented(consent?.hasConsented ?? false);
-      }
-    };
-    checkConsent();
-  }, [context?.user?.fid]);
-
-  const handleConsent = useCallback(async (consent: boolean) => {
-    if (!context?.user?.fid) return false;
-    
-    const success = await updateUserConsent(
-      context.user.fid.toString(),
-      consent,
-      notificationDetails ? {
-        token: notificationDetails.token,
-        url: notificationDetails.url
-      } : undefined
-    );
-
-    if (success) {
-      setHasConsented(consent);
-      // Send welcome notification when consent is granted
-      if (consent && notificationDetails) {
-        sendWelcomeNotification(context.user.fid.toString());
-      }
-    }
-
-    return success;
-  }, [context?.user?.fid, notificationDetails, sendWelcomeNotification]);
 
   useEffect(() => {
     const load = async () => {
@@ -140,10 +83,9 @@ export function useFrameSDK() {
                 },
                 body: JSON.stringify({
                   fid: frameContext.user.fid.toString(),
-                  milestone: 0,
-                  days: 0,
-                  isWelcome: true,
-                  forceWelcome: true
+                  type: 'welcome',
+                  message: 'Welcome to Sun Cycle Age! Track your journey around the sun.',
+                  timestamp: new Date().toISOString()
                 }),
               });
 
@@ -153,7 +95,6 @@ export function useFrameSDK() {
                 console.log("Successfully stored FID");
                 if (notificationDetails) {
                   setNotificationDetails(notificationDetails);
-                  setHasConsented(true);
                 }
               }
             } catch (error) {
@@ -176,17 +117,12 @@ export function useFrameSDK() {
           // Revoke consent when frame is removed
           if (frameContext.user?.fid) {
             revokeUserConsent(frameContext.user.fid.toString());
-            setHasConsented(false);
           }
         });
 
         frameSDK.on("notificationsEnabled", ({ notificationDetails }) => {
           setLastEvent("notificationsEnabled");
           setNotificationDetails(notificationDetails);
-          // Only send welcome notification if user has consented
-          if (frameContext.user?.fid && hasConsented) {
-            sendWelcomeNotification(frameContext.user.fid.toString());
-          }
         });
 
         frameSDK.on("notificationsDisabled", () => {
@@ -202,7 +138,7 @@ export function useFrameSDK() {
     if (!isSDKLoaded) {
       load();
     }
-  }, [isSDKLoaded, sendWelcomeNotification, hasConsented]);
+  }, [isSDKLoaded]);
 
   const pinFrame = useCallback(async () => {
     try {
@@ -245,7 +181,5 @@ export function useFrameSDK() {
     isAuthDialogOpen,
     setIsAuthDialogOpen,
     isInFrame,
-    hasConsented,
-    handleConsent,
   };
 }

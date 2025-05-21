@@ -4,10 +4,10 @@ import { getUserConsent, updateUserConsent } from '~/lib/consent';
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { fid, milestone, days, isWelcome, forceWelcome } = body;
+    const { fid, type, message, timestamp } = body;
 
     console.log("=== Milestone Notification Request ===");
-    console.log("Request data:", { fid, milestone, days, isWelcome, forceWelcome });
+    console.log("Request data:", { fid, type, message, timestamp });
 
     if (!fid) {
       console.log("❌ No FID provided");
@@ -17,18 +17,14 @@ export async function POST(request: Request) {
     // Get user consent
     const consent = await getUserConsent(fid.toString());
     console.log("Current consent status:", consent);
-    
-    // For welcome notifications, we can force send if requested
-    if (!consent?.hasConsented && !forceWelcome) {
-      console.log("❌ User has not consented to notifications");
-      return NextResponse.json({ error: 'User has not consented to notifications' }, { status: 403 });
-    }
 
-    // If this is a welcome notification and we don't have consent yet, store it
-    if (isWelcome && !consent?.hasConsented) {
-      console.log("Storing initial consent for welcome notification");
-      await updateUserConsent(fid.toString(), true);
-    }
+    // Store consent for the notification type
+    console.log("Storing consent for notification type:", type);
+    await updateUserConsent(fid.toString(), type, {
+      type,
+      message,
+      timestamp
+    });
 
     // Send notification using Neynar API
     console.log("Sending notification via Neynar API");
@@ -39,11 +35,7 @@ export async function POST(request: Request) {
         'api_key': process.env.NEYNAR_API_KEY || '',
       },
       body: JSON.stringify({
-        notification_token: consent?.notificationToken,
-        notification_url: consent?.notificationUrl,
-        message: isWelcome 
-          ? "Welcome to Sun Cycle Age! Track your journey around the sun and receive milestone notifications."
-          : `Congratulations! You've completed ${milestone} rotations around the sun. Keep shining!`,
+        message,
       }),
     });
 
