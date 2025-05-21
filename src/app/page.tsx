@@ -41,8 +41,7 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function Page() {
-  const cookieStore = cookies()
-  const supabase = createClient(cookieStore)
+  const supabase = await createClient();
 
   // Fetch user consent data
   const { data: userConsent } = await supabase
@@ -52,7 +51,7 @@ export default async function Page() {
     .limit(10)
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-24">
+    <main className="flex min-h-screen flex-col items-center justify-between p-4 md:p-24">
       <SunCycleAge initialConsentData={userConsent} />
     </main>
   )
