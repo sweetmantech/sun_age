@@ -15,57 +15,43 @@ export function useFrameSDK() {
       if (typeof window === "undefined") return;
       
       try {
+        // First check if we're in a Farcaster frame
+        const frameContext = await sdk.context;
+        if (frameContext) {
+          console.log("Found Farcaster frame context:", {
+            hasUser: !!frameContext.user,
+            fid: frameContext.user?.fid,
+            username: frameContext.user?.username,
+            added: frameContext.client.added
+          });
+          setIsInFrame(true);
+          setContext(frameContext);
+          setIsFramePinned(frameContext.client.added);
+        }
+
+        // Then initialize the SDK
         await sdk.actions.ready({ disableNativeGestures: true });
         setIsSDKLoaded(true);
 
+        // Check for frameSDK in window
         const frameSDK = (window as any).frameSDK;
-        if (!frameSDK) {
-          console.log("No frameSDK found in window");
-          return;
-        }
-
-        setIsInFrame(true);
-        
-        const frameContext = await frameSDK.context;
-        if (!frameContext) {
-          console.log("No frameContext from Farcaster");
-          return;
-        }
-
-        console.log("Frame Context:", {
-          hasUser: !!frameContext.user,
-          fid: frameContext.user?.fid,
-          username: frameContext.user?.username,
-          added: frameContext.client.added
-        });
-
-        setContext(frameContext);
-        setIsFramePinned(frameContext.client.added);
-
-        // Set up event listeners
-        frameSDK.on("frameAdded", async () => {
-          console.log("Frame added");
-          setIsFramePinned(true);
+        if (frameSDK) {
+          console.log("Found frameSDK in window");
+          setIsInFrame(true);
           
-          // if (frameContext.user?.fid) {
-          //   console.log("Storing FID:", frameContext.user.fid);
-          //   try {
-          //     await updateUserConsent(
-          //       frameContext.user.fid.toString(),
-          //       true,
-          //       undefined
-          //     );
-          //     console.log("Successfully stored FID");
-          //   } catch (error) {
-          //     console.error("Error storing FID:", error);
-          //   }
-          // }
-        });
+          // Set up event listeners
+          frameSDK.on("frameAdded", async () => {
+            console.log("Frame added");
+            setIsFramePinned(true);
+          });
 
-        frameSDK.on("frameRemoved", () => {
-          console.log("Frame removed");
-          setIsFramePinned(false);
-        });
+          frameSDK.on("frameRemoved", () => {
+            console.log("Frame removed");
+            setIsFramePinned(false);
+          });
+        } else {
+          console.log("No frameSDK found in window");
+        }
       } catch (error) {
         console.error("Error setting up SDK:", error);
         setIsSDKLoaded(false);
