@@ -93,7 +93,7 @@ export default async function RootLayout({
             <header className="sr-only">Sun Cycle Age App</header>
             {/* Main content and footer, flex column, sticky footer */}
             <div className="min-h-screen flex flex-col bg-white dark:bg-black/60">
-              <main id="main-content" className="flex-1 flex flex-col pt-16">{children}</main>
+              <main id="main-content" className="flex-1 flex flex-col">{children}</main>
             </div>
             {/* Footer is handled in SunCycleAge.tsx */}
           </Providers>

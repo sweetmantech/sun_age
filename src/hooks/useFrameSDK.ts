@@ -75,27 +75,21 @@ export function useFrameSDK() {
             console.log("Attempting to store FID...");
             
             try {
-              // Make a direct API call to store the FID
-              const response = await fetch('/api/milestone-notification', {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                  fid: frameContext.user.fid.toString(),
+              // Use updateUserConsent to store the FID and notification details
+              await updateUserConsent(
+                frameContext.user.fid.toString(),
+                'welcome',
+                {
                   type: 'welcome',
                   message: 'Welcome to Sun Cycle Age! Track your journey around the sun.',
-                  timestamp: new Date().toISOString()
-                }),
-              });
-
-              if (!response.ok) {
-                console.error("Failed to store FID:", await response.text());
-              } else {
-                console.log("Successfully stored FID");
-                if (notificationDetails) {
-                  setNotificationDetails(notificationDetails);
+                  timestamp: new Date().toISOString(),
+                  notificationToken: notificationDetails?.token,
+                  notificationUrl: notificationDetails?.url
                 }
+              );
+              console.log("Successfully stored FID and notification details");
+              if (notificationDetails) {
+                setNotificationDetails(notificationDetails);
               }
             } catch (error) {
               console.error("Error storing FID:", error);
