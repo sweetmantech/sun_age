@@ -1,78 +1,43 @@
 import { NextRequest, NextResponse } from "next/server";
-import { parseWebhookEvent, verifyAppKeyWithNeynar } from "@farcaster/frame-node";
-import { updateUserConsent, revokeUserConsent } from '~/lib/consent';
-
-type WebhookEvent = {
-  event: "frame_added" | "frame_removed" | "notifications_enabled" | "notifications_disabled";
-  fid: number;
-  notificationDetails?: {
-    url: string;
-    token: string;
-  };
-};
+import { createClient } from '~/utils/supabase/server';
 
 export async function POST(request: NextRequest) {
+  console.log("=== Webhook Request Received ===");
+  
   try {
-    const requestJson = await request.json();
-    console.log("=== Webhook Event Received ===");
-    console.log("Event data:", requestJson);
+    const data = await request.json();
+    console.log("Webhook data:", data);
 
-    // Verify the event signature
-    const data = await parseWebhookEvent(requestJson, verifyAppKeyWithNeynar) as unknown as WebhookEvent;
-    console.log("Verified event data:", data);
-
-    const { event, fid, notificationDetails } = data;
+    const { event, fid } = data;
+    console.log("Event:", event);
+    console.log("FID:", fid);
 
     if (!fid) {
-      console.error("No FID in webhook data");
+      console.error("No FID provided in webhook data");
       return NextResponse.json({ error: 'No FID provided' }, { status: 400 });
     }
 
-    switch (event) {
-      case "frame_added":
-        if (notificationDetails) {
-          console.log("Frame added with notifications enabled");
-          // Store the notification token and URL
-          await updateUserConsent(
-            fid.toString(),
-            true,
-            {
-              token: notificationDetails.token,
-              url: notificationDetails.url
-            }
-          );
-        } else {
-          console.log("Frame added without notifications");
-          await updateUserConsent(fid.toString(), false);
-        }
-        break;
+    if (event === 'frame_added') {
+      console.log("Processing frame_added event...");
+      const supabase = await createClient();
+      
+      // Store FID in Supabase
+      const { error } = await supabase
+        .from('user_notification_details')
+        .upsert({
+          fid: fid.toString(),
+          created_at: new Date().toISOString()
+        });
 
-      case "frame_removed":
-        console.log("Frame removed");
-        await revokeUserConsent(fid.toString());
-        break;
+      if (error) {
+        console.error("Failed to store FID:", error);
+        return NextResponse.json({ error: 'Failed to store FID' }, { status: 500 });
+      }
 
-      case "notifications_disabled":
-        console.log("Notifications disabled");
-        await revokeUserConsent(fid.toString());
-        break;
-
-      case "notifications_enabled":
-        if (notificationDetails) {
-          console.log("Notifications enabled");
-          await updateUserConsent(
-            fid.toString(),
-            true,
-            {
-              token: notificationDetails.token,
-              url: notificationDetails.url
-            }
-          );
-        }
-        break;
+      console.log("Successfully stored FID:", fid);
+      return NextResponse.json({ success: true });
     }
 
-    console.log("=== End Webhook Event ===");
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Error processing webhook:", error);

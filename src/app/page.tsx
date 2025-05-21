@@ -41,18 +41,27 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function Page() {
+  console.log("=== Server-side Page Component ===");
+  console.log("Creating Supabase client...");
   const supabase = await createClient();
 
   // Fetch user consent data
-  const { data: userConsent } = await supabase
+  console.log("Fetching user consent data...");
+  const { data: userConsent, error } = await supabase
     .from('user_consent')
     .select('*')
     .order('consent_date', { ascending: false })
-    .limit(10)
+    .limit(10);
+
+  if (error) {
+    console.error("Error fetching user consent:", error);
+  } else {
+    console.log("User consent data:", userConsent);
+  }
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-between p-4 md:p-24">
       <SunCycleAge initialConsentData={userConsent} />
     </main>
-  )
+  );
 }
