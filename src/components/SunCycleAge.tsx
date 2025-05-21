@@ -349,7 +349,7 @@ export default function SunCycleAge({ initialConsentData }: SunCycleAgeProps) {
       {/* Debug info - only show in development */}
       {process.env.NODE_ENV === "development" && (
         <div className="fixed top-0 left-0 bg-black/80 text-white p-2 text-xs font-mono z-50">
-          SDK: {isSDKLoaded ? '✓' : '✗'} | Frame: {isFramePinned ? '✓' : '✗'} | Context: {context ? '✓' : '✗'} | Notifications: {notificationDetails ? '✓' : '✗'}
+          SDK: {isSDKLoaded ? '✓' : '✗'} | Frame: {isFramePinned ? '✓' : '✗'} | Context: {context ? '✓' : '✗'}
         </div>
       )}
       
@@ -397,7 +397,7 @@ export default function SunCycleAge({ initialConsentData }: SunCycleAgeProps) {
                     <div className="flex items-center justify-between">
                       <span className="text-sm text-gray-600 dark:text-gray-300">Milestone Notifications</span>
                       <span className="text-xs text-gray-500 dark:text-gray-400">
-                        {notificationDetails ? 'Enabled' : 'Disabled'}
+                        {isFramePinned ? 'Enabled' : 'Disabled'}
                       </span>
                     </div>
                     <div className="flex items-center justify-between">
