@@ -360,13 +360,29 @@ export default function SunCycleAge({ initialConsentData }: SunCycleAgeProps) {
       localStorage.setItem("sunCycleBookmark", JSON.stringify(data));
       setBookmark(data);
 
+      // Log Farcaster context state
+      console.log("Farcaster context state:", {
+        hasContext: !!context,
+        hasUser: !!context?.user,
+        fid: context?.user?.fid,
+        isFramePinned,
+        isInFrame
+      });
+
       // Farcaster user
-      if (context?.user?.fid) {
+      if (isInFrame && context?.user?.fid) {
+        console.log("Storing bookmark for Farcaster user:", context.user.fid);
         fetch('/api/bookmark', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ fid: context.user.fid, user_type: 'farcaster' }),
-        }).catch(console.error);
+          body: JSON.stringify({ 
+            fid: context.user.fid, 
+            user_type: 'farcaster',
+            is_frame_pinned: isFramePinned 
+          }),
+        }).catch(error => {
+          console.error("Error storing Farcaster bookmark:", error);
+        });
       } else {
         // Browser user: generate/store anon_id
         let anon_id = localStorage.getItem('sunCycleAnonId');
@@ -374,11 +390,18 @@ export default function SunCycleAge({ initialConsentData }: SunCycleAgeProps) {
           anon_id = crypto.randomUUID();
           localStorage.setItem('sunCycleAnonId', anon_id);
         }
+        console.log("Storing bookmark for browser user:", anon_id);
         fetch('/api/bookmark', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ anon_id, user_type: 'browser' }),
-        }).catch(console.error);
+          body: JSON.stringify({ 
+            anon_id, 
+            user_type: 'browser',
+            is_frame_pinned: false
+          }),
+        }).catch(error => {
+          console.error("Error storing browser bookmark:", error);
+        });
       }
     }
   };

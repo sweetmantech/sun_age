@@ -2,17 +2,19 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(request: NextRequest) {
   try {
-    const { fid, anon_id, user_type } = await request.json();
-    console.log('Bookmark request:', { fid, anon_id, user_type });
+    const { fid, anon_id, user_type, is_frame_pinned } = await request.json();
+    console.log('Bookmark request:', { fid, anon_id, user_type, is_frame_pinned });
 
     if (!fid && !anon_id) {
+      console.error('No FID or anon_id provided in request');
       return NextResponse.json({ error: 'No FID or anon_id provided' }, { status: 400 });
     }
 
     const payload: any = { 
       bookmarked: true, 
       user_type,
-      created_at: new Date().toISOString()
+      created_at: new Date().toISOString(),
+      is_frame_pinned: is_frame_pinned || false
     };
 
     // Handle FID for Farcaster users
