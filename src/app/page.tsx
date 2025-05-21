@@ -1,6 +1,9 @@
 import { Metadata } from "next";
 import App from "./app";
 import { PROJECT_TITLE, PROJECT_DESCRIPTION } from "~/lib/constants";
+import { createClient } from '~/utils/supabase/server'
+import { cookies } from 'next/headers'
+import SunCycleAge from '~/components/SunCycleAge'
 
 const appUrl =
   process.env.NEXT_PUBLIC_URL ||
@@ -37,6 +40,20 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-export default function Home() {
-  return <App />;
+export default async function Page() {
+  const cookieStore = cookies()
+  const supabase = createClient(cookieStore)
+
+  // Fetch user consent data
+  const { data: userConsent } = await supabase
+    .from('user_consent')
+    .select('*')
+    .order('consent_date', { ascending: false })
+    .limit(10)
+
+  return (
+    <main className="flex min-h-screen flex-col items-center justify-between p-24">
+      <SunCycleAge initialConsentData={userConsent} />
+    </main>
+  )
 }

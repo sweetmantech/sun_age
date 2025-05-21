@@ -26,7 +26,11 @@ function WarpcastEmbed({ url }: { url: string }) {
   );
 }
 
-export default function SunCycleAge() {
+interface SunCycleAgeProps {
+  initialConsentData?: any[] | null;
+}
+
+export default function SunCycleAge({ initialConsentData }: SunCycleAgeProps) {
   const { 
     isSDKLoaded, 
     sdk, 
@@ -72,6 +76,13 @@ export default function SunCycleAge() {
   const [daysToMilestone, setDaysToMilestone] = useState<number | null>(null);
   const [milestoneDate, setMilestoneDate] = useState<string | null>(null);
   const [lastMilestoneNotified, setLastMilestoneNotified] = useState<number | null>(null);
+
+  // Log initial consent data for debugging
+  useEffect(() => {
+    if (initialConsentData) {
+      console.log("Initial consent data:", initialConsentData);
+    }
+  }, [initialConsentData]);
 
   useEffect(() => {
     if (days !== null) {
