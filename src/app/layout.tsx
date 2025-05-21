@@ -108,7 +108,7 @@ export default async function RootLayout({
                     <Info className="w-5 h-5" />
                   </button>
                 </DialogTrigger>
-                <DialogContent className="max-w-md w-full border border-gray-400 bg-[rgba(255,252,242,0.5)] dark:bg-[rgba(24,24,28,0.5)] p-6 rounded-none shadow-md backdrop-blur-sm mx-4" style={{ boxShadow: '0 4px 24px 0 rgba(0,0,0,0.08)' }}>
+                <DialogContent className="max-w-md w-[80%] border border-gray-400 bg-[rgba(255,252,242,0.5)] dark:bg-[rgba(24,24,28,0.5)] p-6 rounded-none shadow-md backdrop-blur-sm" style={{ boxShadow: '0 4px 24px 0 rgba(0,0,0,0.08)' }}>
                   <DialogTitle className="sr-only">About Solara</DialogTitle>
                   <span className="block text-[#d4af37] dark:text-white w-[120px] h-[30px] mx-auto select-none mb-1">
                     <svg width="120" height="30" viewBox="0 0 627 150" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
