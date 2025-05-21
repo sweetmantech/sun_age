@@ -2,8 +2,17 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(request: NextRequest) {
   try {
-    const { fid, anon_id, user_type, is_frame_pinned } = await request.json();
-    console.log('Bookmark request:', { fid, anon_id, user_type, is_frame_pinned });
+    const body = await request.json();
+    const { fid, anon_id, user_type, is_frame_pinned } = body;
+    console.log('Bookmark request body:', body);
+    console.log('Bookmark request details:', { 
+      fid, 
+      anon_id, 
+      user_type, 
+      is_frame_pinned,
+      fidType: fid ? typeof fid : 'undefined',
+      hasFid: !!fid
+    });
 
     if (!fid && !anon_id) {
       console.error('No FID or anon_id provided in request');
@@ -14,14 +23,21 @@ export async function POST(request: NextRequest) {
       bookmarked: true, 
       user_type,
       created_at: new Date().toISOString(),
-      is_frame_pinned: is_frame_pinned || false
+      is_frame_pinned: is_frame_pinned || false,
+      has_pinned: is_frame_pinned || false,
+      notifications_enabled: is_frame_pinned || false, // We'll assume notifications are enabled if frame is pinned
+      last_updated: new Date().toISOString()
     };
 
     // Handle FID for Farcaster users
     if (fid) {
       // Ensure FID is stored as a string
       payload.fid = String(fid);
-      console.log('Storing FID:', payload.fid);
+      console.log('Storing FID:', {
+        original: fid,
+        converted: payload.fid,
+        type: typeof payload.fid
+      });
     }
 
     // Handle anon_id for browser users
@@ -48,11 +64,18 @@ export async function POST(request: NextRequest) {
     const data = await response.json();
     
     if (!response.ok) {
-      console.error('Supabase REST error:', data);
+      console.error('Supabase REST error:', {
+        status: response.status,
+        statusText: response.statusText,
+        data
+      });
       return NextResponse.json({ error: data }, { status: response.status });
     }
 
-    console.log('Successfully stored bookmark:', data);
+    console.log('Successfully stored bookmark:', {
+      payload,
+      response: data
+    });
     return NextResponse.json({ success: true, data });
   } catch (error) {
     console.error("API error:", error);

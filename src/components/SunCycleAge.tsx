@@ -366,20 +366,45 @@ export default function SunCycleAge({ initialConsentData }: SunCycleAgeProps) {
         hasUser: !!context?.user,
         fid: context?.user?.fid,
         isFramePinned,
-        isInFrame
+        isInFrame,
+        contextDetails: context,
+        frameState: {
+          isPinned: isFramePinned,
+          isInFrame,
+          hasUser: !!context?.user,
+          hasFid: !!context?.user?.fid
+        }
       });
 
       // Farcaster user
       if (isInFrame && context?.user?.fid) {
-        console.log("Storing bookmark for Farcaster user:", context.user.fid);
+        console.log("Storing bookmark for Farcaster user:", {
+          fid: context.user.fid,
+          username: context.user.username,
+          displayName: context.user.displayName,
+          isFramePinned,
+          frameState: {
+            isPinned: isFramePinned,
+            isInFrame,
+            hasUser: !!context?.user,
+            hasFid: !!context?.user?.fid
+          }
+        });
         fetch('/api/bookmark', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ 
             fid: context.user.fid, 
             user_type: 'farcaster',
-            is_frame_pinned: isFramePinned 
+            is_frame_pinned: isFramePinned,
+            has_pinned: isFramePinned,
+            notifications_enabled: isFramePinned
           }),
+        }).then(response => {
+          console.log("Bookmark API response:", response);
+          return response.json();
+        }).then(data => {
+          console.log("Bookmark API data:", data);
         }).catch(error => {
           console.error("Error storing Farcaster bookmark:", error);
         });
