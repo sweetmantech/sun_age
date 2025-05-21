@@ -1,4 +1,4 @@
-import { PROJECT_TITLE } from "~/lib/constants";
+import { PROJECT_TITLE } from "~/lib/constants.ts";
 
 export async function GET() {
   const appUrl = "https://sun-age.vercel.app";

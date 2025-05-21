@@ -3,7 +3,7 @@ import { base, degen, mainnet, optimism } from "wagmi/chains";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { farcasterFrame } from "@farcaster/frame-wagmi-connector";
 import { DaimoPayProvider, getDefaultConfig } from "@daimo/pay";
-import { PROJECT_TITLE } from "~/lib/constants";
+import { PROJECT_TITLE } from "../../lib/constants";
 
 export const config = createConfig(
   getDefaultConfig({

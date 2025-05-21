@@ -35,15 +35,15 @@ export async function POST(request: NextRequest) {
           // Store the notification token and URL
           await updateUserConsent(
             fid.toString(),
-            true,
+            'welcome',
             {
-              token: notificationDetails.token,
-              url: notificationDetails.url
+              type: 'welcome',
+              message: 'Welcome to Sun Cycle Age! Track your journey around the sun.',
+              timestamp: new Date().toISOString(),
+              notificationToken: notificationDetails.token,
+              notificationUrl: notificationDetails.url
             }
           );
-        } else {
-          console.log("Frame added without notifications");
-          await updateUserConsent(fid.toString(), false);
         }
         break;
 
@@ -62,10 +62,13 @@ export async function POST(request: NextRequest) {
           console.log("Notifications enabled");
           await updateUserConsent(
             fid.toString(),
-            true,
+            'welcome',
             {
-              token: notificationDetails.token,
-              url: notificationDetails.url
+              type: 'welcome',
+              message: 'Welcome to Sun Cycle Age! Track your journey around the sun.',
+              timestamp: new Date().toISOString(),
+              notificationToken: notificationDetails.token,
+              notificationUrl: notificationDetails.url
             }
           );
         }

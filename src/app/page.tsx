@@ -1,6 +1,6 @@
 import { Metadata } from "next";
 import App from "./app";
-import { PROJECT_TITLE, PROJECT_DESCRIPTION } from "~/lib/constants";
+import { PROJECT_TITLE, PROJECT_DESCRIPTION } from "../lib/constants";
 import { createClient } from '~/utils/supabase/server'
 import { cookies } from 'next/headers'
 import SunCycleAge from '~/components/SunCycleAge'
