@@ -118,7 +118,8 @@ export default function SunCycleAge({ initialConsentData }: SunCycleAgeProps) {
     pinFrame, 
     isFramePinned, 
     context, 
-    isInFrame
+    isInFrame,
+    loading
   } = useFrameSDK();
   const [birthDate, setBirthDate] = useState<string>("");
   const [days, setDays] = useState<number | null>(null);
@@ -480,33 +481,15 @@ export default function SunCycleAge({ initialConsentData }: SunCycleAgeProps) {
   const [isRecalculating, setIsRecalculating] = useState(false);
   const [showConfirmClear, setShowConfirmClear] = useState(false);
 
+  // Add state to control pin prompt visibility
+  const [showPinPrompt, setShowPinPrompt] = useState(true);
+
   if (!isSDKLoaded) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
           <p className="text-gray-600 dark:text-gray-400">Loading Sun Cycle Age...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // If we're in a frame but not pinned, show a message
-  if (isInFrame && !isFramePinned) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center p-6">
-          <SunSVG />
-          <h2 className="text-xl font-serif font-bold mb-4">Pin to Farcaster</h2>
-          <p className="text-gray-600 dark:text-gray-400 mb-6">
-            Pin this app to your Farcaster profile to track your sun cycle age and receive milestone notifications.
-          </p>
-          <button
-            onClick={pinFrame}
-            className="px-6 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-          >
-            Pin App
-          </button>
         </div>
       </div>
     );
@@ -520,6 +503,33 @@ export default function SunCycleAge({ initialConsentData }: SunCycleAgeProps) {
           SDK: {isSDKLoaded ? '✓' : '✗'} | Frame: {isFramePinned ? '✓' : '✗'} | Context: {context ? '✓' : '✗'}
         </div>
       )}
+
+      {/* Pin Prompt - Only show if in frame and not pinned */}
+      {isInFrame && !isFramePinned && showPinPrompt && (
+        <div className="fixed top-4 right-4 z-50 bg-white dark:bg-gray-800 p-4 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 max-w-sm">
+          <div className="flex items-start gap-3">
+            <div className="flex-1">
+              <h3 className="font-serif font-bold mb-1">Pin to Farcaster</h3>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
+                Pin this app to track your sun cycle age and receive milestone notifications.
+              </p>
+              <button
+                onClick={pinFrame}
+                className="w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-sm"
+              >
+                Pin App
+              </button>
+            </div>
+            <button 
+              onClick={() => setShowPinPrompt(false)} 
+              className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Main Content: Only one of calculator, results, or bookmark card is shown */}
       {days !== null ? (
         <div className="flex-1 flex flex-col items-center justify-center w-full">
