@@ -8,7 +8,6 @@ import { PROJECT_TITLE, PROJECT_DESCRIPTION } from "../lib/constants";
 import { Providers } from "~/app/providers";
 import { NavActions } from "~/components/nav-actions";
 import { SidebarInset, SidebarProvider } from "~/components/ui/sidebar";
-import { PinMiniAppButton } from "~/components/ui/pin-mini-app-button";
 import { Info } from "lucide-react";
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "~/components/ui/tooltip";
 import { Dialog, DialogTrigger, DialogContent, DialogTitle } from "~/components/ui/dialog";
@@ -128,7 +127,6 @@ export default async function RootLayout({
             </div>
             <div className="fixed top-4 right-4 z-50 flex gap-2 items-center">
               <ThemeToggle />
-              <PinMiniAppButton />
             </div>
             {/* App header */}
             <Header formattedDate={formattedDate} />

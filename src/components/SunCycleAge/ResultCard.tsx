@@ -22,6 +22,7 @@ interface ResultCardProps {
   bookmark: any;
   handleBookmark: () => void;
   formattedDate: string;
+  milestoneCard?: React.ReactNode;
 }
 
 const ResultCard: React.FC<ResultCardProps> = ({
@@ -39,6 +40,7 @@ const ResultCard: React.FC<ResultCardProps> = ({
   bookmark,
   handleBookmark,
   formattedDate,
+  milestoneCard,
 }) => {
   const cardRef = useRef<HTMLDivElement>(null);
   const { context } = useFrameSDK();
@@ -102,14 +104,10 @@ const ResultCard: React.FC<ResultCardProps> = ({
         <div className="text-5xl font-serif font-extrabold tracking-tight text-gray-800 dark:text-white text-center mb-1">{days}</div>
         <div className="text-sm font-mono text-gray-500 dark:text-gray-400 text-center mb-2">SOLAR ROTATIONS</div>
         <div className="text-lg font-serif text-gray-700 dark:text-gray-300 text-center mb-2">~ {approxYears} years old</div>
-        {/* Milestone box */}
-        {nextMilestone && daysToMilestone !== null && milestoneDate && (
+        {/* Milestone card (nested) */}
+        {milestoneCard && (
           <div className="w-full flex justify-center mb-2">
-            <div className="bg-white/80 dark:bg-neutral-900/80 border border-gray-400 dark:border-gray-700 px-4 py-3 text-center text-xs font-mono text-gray-800 dark:text-gray-100 rounded-none max-w-xs mx-auto">
-              <span className="font-semibold">Solar Return <span role='img' aria-label='sun'>🌞</span></span><br />
-              Your next milestone: <span className="font-bold">{nextMilestone}</span> rotations<br />
-              in <span className="font-bold">{daysToMilestone}</span> days ({milestoneDate})
-            </div>
+            {milestoneCard}
           </div>
         )}
         {/* Randomized quote */}

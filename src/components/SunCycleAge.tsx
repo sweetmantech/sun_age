@@ -9,7 +9,7 @@ import SolarSystemGraphic from "./SunCycleAge/SolarSystemGraphic";
 import ResultCard from "./SunCycleAge/ResultCard";
 import FormSection from "./SunCycleAge/FormSection";
 import MilestoneOrbit from "./SunCycleAge/MilestoneOrbit";
-import { getNextMilestone, getProgressToNextMilestone } from "~/lib/milestones";
+import { getNextMilestone, getProgressToNextMilestone, getNextNumericalMilestones, getNextMilestoneByType } from "~/lib/milestones";
 import {
   Dialog as RadixDialog,
   DialogContent,
@@ -17,6 +17,7 @@ import {
   DialogClose,
   DialogOverlay,
 } from "../components/ui/dialog";
+import MilestoneCard from "./SunCycleAge/MilestoneCard";
 // import { revokeUserConsent } from "~/lib/consent";
 
 function WarpcastEmbed({ url }: { url: string }) {
@@ -36,7 +37,7 @@ interface SunCycleAgeProps {
   initialConsentData?: any[] | null;
 }
 
-function BookmarkCard({ bookmark, milestone, milestoneDate, daysToMilestone, onRecalculate, onClear, isRecalculating, sinceLastVisit }) {
+function BookmarkCard({ bookmark, milestone, milestoneDate, daysToMilestone, onRecalculate, onClear, isRecalculating, sinceLastVisit, milestoneCard, showMilestoneModal, setShowMilestoneModal, nextNumericalMilestones }) {
   const [tab, setTab] = useState<'age' | 'reflections' | 'signature'>('age');
   return (
     <div className="bg-[rgba(255,252,242,0.3)] dark:bg-[rgba(24,24,28,0.3)] border border-gray-200 dark:border-gray-700 rounded-none shadow p-8 max-w-md w-full flex flex-col items-center space-y-6 relative mt-0">
@@ -66,20 +67,69 @@ function BookmarkCard({ bookmark, milestone, milestoneDate, daysToMilestone, onR
             <span className="font-bold text-right">{bookmark.days.toLocaleString()} DAYS</span>
           </div>
           <div className="flex justify-between items-center">
-            <span className="text-gray-500">NEXT MILESTONE</span>
-            <span className="font-bold text-right">{milestone} <span className="font-normal">(in {daysToMilestone} days)</span></span>
-          </div>
-          {/* Milestone callout box */}
-          <div className="w-full mt-1">
-            <div className="bg-white/80 dark:bg-neutral-900/80 border border-gray-400 dark:border-gray-700 px-4 py-2 text-xs font-mono text-gray-800 dark:text-gray-100 rounded-none w-full text-center">
-              <span className="font-semibold">Solar Return <span role='img' aria-label='sun'>🌞</span></span><br />
-              <span className="text-xs">({milestoneDate})</span>
-            </div>
-          </div>
-          <div className="flex justify-between items-center">
             <span className="text-gray-500">BIRTH DATE</span>
             <span className="font-bold text-right">{bookmark.birthDate.replace(/-/g, ".")}</span>
           </div>
+          <div className="flex justify-between items-center">
+            <span className="text-gray-500">NEXT MILESTONE</span>
+            <span className="font-bold text-right">{milestone} <span className="font-normal">(in {daysToMilestone} days)</span></span>
+          </div>
+          {/* Milestone card and View More Milestones link */}
+          {milestoneCard && (
+            <div className="w-full flex flex-col items-center my-4">
+              {milestoneCard}
+              <button
+                className="mt-2 text-sm underline text-black hover:text-gray-800 dark:text-white dark:hover:text-gray-200 font-mono font-semibold"
+                onClick={() => setShowMilestoneModal(true)}
+              >
+                View More Milestones ↗
+              </button>
+              {/* Modal for more milestones */}
+              {showMilestoneModal && (
+                <RadixDialog open={showMilestoneModal} onOpenChange={setShowMilestoneModal}>
+                  <DialogOverlay />
+                  <DialogContent className="w-4/5 max-w-lg border border-gray-400 bg-[rgba(255,252,242,0.7)] dark:bg-[rgba(24,24,28,0.7)] p-6 rounded-none shadow-md backdrop-blur-lg">
+                    <DialogTitle className="text-lg font-serif font-bold mb-4">Upcoming Milestones</DialogTitle>
+                    <div className="space-y-6 max-h-96 overflow-y-auto">
+                      {(() => {
+                        const milestoneTypes = [
+                          { type: 'interval', label: 'Numerical Milestone' },
+                          { type: 'palindrome', label: 'Palindrome Day' },
+                          { type: 'interesting', label: 'Interesting Number' },
+                          { type: 'cosmic', label: 'Cosmic (Solar Return or Special)' },
+                          { type: 'angel', label: 'Angel Number' },
+                        ];
+                        const milestoneByType = getNextMilestoneByType(bookmark.days, new Date(bookmark.birthDate));
+                        return milestoneTypes.map(({ type, label }) => {
+                          const m = milestoneByType[type];
+                          if (!m) return null;
+                          return (
+                            <div key={type}>
+                              <div className="font-mono text-xs uppercase tracking-widest text-gray-500 mb-1">{label}</div>
+                              <MilestoneCard
+                                number={m.cycles}
+                                label={m.label}
+                                emoji={m.emoji}
+                                description={m.description}
+                                daysToMilestone={m.daysToMilestone}
+                                milestoneDate={m.milestoneDate}
+                                variant="bookmark"
+                              />
+                            </div>
+                          );
+                        });
+                      })()}
+                    </div>
+                    <div className="flex justify-end mt-6">
+                      <DialogClose asChild>
+                        <button className="px-6 py-2 border border-gray-400 dark:border-gray-700 bg-gray-100 dark:bg-neutral-800 text-gray-700 dark:text-gray-200 rounded-none uppercase tracking-widest font-mono text-sm">CLOSE</button>
+                      </DialogClose>
+                    </div>
+                  </DialogContent>
+                </RadixDialog>
+              )}
+            </div>
+          )}
           {/* Divider before quote */}
           <div className="border-t border-gray-300 dark:border-gray-700 my-4" />
           <div className="text-xs font-sans text-gray-400 italic text-left">Your journey began {bookmark.days.toLocaleString()} days ago. Each rotation represents both repetition and change.</div>
@@ -484,6 +534,20 @@ export default function SunCycleAge({ initialConsentData }: SunCycleAgeProps) {
   // Add state to control pin prompt visibility
   const [showPinPrompt, setShowPinPrompt] = useState(true);
 
+  // Add state for modal
+  const [showMilestoneModal, setShowMilestoneModal] = useState(false);
+
+  // Compute next numerical milestones (after birth date is entered)
+  const nextNumericalMilestones = (bookmark && showBookmark)
+    ? getNextNumericalMilestones(bookmark.days, new Date(bookmark.birthDate), 10)
+    : (days !== null && birthDate)
+      ? getNextNumericalMilestones(days, new Date(birthDate), 10)
+      : [];
+  const nextMilestoneObj = nextNumericalMilestones.length > 0 ? nextNumericalMilestones[0] : null;
+
+  // Debug log before rendering bookmark card
+  console.log('bookmark:', bookmark, 'showBookmark:', showBookmark, 'nextMilestoneObj:', nextMilestoneObj);
+
   if (!isSDKLoaded) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -496,7 +560,7 @@ export default function SunCycleAge({ initialConsentData }: SunCycleAgeProps) {
   }
 
   return (
-    <div className="relative w-full min-h-screen flex flex-col justify-between z-0">
+    <div className="relative w-full min-h-screen flex flex-col items-center justify-between z-0">
       {/* Debug info - only show in development */}
       {process.env.NODE_ENV === "development" && (
         <div className="fixed top-0 left-0 bg-black/80 text-white p-2 text-xs font-mono z-50">
@@ -506,87 +570,115 @@ export default function SunCycleAge({ initialConsentData }: SunCycleAgeProps) {
 
       {/* Pin Prompt - Only show if in frame and not pinned */}
       {isInFrame && !isFramePinned && showPinPrompt && (
-        <div className="fixed top-4 right-4 z-50 bg-white dark:bg-gray-800 p-4 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 max-w-sm">
-          <div className="flex items-start gap-3">
-            <div className="flex-1">
-              <h3 className="font-serif font-bold mb-1">Pin to Farcaster</h3>
-              <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
-                Pin this app to track your sun cycle age and receive milestone notifications.
-              </p>
-              <button
-                onClick={pinFrame}
-                className="w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-sm"
-              >
-                Pin App
-              </button>
-            </div>
-            <button 
-              onClick={() => setShowPinPrompt(false)} 
-              className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
-            >
-              ✕
-            </button>
-          </div>
+        <div className="fixed top-8 left-1/2 transform -translate-x-1/2 z-50 w-[90vw] max-w-md bg-white dark:bg-neutral-900/95 border border-gray-300 dark:border-gray-700 shadow-lg rounded-none p-6 flex flex-col items-center relative">
+          <button
+            onClick={() => setShowPinPrompt(false)}
+            className="absolute top-3 right-3 text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 text-xl font-bold focus:outline-none"
+            aria-label="Close"
+          >
+            ×
+          </button>
+          <div className="text-lg font-serif font-bold mb-1 text-center">Add Solara</div>
+          <div className="text-xs font-mono uppercase tracking-widest text-gray-500 mb-2 text-center">Become one with your inner sol.</div>
+          <div className="text-sm text-gray-700 dark:text-gray-300 mb-4 text-center">Pin Solara to track your Sol Age through time and receive milestone notifications.</div>
+          <button
+            onClick={pinFrame}
+            className="w-full px-4 py-2 bg-black text-white rounded-none uppercase tracking-widest font-mono text-sm font-bold hover:bg-gray-900 transition-colors"
+          >
+            PIN SOLARA
+          </button>
         </div>
       )}
 
-      {/* Main Content: Only one of calculator, results, or bookmark card is shown */}
-      {days !== null ? (
-        <div className="flex-1 flex flex-col items-center justify-center w-full">
-          <ResultCard
-            days={days}
-            approxYears={approxYears!}
-            nextMilestone={nextMilestone}
-            daysToMilestone={daysToMilestone}
-            milestoneDate={milestoneDate}
-            quote={quote}
-            showDetails={showDetails}
-            setShowDetails={setShowDetails}
-            onShare={onShare}
-            isSharing={isSharing}
-            onRecalculate={() => {
-              setBirthDate("");
-              setDays(null);
-              setApproxYears(null);
-              setShowDetails(false);
-            }}
-            bookmark={bookmark}
-            handleBookmark={handleBookmark}
-            formattedDate={formattedDate}
-          />
-        </div>
-      ) : bookmark && showBookmark ? (
-        <div className="flex-1 flex items-center justify-center w-full">
-          <BookmarkCard
-            bookmark={bookmark}
-            milestone={bookmarkMilestone?.nextMilestone}
-            milestoneDate={bookmarkMilestone?.milestoneDate}
-            daysToMilestone={bookmarkMilestone?.daysToMilestone}
-            sinceLastVisit={bookmark && bookmark.lastVisitDays !== undefined ? Math.max(0, bookmark.days - bookmark.lastVisitDays) : 0}
-            onRecalculate={async () => {
-              setIsRecalculating(true);
-              await new Promise(r => setTimeout(r, 1200));
-              calculateAge();
-              // After recalculation, update lastVisitDays to the new days value
-              setBookmark(prev => prev && days !== null ? {
-                ...prev,
-                lastVisitDays: days,
-                lastVisitDate: new Date().toISOString(),
-              } : prev);
-              setIsRecalculating(false);
-            }}
-            onClear={() => setShowConfirmClear(true)}
-            isRecalculating={isRecalculating}
-          />
-        </div>
+      {/* Show BookmarkCard if bookmark exists */}
+      {bookmark && showBookmark ? (
+        <BookmarkCard
+          bookmark={bookmark}
+          milestone={nextMilestoneObj ? nextMilestoneObj.cycles : undefined}
+          milestoneDate={nextMilestoneObj ? nextMilestoneObj.milestoneDate : undefined}
+          daysToMilestone={nextMilestoneObj ? nextMilestoneObj.daysToMilestone : undefined}
+          onRecalculate={async () => {
+            setIsRecalculating(true);
+            await new Promise(r => setTimeout(r, 1200));
+            calculateAge();
+            setBookmark(prev => prev && days !== null ? {
+              ...prev,
+              lastVisitDays: days,
+              lastVisitDate: new Date().toISOString(),
+            } : prev);
+            setIsRecalculating(false);
+          }}
+          onClear={() => setShowConfirmClear(true)}
+          isRecalculating={isRecalculating}
+          sinceLastVisit={bookmark && bookmark.lastVisitDays !== undefined ? Math.max(0, bookmark.days - bookmark.lastVisitDays) : 0}
+          milestoneCard={
+            nextMilestoneObj ? (
+              <MilestoneCard
+                number={nextMilestoneObj.cycles}
+                label={nextMilestoneObj.label}
+                emoji={nextMilestoneObj.emoji}
+                description={nextMilestoneObj.description}
+                daysToMilestone={nextMilestoneObj.daysToMilestone}
+                milestoneDate={nextMilestoneObj.milestoneDate}
+                variant="bookmark"
+              />
+            ) : null
+          }
+          showMilestoneModal={showMilestoneModal}
+          setShowMilestoneModal={setShowMilestoneModal}
+          nextNumericalMilestones={nextNumericalMilestones}
+        />
       ) : (
-        <div className="flex-1 flex flex-col items-center justify-center w-full">
-          <Header formattedDate={formattedDate} />
-          <div className="border-b border-gray-200 dark:border-gray-800 mt-4 mb-2 w-full mx-0 sm:mx-4" />
-          <SolarSystemGraphic />
-          <div className="mb-10" />
-          <FormSection birthDate={birthDate} setBirthDate={setBirthDate} calculateAge={calculateAge} />
-        </div>
+        // Show calculator/intro/main content if no bookmark
+        <>
+          {/* Main Content: Only one of calculator, results, or bookmark card is shown */}
+          {days !== null && nextMilestoneObj && (
+            <div className="flex-1 flex flex-col items-center justify-center w-full">
+              <ResultCard
+                days={days}
+                approxYears={approxYears!}
+                nextMilestone={nextMilestoneObj.cycles}
+                daysToMilestone={nextMilestoneObj.daysToMilestone}
+                milestoneDate={nextMilestoneObj.milestoneDate}
+                quote={quote}
+                showDetails={showDetails}
+                setShowDetails={setShowDetails}
+                onShare={onShare}
+                isSharing={isSharing}
+                onRecalculate={() => {
+                  setBirthDate("");
+                  setDays(null);
+                  setApproxYears(null);
+                  setShowDetails(false);
+                }}
+                bookmark={bookmark}
+                handleBookmark={handleBookmark}
+                formattedDate={formattedDate}
+                milestoneCard={
+                  <MilestoneCard
+                    number={nextMilestoneObj.cycles}
+                    label={nextMilestoneObj.label}
+                    emoji={nextMilestoneObj.emoji}
+                    description={nextMilestoneObj.description}
+                    daysToMilestone={nextMilestoneObj.daysToMilestone}
+                    milestoneDate={nextMilestoneObj.milestoneDate}
+                    variant="results"
+                  />
+                }
+              />
+            </div>
+          )}
+          {/* Show calculator/intro if no days calculated yet */}
+          {days === null && (
+            <div className="flex-1 flex flex-col items-center justify-center w-full">
+              <Header formattedDate={formattedDate} />
+              <div className="border-b border-gray-200 dark:border-gray-800 mt-4 mb-2 w-full mx-0 sm:mx-4" />
+              <SolarSystemGraphic />
+              <div className="mb-10" />
+              <FormSection birthDate={birthDate} setBirthDate={setBirthDate} calculateAge={calculateAge} />
+            </div>
+          )}
+        </>
       )}
       {/* Confirmation dialog: */}
       {showConfirmClear && (
@@ -605,7 +697,7 @@ export default function SunCycleAge({ initialConsentData }: SunCycleAgeProps) {
         </RadixDialog>
       )}
       {/* Footer */}
-      <div className="flex justify-center items-center w-full mb-8">
+      <div className="flex justify-center items-center w-full mb-16">
         <div className="bg-gray-50 dark:bg-neutral-900 border border-gray-400 dark:border-gray-700 p-2 mx-1 text-center text-xs font-mono text-gray-700 dark:text-gray-300 w-full max-w-md mx-auto">
           <div>Your data is not stored or shared.<br />
             Solara is made for <a href="https://warpcast.com/~/channel/occulture" target="_blank" rel="noopener noreferrer" className="underline hover:text-blue-600 transition-colors">/occulture</a>

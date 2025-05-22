@@ -1,10 +1,13 @@
+import { isPalindrome, isInterestingNumber } from './numberUtils';
+
 export interface Milestone {
-  type: 'interval' | 'birthday' | 'cosmic' | 'angel';
+  type: 'interval' | 'palindrome' | 'interesting' | 'cosmic' | 'angel';
   cycles: number;
-  name: string;
+  label: string;
+  emoji: string;
   description: string;
-  prompt: string;
-  theme: string;
+  daysToMilestone: number;
+  milestoneDate: string;
 }
 
 // Cosmic numbers for special milestones
@@ -40,116 +43,176 @@ export const MILESTONES: Milestone[] = [
   ...Array.from({ length: 100 }, (_, i) => ({
     type: 'interval' as const,
     cycles: (i + 1) * 1000,
-    name: `${(i + 1) * 1000} Rotations`,
+    label: `${(i + 1) * 1000} Rotations`,
+    emoji: '🔢',
     description: `${(i + 1) * 1000} days of solar rotation`,
-    prompt: `You've completed ${(i + 1) * 1000} rotations around the sun. What patterns have emerged in your journey?`,
-    theme: "Patterns"
+    daysToMilestone: (i + 1) * 1000,
+    milestoneDate: new Date((i + 1) * 1000).toLocaleDateString("en-US", { year: "numeric", month: "2-digit", day: "2-digit" }).replace(/\//g, "."),
   })),
   // Cosmic milestones
   ...COSMIC_NUMBERS.map(m => ({
     type: 'cosmic' as const,
     cycles: m.cycles,
-    name: m.name,
+    label: m.name,
+    emoji: '🌌',
     description: m.description,
-    prompt: `You've reached ${m.name}. How has this cosmic milestone influenced your journey?`,
-    theme: "Cosmic Connection"
+    daysToMilestone: m.cycles,
+    milestoneDate: new Date(m.cycles).toLocaleDateString("en-US", { year: "numeric", month: "2-digit", day: "2-digit" }).replace(/\//g, "."),
   })),
   // Angel number milestones
   ...ANGEL_NUMBERS.map(m => ({
     type: 'angel' as const,
     cycles: m.cycles,
-    name: m.name,
+    label: m.name,
+    emoji: '👼',
     description: m.description,
-    prompt: `You've reached ${m.name}. What spiritual insights have you gained?`,
-    theme: "Spiritual Growth"
+    daysToMilestone: m.cycles,
+    milestoneDate: new Date(m.cycles).toLocaleDateString("en-US", { year: "numeric", month: "2-digit", day: "2-digit" }).replace(/\//g, "."),
+  })),
+  // Palindrome milestones
+  ...Array.from({ length: 100 }, (_, i) => ({
+    type: 'palindrome' as const,
+    cycles: (i + 1) * 1000,
+    label: "Palindrome Day",
+    emoji: '🔄',
+    description: "A rare palindrome day count",
+    daysToMilestone: (i + 1) * 1000,
+    milestoneDate: new Date((i + 1) * 1000).toLocaleDateString("en-US", { year: "numeric", month: "2-digit", day: "2-digit" }).replace(/\//g, "."),
+  })),
+  // Interesting number milestones
+  ...Array.from({ length: 100 }, (_, i) => ({
+    type: 'interesting' as const,
+    cycles: (i + 1) * 1000,
+    label: "Interesting Number",
+    emoji: '✨',
+    description: "A mathematically interesting number",
+    daysToMilestone: (i + 1) * 1000,
+    milestoneDate: new Date((i + 1) * 1000).toLocaleDateString("en-US", { year: "numeric", month: "2-digit", day: "2-digit" }).replace(/\//g, "."),
   }))
 ].sort((a, b) => a.cycles - b.cycles);
 
 // Get the next milestone based on current cycles and birth date
-export function getNextMilestone(currentCycles: number, birthDate: Date): Milestone | null {
+export function getNextMilestone(days: number, birthDate: Date): Milestone | null {
   const today = new Date();
   const nextMilestones: Milestone[] = [];
 
-  // 1. Check for next 1000-day interval
-  const nextInterval = Math.ceil(currentCycles / 1000) * 1000;
-  if (nextInterval > currentCycles) {
-    nextMilestones.push({
-      type: 'interval',
-      cycles: nextInterval,
-      name: `${nextInterval} Rotations`,
-      description: `${nextInterval} days of solar rotation`,
-      prompt: `You're approaching ${nextInterval} rotations. What patterns are emerging?`,
-      theme: "Patterns"
-    });
-  }
+  // 1. Next 1000-day interval
+  const nextInterval = Math.ceil((days + 1) / 1000) * 1000;
+  const toNextInterval = nextInterval - days;
+  const dInterval = new Date(birthDate);
+  dInterval.setDate(dInterval.getDate() + days + toNextInterval);
+  nextMilestones.push({
+    cycles: nextInterval,
+    label: 'Numerical Milestone',
+    emoji: '🔢',
+    description: 'A significant numerical milestone.',
+    daysToMilestone: toNextInterval,
+    milestoneDate: dInterval.toLocaleDateString("en-US", { year: "numeric", month: "2-digit", day: "2-digit" }).replace(/\//g, "."),
+    type: 'interval'
+  });
 
-  // 2. Check for next birthday (solar return)
+  // 2. Next birthday (solar return)
   const nextBirthday = new Date(birthDate);
   nextBirthday.setFullYear(today.getFullYear());
   if (nextBirthday < today) {
     nextBirthday.setFullYear(today.getFullYear() + 1);
   }
   const daysToBirthday = Math.ceil((nextBirthday.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-  const cyclesAtBirthday = currentCycles + daysToBirthday;
+  const cyclesAtBirthday = days + daysToBirthday;
   nextMilestones.push({
-    type: 'birthday',
     cycles: cyclesAtBirthday,
-    name: "Solar Return",
-    description: "Your next birthday - a complete solar cycle",
-    prompt: "Your next solar return approaches. How have you grown since your last birthday?",
-    theme: "Growth"
+    label: 'Solar Return',
+    emoji: '🌞',
+    description: 'Your annual solar return.',
+    daysToMilestone: daysToBirthday,
+    milestoneDate: nextBirthday.toLocaleDateString("en-US", { year: "numeric", month: "2-digit", day: "2-digit" }).replace(/\//g, "."),
+    type: 'cosmic'
   });
 
-  // 3. Check for next cosmic number
-  const nextCosmic = COSMIC_NUMBERS.find(m => m.cycles > currentCycles);
+  // 3. Next palindrome
+  let nextPalindrome = days + 1;
+  while (!isPalindrome(nextPalindrome)) {
+    nextPalindrome++;
+  }
+  const toNextPalindrome = nextPalindrome - days;
+  const dPalindrome = new Date(birthDate);
+  dPalindrome.setDate(dPalindrome.getDate() + days + toNextPalindrome);
+  nextMilestones.push({
+    cycles: nextPalindrome,
+    label: 'Palindrome Day',
+    emoji: '🔄',
+    description: 'A rare palindrome day count!',
+    daysToMilestone: toNextPalindrome,
+    milestoneDate: dPalindrome.toLocaleDateString("en-US", { year: "numeric", month: "2-digit", day: "2-digit" }).replace(/\//g, "."),
+    type: 'palindrome'
+  });
+
+  // 4. Next interesting number
+  let nextInteresting = days + 1;
+  while (!isInterestingNumber(nextInteresting)) {
+    nextInteresting++;
+  }
+  const toNextInteresting = nextInteresting - days;
+  const dInteresting = new Date(birthDate);
+  dInteresting.setDate(dInteresting.getDate() + days + toNextInteresting);
+  nextMilestones.push({
+    cycles: nextInteresting,
+    label: 'Interesting Number',
+    emoji: '✨',
+    description: 'A mathematically interesting number!',
+    daysToMilestone: toNextInteresting,
+    milestoneDate: dInteresting.toLocaleDateString("en-US", { year: "numeric", month: "2-digit", day: "2-digit" }).replace(/\//g, "."),
+    type: 'interesting'
+  });
+
+  // 5. Next cosmic number
+  const nextCosmic = COSMIC_NUMBERS.find(m => m.cycles > days);
   if (nextCosmic) {
+    const toNextCosmic = nextCosmic.cycles - days;
+    const dCosmic = new Date(birthDate);
+    dCosmic.setDate(dCosmic.getDate() + days + toNextCosmic);
     nextMilestones.push({
-      type: 'cosmic',
       cycles: nextCosmic.cycles,
-      name: nextCosmic.name,
+      label: nextCosmic.name,
+      emoji: '🌌',
       description: nextCosmic.description,
-      prompt: `You're approaching ${nextCosmic.name}. How will this cosmic milestone influence your journey?`,
-      theme: "Cosmic Connection"
+      daysToMilestone: toNextCosmic,
+      milestoneDate: dCosmic.toLocaleDateString("en-US", { year: "numeric", month: "2-digit", day: "2-digit" }).replace(/\//g, "."),
+      type: 'cosmic'
     });
   }
 
-  // 4. Check for next angel number
-  const nextAngel = ANGEL_NUMBERS.find(m => m.cycles > currentCycles);
+  // 6. Next angel number
+  const nextAngel = ANGEL_NUMBERS.find(m => m.cycles > days);
   if (nextAngel) {
+    const toNextAngel = nextAngel.cycles - days;
+    const dAngel = new Date(birthDate);
+    dAngel.setDate(dAngel.getDate() + days + toNextAngel);
     nextMilestones.push({
-      type: 'angel',
       cycles: nextAngel.cycles,
-      name: nextAngel.name,
+      label: nextAngel.name,
+      emoji: '👼',
       description: nextAngel.description,
-      prompt: `You're approaching ${nextAngel.name}. What spiritual insights are you seeking?`,
-      theme: "Spiritual Growth"
+      daysToMilestone: toNextAngel,
+      milestoneDate: dAngel.toLocaleDateString("en-US", { year: "numeric", month: "2-digit", day: "2-digit" }).replace(/\//g, "."),
+      type: 'angel'
     });
   }
 
-  // Return the next milestone (closest in time)
-  return nextMilestones.sort((a, b) => a.cycles - b.cycles)[0] || null;
+  // Find the soonest milestone
+  const soonest = nextMilestones.reduce((a, b) => (a.daysToMilestone < b.daysToMilestone ? a : b));
+  return soonest;
 }
 
 export function getCurrentMilestone(currentCycles: number): Milestone | null {
   return MILESTONES.find(m => m.cycles === currentCycles) || null;
 }
 
-export function getProgressToNextMilestone(currentCycles: number, nextMilestone: Milestone | null): number {
-  if (!nextMilestone) return 100;
-  
-  // For birthdays and astronomical events, we need to calculate progress differently
-  if (nextMilestone.type === 'birthday') {
-    const total = nextMilestone.cycles - currentCycles;
-    return Math.min(100, Math.max(0, (1 - (total / 365)) * 100));
-  }
-  
-  // For interval, cosmic, and angel milestones, calculate progress based on the previous milestone
-  const prevMilestone = getPreviousMilestone(currentCycles);
-  const prevCycles = prevMilestone ? prevMilestone.cycles : 0;
-  const total = nextMilestone.cycles - prevCycles;
-  const current = currentCycles - prevCycles;
-  
-  return Math.min(100, Math.max(0, (current / total) * 100));
+export function getProgressToNextMilestone(days: number, birthDate: Date): number {
+  const nextMilestone = getNextMilestone(days, birthDate);
+  if (!nextMilestone) return 0;
+  const totalDays = nextMilestone.cycles - days;
+  return (days % totalDays) / totalDays;
 }
 
 function getPreviousMilestone(currentCycles: number): Milestone | null {
@@ -160,13 +223,168 @@ export function getMilestoneDescription(milestone: Milestone): string {
   switch (milestone.type) {
     case 'interval':
       return `Reach ${milestone.cycles} rotations around the sun`;
-    case 'birthday':
-      return "Celebrate your next solar return";
     case 'cosmic':
       return milestone.description;
     case 'angel':
       return milestone.description;
+    case 'palindrome':
+      return "A rare palindrome day count";
+    case 'interesting':
+      return "A mathematically interesting number";
     default:
       return milestone.description;
   }
+}
+
+// Main function: get next N numerical milestones
+export function getNextNumericalMilestones(days: number, birthDate: Date, count: number = 10): Milestone[] {
+  const milestones: Milestone[] = [];
+  let currentDays = days;
+
+  for (let i = 0; i < count; i++) {
+    const nextMilestone = getNextMilestone(currentDays, birthDate);
+    if (!nextMilestone) break;
+    milestones.push(nextMilestone);
+    currentDays = nextMilestone.cycles;
+  }
+
+  return milestones;
+}
+
+export function getNextMilestoneByType(days: number, birthDate: Date): Record<Milestone['type'], Milestone | null> {
+  const types: Milestone['type'][] = ['interval', 'palindrome', 'interesting', 'cosmic', 'angel'];
+  const result: Record<Milestone['type'], Milestone | null> = {
+    interval: null,
+    palindrome: null,
+    interesting: null,
+    cosmic: null,
+    angel: null,
+  };
+
+  // 1. Next interval
+  const nextInterval = Math.ceil((days + 1) / 1000) * 1000;
+  const toNextInterval = nextInterval - days;
+  const dInterval = new Date(birthDate);
+  dInterval.setDate(dInterval.getDate() + days + toNextInterval);
+  result.interval = {
+    cycles: nextInterval,
+    label: 'Numerical Milestone',
+    emoji: '🔢',
+    description: 'A significant numerical milestone.',
+    daysToMilestone: toNextInterval,
+    milestoneDate: dInterval.toLocaleDateString("en-US", { year: "numeric", month: "2-digit", day: "2-digit" }).replace(/\//g, "."),
+    type: 'interval'
+  };
+
+  // 2. Next palindrome
+  let nextPalindrome = days + 1;
+  while (!isPalindrome(nextPalindrome)) {
+    nextPalindrome++;
+  }
+  const toNextPalindrome = nextPalindrome - days;
+  const dPalindrome = new Date(birthDate);
+  dPalindrome.setDate(dPalindrome.getDate() + days + toNextPalindrome);
+  result.palindrome = {
+    cycles: nextPalindrome,
+    label: 'Palindrome Day',
+    emoji: '🔄',
+    description: 'A rare palindrome day count!',
+    daysToMilestone: toNextPalindrome,
+    milestoneDate: dPalindrome.toLocaleDateString("en-US", { year: "numeric", month: "2-digit", day: "2-digit" }).replace(/\//g, "."),
+    type: 'palindrome'
+  };
+
+  // 3. Next interesting number
+  let nextInteresting = days + 1;
+  while (!isInterestingNumber(nextInteresting)) {
+    nextInteresting++;
+  }
+  const toNextInteresting = nextInteresting - days;
+  const dInteresting = new Date(birthDate);
+  dInteresting.setDate(dInteresting.getDate() + days + toNextInteresting);
+  result.interesting = {
+    cycles: nextInteresting,
+    label: 'Interesting Number',
+    emoji: '✨',
+    description: 'A mathematically interesting number!',
+    daysToMilestone: toNextInteresting,
+    milestoneDate: dInteresting.toLocaleDateString("en-US", { year: "numeric", month: "2-digit", day: "2-digit" }).replace(/\//g, "."),
+    type: 'interesting'
+  };
+
+  // 4. Next cosmic (including solar return)
+  // Solar return (birthday)
+  const today = new Date();
+  const nextBirthday = new Date(birthDate);
+  nextBirthday.setFullYear(today.getFullYear());
+  if (nextBirthday < today) {
+    nextBirthday.setFullYear(today.getFullYear() + 1);
+  }
+  const daysToBirthday = Math.ceil((nextBirthday.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+  const cyclesAtBirthday = days + daysToBirthday;
+  const dCosmicBirthday = new Date(birthDate);
+  dCosmicBirthday.setDate(dCosmicBirthday.getDate() + days + daysToBirthday);
+  // Next cosmic number milestone
+  const nextCosmic = COSMIC_NUMBERS.find(m => m.cycles > days);
+  let cosmicMilestone: Milestone | null = null;
+  if (nextCosmic) {
+    const toNextCosmic = nextCosmic.cycles - days;
+    const dCosmic = new Date(birthDate);
+    dCosmic.setDate(dCosmic.getDate() + days + toNextCosmic);
+    // Pick the soonest between solar return and cosmic number
+    if (toNextCosmic < daysToBirthday) {
+      cosmicMilestone = {
+        cycles: nextCosmic.cycles,
+        label: nextCosmic.name,
+        emoji: '🌌',
+        description: nextCosmic.description,
+        daysToMilestone: toNextCosmic,
+        milestoneDate: dCosmic.toLocaleDateString("en-US", { year: "numeric", month: "2-digit", day: "2-digit" }).replace(/\//g, "."),
+        type: 'cosmic'
+      };
+    } else {
+      cosmicMilestone = {
+        cycles: cyclesAtBirthday,
+        label: 'Solar Return',
+        emoji: '🌞',
+        description: 'Your annual solar return.',
+        daysToMilestone: daysToBirthday,
+        milestoneDate: nextBirthday.toLocaleDateString("en-US", { year: "numeric", month: "2-digit", day: "2-digit" }).replace(/\//g, "."),
+        type: 'cosmic'
+      };
+    }
+  } else {
+    // Only solar return available
+    cosmicMilestone = {
+      cycles: cyclesAtBirthday,
+      label: 'Solar Return',
+      emoji: '🌞',
+      description: 'Your annual solar return.',
+      daysToMilestone: daysToBirthday,
+      milestoneDate: nextBirthday.toLocaleDateString("en-US", { year: "numeric", month: "2-digit", day: "2-digit" }).replace(/\//g, "."),
+      type: 'cosmic'
+    };
+  }
+  result.cosmic = cosmicMilestone;
+
+  // 5. Next angel number
+  const nextAngel = ANGEL_NUMBERS.find(m => m.cycles > days);
+  if (nextAngel) {
+    const toNextAngel = nextAngel.cycles - days;
+    const dAngel = new Date(birthDate);
+    dAngel.setDate(dAngel.getDate() + days + toNextAngel);
+    result.angel = {
+      cycles: nextAngel.cycles,
+      label: nextAngel.name,
+      emoji: '👼',
+      description: nextAngel.description,
+      daysToMilestone: toNextAngel,
+      milestoneDate: dAngel.toLocaleDateString("en-US", { year: "numeric", month: "2-digit", day: "2-digit" }).replace(/\//g, "."),
+      type: 'angel'
+    };
+  } else {
+    result.angel = null;
+  }
+
+  return result;
 } 
