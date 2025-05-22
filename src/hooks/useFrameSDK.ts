@@ -69,12 +69,28 @@ export function useFrameSDK() {
       const result = await sdk.actions.addFrame();
       console.log("Frame pin result:", result);
       setIsFramePinned(true);
+
+      // Send welcome notification after 90 seconds
+      if (context?.user?.fid) {
+        setTimeout(() => {
+          fetch('/api/milestone-notification', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              fid: context.user.fid,
+              type: 'welcome',
+              message: `Welcome to Solara! You'll now receive milestone notifications as you journey around the sun.`,
+              timestamp: new Date().toISOString()
+            }),
+          }).catch(console.error);
+        }, 90000); // 90,000 ms = 1.5 minutes
+      }
     } catch (error) {
       console.error("Error pinning frame:", error);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [context]);
 
   return {
     context,

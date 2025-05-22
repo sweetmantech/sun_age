@@ -14,13 +14,10 @@ const FormSection: React.FC<FormSectionProps> = ({ birthDate, setBirthDate, calc
       </label>
       <input
         id="birth"
-        type="text"
-        inputMode="numeric"
-        pattern="\d{2}/\d{2}/\d{4}"
+        type="date"
         value={birthDate}
         onChange={(e) => setBirthDate(e.target.value)}
         className="w-56 mx-auto bg-white dark:bg-black/40 border-b border-gray-300 dark:border-gray-700 text-lg py-2 px-0 mb-6 focus:outline-none focus-visible:outline-2 focus-visible:outline-blue-400 focus:border-gray-800 dark:focus:border-gray-200 placeholder-gray-400 dark:placeholder-gray-500 font-mono text-black dark:text-white text-center transition-colors"
-        placeholder="MM/DD/YYYY"
         aria-describedby="birth-desc"
         autoComplete="off"
       />
