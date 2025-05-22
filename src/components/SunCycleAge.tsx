@@ -570,24 +570,27 @@ export default function SunCycleAge({ initialConsentData }: SunCycleAgeProps) {
 
       {/* Pin Prompt - Only show if in frame and not pinned */}
       {isInFrame && !isFramePinned && showPinPrompt && (
-        <div className="fixed top-8 left-1/2 transform -translate-x-1/2 z-50 w-[90vw] max-w-md bg-white dark:bg-neutral-900/95 border border-gray-300 dark:border-gray-700 shadow-lg rounded-none p-6 flex flex-col items-center relative">
-          <button
-            onClick={() => setShowPinPrompt(false)}
-            className="absolute top-3 right-3 text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 text-xl font-bold focus:outline-none"
-            aria-label="Close"
-          >
-            ×
-          </button>
-          <div className="text-lg font-serif font-bold mb-1 text-center">Add Solara</div>
-          <div className="text-xs font-mono uppercase tracking-widest text-gray-500 mb-2 text-center">Become one with your inner sol.</div>
-          <div className="text-sm text-gray-700 dark:text-gray-300 mb-4 text-center">Pin Solara to track your Sol Age through time and receive milestone notifications.</div>
-          <button
-            onClick={pinFrame}
-            className="w-full px-4 py-2 bg-black text-white rounded-none uppercase tracking-widest font-mono text-sm font-bold hover:bg-gray-900 transition-colors"
-          >
-            PIN SOLARA
-          </button>
-        </div>
+        <RadixDialog open={true} onOpenChange={setShowPinPrompt}>
+          <DialogOverlay />
+          <DialogContent className="w-4/5 max-w-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-neutral-900/95 p-6 rounded-none shadow-lg backdrop-blur-lg flex flex-col items-center relative">
+            <button
+              onClick={() => setShowPinPrompt(false)}
+              className="absolute top-3 right-3 text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 text-xl font-bold focus:outline-none"
+              aria-label="Close"
+            >
+              ×
+            </button>
+            <div className="text-lg font-serif font-bold mb-1 text-center">Add Solara</div>
+            <div className="text-xs font-mono uppercase tracking-widest text-gray-500 mb-2 text-center">Become one with your inner sol.</div>
+            <div className="text-sm text-gray-700 dark:text-gray-300 mb-4 text-center">Pin Solara to track your Sol Age through time and receive milestone notifications.</div>
+            <button
+              onClick={pinFrame}
+              className="w-full px-4 py-2 bg-black text-white rounded-none uppercase tracking-widest font-mono text-sm font-bold hover:bg-gray-900 transition-colors"
+            >
+              PIN SOLARA
+            </button>
+          </DialogContent>
+        </RadixDialog>
       )}
 
       {/* Show BookmarkCard if bookmark exists */}

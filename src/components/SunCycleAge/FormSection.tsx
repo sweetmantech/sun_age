@@ -8,20 +8,23 @@ interface FormSectionProps {
 
 const FormSection: React.FC<FormSectionProps> = ({ birthDate, setBirthDate, calculateAge }) => (
   <div className="flex flex-col items-center w-full px-2 sm:px-4 pb-16">
-    <form className="w-full max-w-md mx-auto">
-      <label htmlFor="birth" className="block text-xs tracking-widest font-mono uppercase mb-2" style={{ color: '#6c6f7d' }}>
+    <form className="w-full max-w-md mx-auto flex flex-col items-center">
+      <label htmlFor="birth" className="block text-xs tracking-widest font-mono uppercase mb-2 text-center" style={{ color: '#6c6f7d' }}>
         ENTER BIRTH DATE
       </label>
       <input
         id="birth"
-        type="date"
+        type="text"
+        inputMode="numeric"
+        pattern="\d{2}/\d{2}/\d{4}"
         value={birthDate}
         onChange={(e) => setBirthDate(e.target.value)}
-        className="w-full bg-white dark:bg-black/40 border-b border-gray-300 dark:border-gray-700 text-lg py-2 px-0 mb-6 focus:outline-none focus-visible:outline-2 focus-visible:outline-blue-400 focus:border-gray-800 dark:focus:border-gray-200 placeholder-gray-400 dark:placeholder-gray-500 font-mono text-black dark:text-white transition-colors"
-        placeholder="mm/dd/yyyy"
+        className="w-56 mx-auto bg-white dark:bg-black/40 border-b border-gray-300 dark:border-gray-700 text-lg py-2 px-0 mb-6 focus:outline-none focus-visible:outline-2 focus-visible:outline-blue-400 focus:border-gray-800 dark:focus:border-gray-200 placeholder-gray-400 dark:placeholder-gray-500 font-mono text-black dark:text-white text-center transition-colors"
+        placeholder="MM/DD/YYYY"
         aria-describedby="birth-desc"
+        autoComplete="off"
       />
-      <span id="birth-desc" className="sr-only">Enter your birth date in mm/dd/yyyy format</span>
+      <span id="birth-desc" className="sr-only">Enter your birth date in MM/DD/YYYY format</span>
       <button
         type="button"
         onClick={calculateAge}
