@@ -36,20 +36,25 @@ const MilestoneCard: React.FC<MilestoneCardProps> = ({
       exit={{ opacity: 0, y: -20 }}
       transition={{ duration: 0.4 }}
       whileHover={{ scale: 1.02 }}
-      className={`relative overflow-hidden bg-white/80 dark:bg-neutral-900/80 border border-gray-400 dark:border-gray-700 ${isBookmark ? "px-2 py-6" : "px-4 py-6"} text-xs font-mono text-gray-800 dark:text-gray-100 rounded-none w-full text-center shadow ${highlight ? 'ring-2 ring-yellow-400 dark:ring-yellow-500' : ''}`}
+      className={`relative overflow-hidden bg-white/80 dark:bg-neutral-900 border border-gray-400 dark:border-gray-600 ${isBookmark ? "px-2 py-6" : "px-4 py-6"} text-xs font-mono text-gray-800 dark:text-gray-100 rounded-none w-full text-center shadow ${highlight ? 'ring-2 ring-yellow-400 dark:ring-yellow-500' : ''}`}
       style={{ marginBottom: '0.5rem', minHeight: isBookmark ? '140px' : '140px' }}
     >
       {/* Decorative background sun illustration */}
-      <motion.img
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 0.7 }}
-        transition={{ duration: 0.6, delay: 0.2 }}
-        src={bgImages[variant]}
-        alt=""
-        aria-hidden="true"
-        className={`absolute inset-0 w-full h-full object-cover pointer-events-none select-none z-0 ${isBookmark ? 'object-[center_60%]' : ''}`}
-        draggable="false"
-      />
+      {variant !== "bookmark" && (
+        <>
+          {/* Show image only in light mode */}
+          <motion.img
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 0.7 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+            src={bgImages[variant]}
+            alt=""
+            aria-hidden="true"
+            className={`absolute inset-0 w-full h-full object-cover pointer-events-none select-none z-0 dark:hidden ${isBookmark ? 'object-[center_60%]' : ''}`}
+            draggable="false"
+          />
+        </>
+      )}
       {/* Card content */}
       <motion.div 
         initial={{ opacity: 0 }}
