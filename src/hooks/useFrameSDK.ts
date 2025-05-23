@@ -9,13 +9,20 @@ export function useFrameSDK() {
   const [context, setContext] = useState<FrameContext>();
   const [isFramePinned, setIsFramePinned] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
     const load = async () => {
       if (typeof window === "undefined") return;
       
       try {
-        // First check if we're in a Farcaster frame
+        setError(null);
+        
+        // Initialize the SDK first
+        await sdk.actions.ready({ disableNativeGestures: true });
+        setIsSDKLoaded(true);
+
+        // Then check for frame context
         const frameContext = await sdk.context;
         if (frameContext) {
           console.log("Found Farcaster frame context:", {
@@ -29,17 +36,12 @@ export function useFrameSDK() {
           setIsFramePinned(frameContext.client.added);
         }
 
-        // Then initialize the SDK
-        await sdk.actions.ready({ disableNativeGestures: true });
-        setIsSDKLoaded(true);
-
-        // Check for frameSDK in window
+        // Set up event listeners for frameSDK
         const frameSDK = (window as any).frameSDK;
         if (frameSDK) {
           console.log("Found frameSDK in window");
           setIsInFrame(true);
           
-          // Set up event listeners
           frameSDK.on("frameAdded", async () => {
             console.log("Frame added");
             setIsFramePinned(true);
@@ -50,22 +52,22 @@ export function useFrameSDK() {
             setIsFramePinned(false);
           });
         } else {
-          console.log("No frameSDK found in window");
+          console.log("No frameSDK found in window - this is normal when not in a Farcaster frame");
         }
       } catch (error) {
         console.error("Error setting up SDK:", error);
+        setError(error instanceof Error ? error : new Error(String(error)));
         setIsSDKLoaded(false);
       }
     };
 
-    if (!isSDKLoaded) {
-      load();
-    }
-  }, [isSDKLoaded]);
+    load();
+  }, []); // Remove isSDKLoaded dependency to ensure we try to load only once
 
   const pinFrame = useCallback(async () => {
     try {
       setLoading(true);
+      setError(null);
       const result = await sdk.actions.addFrame();
       console.log("Frame pin result:", result);
       setIsFramePinned(true);
@@ -85,6 +87,7 @@ export function useFrameSDK() {
       }
     } catch (error) {
       console.error("Error pinning frame:", error);
+      setError(error instanceof Error ? error : new Error(String(error)));
     } finally {
       setLoading(false);
     }
@@ -97,6 +100,7 @@ export function useFrameSDK() {
     sdk,
     isSDKLoaded,
     isInFrame,
-    loading
+    loading,
+    error
   };
 }

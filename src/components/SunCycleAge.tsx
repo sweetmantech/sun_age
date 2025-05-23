@@ -548,6 +548,11 @@ export default function SunCycleAge({ initialConsentData }: SunCycleAgeProps) {
   // Debug log before rendering bookmark card
   console.log('bookmark:', bookmark, 'showBookmark:', showBookmark, 'nextMilestoneObj:', nextMilestoneObj);
 
+  // Add this near the top of the SunCycleAge component
+  useEffect(() => {
+    console.log('[PinModal Debug] isInFrame:', isInFrame, '| isFramePinned:', isFramePinned, '| showPinPrompt:', showPinPrompt, '| isSDKLoaded:', isSDKLoaded);
+  }, [isInFrame, isFramePinned, showPinPrompt, isSDKLoaded]);
+
   if (!isSDKLoaded) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -561,11 +566,6 @@ export default function SunCycleAge({ initialConsentData }: SunCycleAgeProps) {
 
   return (
     <div className="relative w-full min-h-screen flex flex-col items-center justify-between z-0">
-      {/* Debug info - always show for pin modal debugging */}
-      <div className="fixed top-0 left-0 w-full bg-black/80 text-white p-2 text-xs font-mono z-50 text-center">
-        isInFrame: {String(isInFrame)} | isFramePinned: {String(isFramePinned)} | showPinPrompt: {String(showPinPrompt)} | isSDKLoaded: {String(isSDKLoaded)}
-      </div>
-
       {/* Debug info - only show in development */}
       {process.env.NODE_ENV === "development" && (
         <div className="fixed top-0 left-0 bg-black/80 text-white p-2 text-xs font-mono z-50">
