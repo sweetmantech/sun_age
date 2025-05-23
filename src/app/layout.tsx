@@ -5,7 +5,7 @@ import { ThemeProviderClient } from "~/components/providers/theme-provider-clien
 import { ThemeToggle } from "~/components/ui/theme-toggle";
 import { CosmicBackground } from "~/components/ui/cosmic-background";
 import { PROJECT_TITLE, PROJECT_DESCRIPTION } from "../lib/constants";
-import { Providers } from "~/app/providers";
+import { Providers } from "./providers";
 import { NavActions } from "~/components/nav-actions";
 import { SidebarInset, SidebarProvider } from "~/components/ui/sidebar";
 import { Info } from "lucide-react";
@@ -13,6 +13,10 @@ import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "~/comp
 import { Dialog, DialogTrigger, DialogContent, DialogTitle } from "~/components/ui/dialog";
 import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
 import Header from "../components/SunCycleAge/Header";
+import { Inter } from "next/font/google";
+import { PostHogIdentify } from "~/components/posthog-identify";
+
+const inter = Inter({ subsets: ["latin"] });
 
 const appUrl =
   process.env.NEXT_PUBLIC_URL ||
@@ -46,20 +50,25 @@ export const metadata: Metadata = {
   },
   manifest: "/site.webmanifest",
   openGraph: {
-    title: "Solara",
-    siteName: "Solara",
+    title: PROJECT_TITLE,
+    description: PROJECT_DESCRIPTION,
+    url: appUrl,
+    siteName: PROJECT_TITLE,
     images: [
       {
-        url: "https://sun-age.vercel.app/suncycles_og.png",
+        url: `${appUrl}/og-image.png`,
         width: 1200,
         height: 630,
-        type: "image/png",
       },
     ],
+    locale: "en_US",
+    type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    images: ["https://sun-age.vercel.app/suncycles_og.png"],
+    title: PROJECT_TITLE,
+    description: PROJECT_DESCRIPTION,
+    images: [`${appUrl}/og-image.png`],
   },
 };
 
@@ -70,11 +79,11 @@ export const viewport = {
   ],
 };
 
-export default async function RootLayout({
+export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
   // Get today's date formatted as MM.DD.YYYY
   const today = new Date();
   const formattedDate = today.toLocaleDateString("en-US", {
@@ -84,11 +93,12 @@ export default async function RootLayout({
   }).replace(/\//g, ".");
   return (
     <html lang="en" suppressHydrationWarning>
-      <body>
-        {/* Skip to content link */}
-        <a href="#main-content" className="skip-link absolute left-2 top-2 z-50 bg-white text-gray-800 px-4 py-2 rounded focus:block focus:outline-none focus:ring-2 focus:ring-blue-400 sr-only focus:not-sr-only">Skip to content</a>
-        <ThemeProviderClient>
-          <Providers>
+      <body className={inter.className}>
+        <Providers>
+          <PostHogIdentify />
+          {/* Skip to content link */}
+          <a href="#main-content" className="skip-link absolute left-2 top-2 z-50 bg-white text-gray-800 px-4 py-2 rounded focus:block focus:outline-none focus:ring-2 focus:ring-blue-400 sr-only focus:not-sr-only">Skip to content</a>
+          <ThemeProviderClient>
             {/* Light mode: solid background. Dark mode: gradient. */}
             <div className="pointer-events-none fixed inset-0 z-0 dark:hidden" style={{ background: '#ffffff' }} />
             {/* Light mode: noise texture overlay */}
@@ -135,8 +145,8 @@ export default async function RootLayout({
               <main id="main-content" className="flex-1 flex flex-col justify-between min-h-screen">{children}</main>
             </div>
             {/* Footer is handled in SunCycleAge.tsx */}
-          </Providers>
-        </ThemeProviderClient>
+          </ThemeProviderClient>
+        </Providers>
       </body>
     </html>
   );

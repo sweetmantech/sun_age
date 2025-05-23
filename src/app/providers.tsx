@@ -4,7 +4,6 @@ import dynamic from "next/dynamic";
 import { useEffect, useState } from "react";
 import posthog from "posthog-js";
 import { PostHogProvider as PHProvider } from "posthog-js/react";
-import { useFrameSDK } from "~/hooks/useFrameSDK";
 import { getUUID } from "~/lib/utils";
 
 const WagmiProvider = dynamic(
@@ -37,29 +36,8 @@ export function PostHogProvider({ children }: { children: React.ReactNode }) {
 
   return <PHProvider client={posthog}>{children}</PHProvider>;
 }
+
 export function Providers({ children }: { children: React.ReactNode }) {
-  const { isSDKLoaded, context } = useFrameSDK();
-
-  useEffect(() => {
-    if (!context?.user?.fid || !posthog?.isFeatureEnabled) return;
-
-    const fidId = `fc_${context?.user?.fid}`;
-    const currentId = posthog.get_distinct_id();
-
-    // Skip if already identified with this FID
-    if (currentId === fidId) return;
-
-    // Create alias from session ID → FID
-    posthog.alias(fidId, currentId);
-
-    // Identify future events with FID
-    posthog.identify(fidId, {
-      farcaster_username: context.user?.username,
-      farcaster_display_name: context.user?.displayName,
-      farcaster_fid: context.user?.fid,
-    });
-  }, [context?.user]); // Only runs when FID changes
-
   return (
     <WagmiProvider>
       <PostHogProvider>{children}</PostHogProvider>
