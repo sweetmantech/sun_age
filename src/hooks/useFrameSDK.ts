@@ -61,8 +61,8 @@ export function useFrameSDK() {
       setLoading(true);
       setError(null);
 
-      // Use addMiniApp for the new SDK version
-      await sdk.actions.addMiniApp();
+      // Use addFrame for version 0.0.50
+      await sdk.actions.addFrame();
       setIsFramePinned(true);
 
       // Send welcome notification if we have a user
