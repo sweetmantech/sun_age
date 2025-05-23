@@ -577,7 +577,7 @@ export default function SunCycleAge({ initialConsentData }: SunCycleAgeProps) {
       {isInFrame && !isFramePinned && showPinPrompt && (
         <RadixDialog open={true} onOpenChange={setShowPinPrompt}>
           <DialogOverlay />
-          <DialogContent className="w-4/5 max-w-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-neutral-900/95 p-6 rounded-none shadow-lg backdrop-blur-lg flex flex-col items-center relative">
+          <DialogContent className="w-4/5 max-w-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-neutral-900/95 p-6 rounded-none shadow-lg backdrop-blur-lg flex flex-col items-center relative z-[9999] bg-red-200">
             <button
               onClick={() => setShowPinPrompt(false)}
               className="absolute top-3 right-3 text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 text-xl font-bold focus:outline-none"
