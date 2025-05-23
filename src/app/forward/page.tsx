@@ -1,13 +1,13 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
-import { useEffect, useMemo } from "react";
-import { Button } from "~/components/ui/button";
+import { useMemo, useEffect } from "react";
 import { useFrameSDK } from "~/hooks/useFrameSDK";
+import { Button } from "~/components/ui/button";
 
 export default function ForwardPage() {
   const searchParams = useSearchParams();
-  const { sdk } = useFrameSDK();
+  const { isSDKLoaded, sdk } = useFrameSDK();
 
   const url = useMemo(() => {
     if (!searchParams) return null;
@@ -21,19 +21,16 @@ export default function ForwardPage() {
   }, [searchParams]);
 
   useEffect(() => {
-    if (!url) return;
-    if (sdk) {
-      Promise.resolve(sdk.actions.openUrl(url)).catch(err => {
-        console.error("SDK redirect error:", err);
-      });
-    } else {
+    if (!url || !isSDKLoaded) return;
+    Promise.resolve(sdk.actions.openUrl(url)).catch(err => {
+      console.error("SDK redirect error:", err);
       try {
         window.location.replace(url);
       } catch (err) {
         console.error("Window redirect error:", err);
       }
-    }
-  }, [url, sdk]);
+    });
+  }, [url, isSDKLoaded, sdk]);
 
   if (!url) {
     return (
@@ -45,7 +42,7 @@ export default function ForwardPage() {
 
   return (
     <div className="container flex flex-col mx-auto p-6 max-w-lg gap-4">
-      <p className="text-center ">Redirecting to {url}</p>
+      <p className="text-center">Redirecting to {url}</p>
       <Button
         className="text-2xl font-bold"
         size="lg"

@@ -99,6 +99,7 @@ export function useFrameSDK() {
     loading,
     error,
     isConnected,
-    address
+    address,
+    sdk // Return the SDK instance for direct access
   };
 }
