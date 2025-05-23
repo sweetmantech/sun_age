@@ -18,6 +18,7 @@ import {
   DialogOverlay,
 } from "../components/ui/dialog";
 import MilestoneCard from "./SunCycleAge/MilestoneCard";
+import sdk from "@farcaster/frame-sdk";
 // import { revokeUserConsent } from "~/lib/consent";
 
 function WarpcastEmbed({ url }: { url: string }) {
@@ -164,12 +165,13 @@ function BookmarkCard({ bookmark, milestone, milestoneDate, daysToMilestone, onR
 export default function SunCycleAge({ initialConsentData }: SunCycleAgeProps) {
   const { 
     isSDKLoaded, 
-    sdk, 
     pinFrame, 
     isFramePinned, 
     context, 
     isInFrame,
-    loading
+    loading,
+    isConnected,
+    address
   } = useFrameSDK();
   const [birthDate, setBirthDate] = useState<string>("");
   const [days, setDays] = useState<number | null>(null);
@@ -284,7 +286,8 @@ export default function SunCycleAge({ initialConsentData }: SunCycleAgeProps) {
     const url = process.env.NEXT_PUBLIC_URL || window.location.origin;
     const message = `Forget birthdays—I've completed ${days} rotations around the sun ☀️🌎 What's your Sol Age? ${url}`;
     try {
-      await sdk.actions.composeCast({ text: message });
+      // Use window.location.href for sharing
+      window.location.href = `https://warpcast.com/~/compose?text=${encodeURIComponent(message)}`;
     } catch (err) {
       console.error(err);
     } finally {
@@ -573,29 +576,33 @@ export default function SunCycleAge({ initialConsentData }: SunCycleAgeProps) {
         </div>
       )}
 
-      {/* Pin Prompt - Only show if in frame and not pinned */}
-      {isInFrame && !isFramePinned && showPinPrompt && (
-        <RadixDialog open={true} onOpenChange={setShowPinPrompt}>
-          <DialogOverlay />
-          <DialogContent className="w-4/5 max-w-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-neutral-900/95 p-6 rounded-none shadow-lg backdrop-blur-lg flex flex-col items-center relative z-[9999] bg-red-200">
-            <button
-              onClick={() => setShowPinPrompt(false)}
-              className="absolute top-3 right-3 text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 text-xl font-bold focus:outline-none"
-              aria-label="Close"
-            >
-              ×
-            </button>
-            <div className="text-lg font-serif font-bold mb-1 text-center">Add Solara</div>
-            <div className="text-xs font-mono uppercase tracking-widest text-gray-500 mb-2 text-center">Become one with your inner sol.</div>
-            <div className="text-sm text-gray-700 dark:text-gray-300 mb-4 text-center">Pin Solara to track your Sol Age through time and receive milestone notifications.</div>
-            <button
-              onClick={pinFrame}
-              className="w-full px-4 py-2 bg-black text-white rounded-none uppercase tracking-widest font-mono text-sm font-bold hover:bg-gray-900 transition-colors"
-            >
-              PIN SOLARA
-            </button>
-          </DialogContent>
-        </RadixDialog>
+      {/* New Pin Modal */}
+      {isInFrame && !isFramePinned && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-neutral-900 border border-gray-200 dark:border-gray-700 max-w-md w-full p-6 rounded-none shadow-lg">
+            <div className="text-center mb-6">
+              <h2 className="text-xl font-serif font-bold mb-2">Add Solara</h2>
+              <p className="text-sm text-gray-600 dark:text-gray-300 mb-4">
+                Pin Solara to track your Sol Age through time and receive milestone notifications.
+              </p>
+            </div>
+            <div className="flex flex-col gap-3">
+              <button
+                onClick={pinFrame}
+                disabled={loading}
+                className="w-full px-4 py-3 bg-black dark:bg-white text-white dark:text-black rounded-none uppercase tracking-widest font-mono text-sm font-bold hover:bg-gray-900 dark:hover:bg-gray-100 transition-colors disabled:opacity-50"
+              >
+                {loading ? "PINNING..." : "PIN SOLARA"}
+              </button>
+              <button
+                onClick={() => setShowPinPrompt(false)}
+                className="w-full px-4 py-3 border border-gray-200 dark:border-gray-700 bg-transparent text-gray-600 dark:text-gray-300 rounded-none uppercase tracking-widest font-mono text-sm hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+              >
+                NOT NOW
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Show BookmarkCard if bookmark exists */}

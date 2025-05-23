@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import sdk from "@farcaster/frame-sdk";
 import type { FrameContext } from "@farcaster/frame-core/src/context";
+import { useAccount, useConnect } from 'wagmi';
 // import { updateUserConsent } from "~/lib/consent";
 
 export function useFrameSDK() {
@@ -11,96 +12,93 @@ export function useFrameSDK() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
+  const { isConnected, address } = useAccount();
+  const { connect, connectors } = useConnect();
+
+  // Initialize SDK and check frame context
   useEffect(() => {
-    const load = async () => {
+    const initSDK = async () => {
       if (typeof window === "undefined") return;
-      
+
       try {
-        setError(null);
-        
-        // Initialize the SDK first
+        // Initialize SDK
         await sdk.actions.ready({ disableNativeGestures: true });
         setIsSDKLoaded(true);
 
-        // Then check for frame context
+        // Check frame context
         const frameContext = await sdk.context;
         if (frameContext) {
-          console.log("Found Farcaster frame context:", {
-            hasUser: !!frameContext.user,
-            fid: frameContext.user?.fid,
-            username: frameContext.user?.username,
-            added: frameContext.client.added
-          });
           setIsInFrame(true);
           setContext(frameContext);
           setIsFramePinned(frameContext.client.added);
         }
 
-        // Set up event listeners for frameSDK
+        // Set up frameSDK event listeners
         const frameSDK = (window as any).frameSDK;
         if (frameSDK) {
-          console.log("Found frameSDK in window");
-          setIsInFrame(true);
-          
-          frameSDK.on("frameAdded", async () => {
-            console.log("Frame added");
-            setIsFramePinned(true);
-          });
-
-          frameSDK.on("frameRemoved", () => {
-            console.log("Frame removed");
-            setIsFramePinned(false);
-          });
-        } else {
-          console.log("No frameSDK found in window - this is normal when not in a Farcaster frame");
+          frameSDK.on("frameAdded", () => setIsFramePinned(true));
+          frameSDK.on("frameRemoved", () => setIsFramePinned(false));
         }
-      } catch (error) {
-        console.error("Error setting up SDK:", error);
-        setError(error instanceof Error ? error : new Error(String(error)));
-        setIsSDKLoaded(false);
+
+        // Connect to wallet if not already connected
+        if (!isConnected && connectors.length > 0) {
+          await connect({ connector: connectors[0] });
+        }
+      } catch (err) {
+        console.error("Error initializing SDK:", err);
+        setError(err instanceof Error ? err : new Error(String(err)));
       }
     };
 
-    load();
-  }, []); // Remove isSDKLoaded dependency to ensure we try to load only once
+    initSDK();
+  }, [isConnected, connect, connectors]);
 
+  // Pin frame function
   const pinFrame = useCallback(async () => {
+    if (!isSDKLoaded) return;
+
     try {
       setLoading(true);
       setError(null);
-      const result = await sdk.actions.addFrame();
-      console.log("Frame pin result:", result);
+
+      // Use addMiniApp for the new SDK version
+      await sdk.actions.addMiniApp();
       setIsFramePinned(true);
 
-      // Send welcome notification immediately
+      // Send welcome notification if we have a user
       if (context?.user?.fid) {
-        fetch('/api/milestone-notification', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            fid: context.user.fid,
-            type: 'welcome',
-            message: `Welcome to Solara! You'll now receive milestone notifications as you journey around the sun.`,
-            timestamp: new Date().toISOString()
-          }),
-        }).catch(console.error);
+        try {
+          await fetch('/api/milestone-notification', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              fid: context.user.fid,
+              type: 'welcome',
+              message: `Welcome to Solara! You'll now receive milestone notifications as you journey around the sun.`,
+              timestamp: new Date().toISOString()
+            }),
+          });
+        } catch (err) {
+          console.error("Error sending welcome notification:", err);
+        }
       }
-    } catch (error) {
-      console.error("Error pinning frame:", error);
-      setError(error instanceof Error ? error : new Error(String(error)));
+    } catch (err) {
+      console.error("Error pinning frame:", err);
+      setError(err instanceof Error ? err : new Error(String(err)));
     } finally {
       setLoading(false);
     }
-  }, [context]);
+  }, [isSDKLoaded, context]);
 
   return {
-    context,
-    pinFrame,
-    isFramePinned,
-    sdk,
     isSDKLoaded,
     isInFrame,
+    isFramePinned,
+    context,
+    pinFrame,
     loading,
-    error
+    error,
+    isConnected,
+    address
   };
 }
