@@ -409,7 +409,10 @@ export default function SunCycleAge({ initialConsentData }: SunCycleAgeProps) {
     }
   }, []);
 
-  // Save bookmark
+  // Add state for bookmark success modal
+  const [showBookmarkSuccess, setShowBookmarkSuccess] = useState(false);
+
+  // Update handleBookmark to show success modal
   const handleBookmark = () => {
     if (days !== null && approxYears !== null && birthDate) {
       const now = new Date();
@@ -422,6 +425,7 @@ export default function SunCycleAge({ initialConsentData }: SunCycleAgeProps) {
       };
       localStorage.setItem("sunCycleBookmark", JSON.stringify(data));
       setBookmark(data);
+      setShowBookmarkSuccess(true); // Show success modal
 
       // Log Farcaster context state
       console.log("Farcaster context state:", {
@@ -758,6 +762,27 @@ export default function SunCycleAge({ initialConsentData }: SunCycleAgeProps) {
           </div>
         </div>
       </footer>
+      {/* Render the bookmark success modal */}
+      {showBookmarkSuccess && (
+        <RadixDialog open={showBookmarkSuccess} onOpenChange={(open) => {
+          setShowBookmarkSuccess(open);
+          if (!open) setShowBookmark(true); // Load bookmark page after closing modal
+        }}>
+          <DialogOverlay />
+          <DialogContent className="max-w-md w-full border border-gray-400 bg-[rgba(255,252,242,0.95)] dark:bg-[rgba(24,24,28,0.95)] p-6 rounded-none shadow-md backdrop-blur-sm">
+            <DialogTitle className="text-lg font-serif font-bold mb-2 text-center">Sol Age Bookmarked!</DialogTitle>
+            <div className="mb-6 text-sm text-gray-700 dark:text-gray-200 text-center">You can revisit your journey anytime from your bookmark page.</div>
+            <div className="flex justify-center">
+              <button
+                onClick={() => { setShowBookmarkSuccess(false); setShowBookmark(true); }}
+                className="px-6 py-2 border border-gray-400 dark:border-gray-700 bg-black dark:bg-white text-white dark:text-black rounded-none uppercase tracking-widest font-mono text-sm"
+              >
+                VIEW MY BOOKMARK
+              </button>
+            </div>
+          </DialogContent>
+        </RadixDialog>
+      )}
     </div>
   );
 }
