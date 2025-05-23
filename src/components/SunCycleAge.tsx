@@ -38,7 +38,7 @@ interface SunCycleAgeProps {
   initialConsentData?: any[] | null;
 }
 
-function BookmarkCard({ bookmark, milestone, milestoneDate, daysToMilestone, onRecalculate, onClear, isRecalculating, sinceLastVisit, milestoneCard, showMilestoneModal, setShowMilestoneModal, nextNumericalMilestones }) {
+function BookmarkCard({ bookmark, milestone, milestoneDate, daysToMilestone, onRecalculate, onClear, isRecalculating, sinceLastVisit, milestoneCard, showMilestoneModal, setShowMilestoneModal, nextNumericalMilestones, onShare, isSharing }) {
   const [tab, setTab] = useState<'age' | 'reflections' | 'signature'>('age');
   return (
     <div className="bg-[rgba(255,252,242,0.3)] dark:bg-[rgba(24,24,28,0.3)] border border-gray-200 dark:border-gray-700 rounded-none shadow p-8 max-w-md w-full flex flex-col items-center space-y-6 relative mt-0">
@@ -143,17 +143,26 @@ function BookmarkCard({ bookmark, milestone, milestoneDate, daysToMilestone, onR
         <div className="w-full text-center text-xs font-mono text-gray-500 py-8 border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-neutral-900/80">Signature coming soon.</div>
       )}
       {/* Actions */}
-      <div className="flex w-full gap-2 mt-6">
-        <button
-          onClick={onRecalculate}
-          disabled={isRecalculating}
-          className="flex-1 border border-black dark:border-white bg-transparent dark:bg-black text-black dark:text-white uppercase tracking-widest font-mono py-2.5 px-2 text-sm transition-colors hover:bg-gray-100 dark:hover:bg-gray-900 rounded-none"
-        >
-          {isRecalculating ? "RECALCULATING..." : "RECALCULATE"}
-        </button>
+      <div className="w-full mt-6">
+        <div className="flex w-full gap-2 mb-2">
+          <button
+            onClick={onShare}
+            disabled={isSharing}
+            className="flex-1 border border-black dark:border-white bg-transparent dark:bg-black text-black dark:text-white uppercase tracking-widest font-mono py-2.5 px-2 text-sm transition-colors hover:bg-gray-100 dark:hover:bg-gray-900 rounded-none"
+          >
+            {isSharing ? "SHARING..." : "SHARE SOL AGE"}
+          </button>
+          <button
+            onClick={onRecalculate}
+            disabled={isRecalculating}
+            className="flex-1 border border-black dark:border-white bg-transparent dark:bg-black text-black dark:text-white uppercase tracking-widest font-mono py-2.5 px-2 text-sm transition-colors hover:bg-gray-100 dark:hover:bg-gray-900 rounded-none"
+          >
+            {isRecalculating ? "RECALCULATING..." : "RECALCULATE"}
+          </button>
+        </div>
         <button
           onClick={onClear}
-          className="flex-1 border border-black dark:border-white bg-black dark:bg-white text-white dark:text-black uppercase tracking-widest font-mono py-2.5 px-2 text-sm transition-colors hover:bg-gray-900 dark:hover:bg-gray-100 rounded-none"
+          className="w-full border border-black dark:border-white bg-black dark:bg-white text-white dark:text-black uppercase tracking-widest font-mono py-2.5 px-2 text-sm transition-colors hover:bg-gray-900 dark:hover:bg-gray-100 rounded-none"
         >
           CLEAR BOOKMARK
         </button>
@@ -667,6 +676,8 @@ export default function SunCycleAge({ initialConsentData }: SunCycleAgeProps) {
             showMilestoneModal={showMilestoneModal}
             setShowMilestoneModal={setShowMilestoneModal}
             nextNumericalMilestones={nextNumericalMilestones}
+            onShare={onShare}
+            isSharing={isSharing}
           />
         </div>
       ) : (
