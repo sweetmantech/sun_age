@@ -601,7 +601,7 @@ export default function SunCycleAge({ initialConsentData }: SunCycleAgeProps) {
       )}
 
       {/* New Pin Modal */}
-      {isInFrame && !isFramePinned && (
+      {isInFrame && !isFramePinned && showPinPrompt && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-white dark:bg-neutral-900 border border-gray-200 dark:border-gray-700 max-w-md w-full p-6 rounded-none shadow-lg">
             <div className="text-center mb-6">
