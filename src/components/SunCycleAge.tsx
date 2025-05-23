@@ -593,6 +593,9 @@ export default function SunCycleAge({ initialConsentData }: SunCycleAgeProps) {
     );
   }
 
+  // Add state for error handling
+  const [error, setError] = useState<Error | null>(null);
+
   if (!isSDKLoaded) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -622,6 +625,11 @@ export default function SunCycleAge({ initialConsentData }: SunCycleAgeProps) {
               <p className="text-sm text-gray-600 dark:text-gray-300 mb-4">
                 Pin Solara to track your Sol Age through time and receive milestone notifications.
               </p>
+              {error && (
+                <div className="text-sm text-red-500 dark:text-red-400 mb-4">
+                  {error.message}
+                </div>
+              )}
             </div>
             <div className="flex flex-col gap-3">
               <button
@@ -629,7 +637,7 @@ export default function SunCycleAge({ initialConsentData }: SunCycleAgeProps) {
                 disabled={loading}
                 className="w-full px-4 py-3 bg-black dark:bg-white text-white dark:text-black rounded-none uppercase tracking-widest font-mono text-sm font-bold hover:bg-gray-900 dark:hover:bg-gray-100 transition-colors disabled:opacity-50"
               >
-                {loading ? "PINNING..." : "PIN SOLARA"}
+                {loading ? "ADDING..." : "ADD SOLARA"}
               </button>
               <button
                 onClick={() => setShowPinPrompt(false)}

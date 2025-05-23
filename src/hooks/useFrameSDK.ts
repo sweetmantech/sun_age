@@ -61,8 +61,8 @@ export function useFrameSDK() {
       setLoading(true);
       setError(null);
 
-      // Use addFrame for version 0.0.50
-      await sdk.actions.addFrame();
+      // Use addMiniApp instead of addFrame (updated for latest SDK)
+      await sdk.actions.addMiniApp();
       setIsFramePinned(true);
 
       // Send welcome notification if we have a user
@@ -84,7 +84,18 @@ export function useFrameSDK() {
       }
     } catch (err) {
       console.error("Error pinning frame:", err);
-      setError(err instanceof Error ? err : new Error(String(err)));
+      // Handle specific error cases
+      if (err instanceof Error) {
+        if (err.message.includes('RejectedByUser')) {
+          setError(new Error('You declined to add Solara to your apps.'));
+        } else if (err.message.includes('InvalidDomainManifestJson')) {
+          setError(new Error('Unable to add Solara: Invalid app configuration.'));
+        } else {
+          setError(err);
+        }
+      } else {
+        setError(new Error('Failed to add Solara to your apps.'));
+      }
     } finally {
       setLoading(false);
     }
