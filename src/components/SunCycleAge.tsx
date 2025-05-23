@@ -556,6 +556,30 @@ export default function SunCycleAge({ initialConsentData }: SunCycleAgeProps) {
     console.log('[PinModal Debug] isInFrame:', isInFrame, '| isFramePinned:', isFramePinned, '| showPinPrompt:', showPinPrompt, '| isSDKLoaded:', isSDKLoaded);
   }, [isInFrame, isFramePinned, showPinPrompt, isSDKLoaded]);
 
+  // Helper for Farcaster-aware link
+  function OccultureLink() {
+    const { isInFrame } = useFrameSDK();
+    const handleClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+      if (isInFrame) {
+        e.preventDefault();
+        import("@farcaster/frame-sdk").then(({ sdk }) => {
+          sdk.actions.openUrl("https://warpcast.com/~/channel/occulture");
+        });
+      }
+    };
+    return (
+      <a
+        href="https://warpcast.com/~/channel/occulture"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="underline hover:text-blue-600 transition-colors"
+        onClick={handleClick}
+      >
+        /occulture
+      </a>
+    );
+  }
+
   if (!isSDKLoaded) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -607,42 +631,44 @@ export default function SunCycleAge({ initialConsentData }: SunCycleAgeProps) {
 
       {/* Show BookmarkCard if bookmark exists */}
       {bookmark && showBookmark ? (
-        <BookmarkCard
-          bookmark={bookmark}
-          milestone={nextMilestoneObj ? nextMilestoneObj.cycles : undefined}
-          milestoneDate={nextMilestoneObj ? nextMilestoneObj.milestoneDate : undefined}
-          daysToMilestone={nextMilestoneObj ? nextMilestoneObj.daysToMilestone : undefined}
-          onRecalculate={async () => {
-            setIsRecalculating(true);
-            await new Promise(r => setTimeout(r, 1200));
-            calculateAge();
-            setBookmark(prev => prev && days !== null ? {
-              ...prev,
-              lastVisitDays: days,
-              lastVisitDate: new Date().toISOString(),
-            } : prev);
-            setIsRecalculating(false);
-          }}
-          onClear={() => setShowConfirmClear(true)}
-          isRecalculating={isRecalculating}
-          sinceLastVisit={bookmark && bookmark.lastVisitDays !== undefined ? Math.max(0, bookmark.days - bookmark.lastVisitDays) : 0}
-          milestoneCard={
-            nextMilestoneObj ? (
-              <MilestoneCard
-                number={nextMilestoneObj.cycles}
-                label={nextMilestoneObj.label}
-                emoji={nextMilestoneObj.emoji}
-                description={nextMilestoneObj.description}
-                daysToMilestone={nextMilestoneObj.daysToMilestone}
-                milestoneDate={nextMilestoneObj.milestoneDate}
-                variant="bookmark"
-              />
-            ) : null
-          }
-          showMilestoneModal={showMilestoneModal}
-          setShowMilestoneModal={setShowMilestoneModal}
-          nextNumericalMilestones={nextNumericalMilestones}
-        />
+        <div className="mb-24">
+          <BookmarkCard
+            bookmark={bookmark}
+            milestone={nextMilestoneObj ? nextMilestoneObj.cycles : undefined}
+            milestoneDate={nextMilestoneObj ? nextMilestoneObj.milestoneDate : undefined}
+            daysToMilestone={nextMilestoneObj ? nextMilestoneObj.daysToMilestone : undefined}
+            onRecalculate={async () => {
+              setIsRecalculating(true);
+              await new Promise(r => setTimeout(r, 1200));
+              calculateAge();
+              setBookmark(prev => prev && days !== null ? {
+                ...prev,
+                lastVisitDays: days,
+                lastVisitDate: new Date().toISOString(),
+              } : prev);
+              setIsRecalculating(false);
+            }}
+            onClear={() => setShowConfirmClear(true)}
+            isRecalculating={isRecalculating}
+            sinceLastVisit={bookmark && bookmark.lastVisitDays !== undefined ? Math.max(0, bookmark.days - bookmark.lastVisitDays) : 0}
+            milestoneCard={
+              nextMilestoneObj ? (
+                <MilestoneCard
+                  number={nextMilestoneObj.cycles}
+                  label={nextMilestoneObj.label}
+                  emoji={nextMilestoneObj.emoji}
+                  description={nextMilestoneObj.description}
+                  daysToMilestone={nextMilestoneObj.daysToMilestone}
+                  milestoneDate={nextMilestoneObj.milestoneDate}
+                  variant="bookmark"
+                />
+              ) : null
+            }
+            showMilestoneModal={showMilestoneModal}
+            setShowMilestoneModal={setShowMilestoneModal}
+            nextNumericalMilestones={nextNumericalMilestones}
+          />
+        </div>
       ) : (
         // Show calculator/intro/main content if no bookmark
         <>
@@ -712,13 +738,15 @@ export default function SunCycleAge({ initialConsentData }: SunCycleAgeProps) {
         </RadixDialog>
       )}
       {/* Footer */}
-      <div className="flex justify-center items-center w-full mb-16">
-        <div className="bg-gray-50 dark:bg-neutral-900 border border-gray-400 dark:border-gray-700 p-2 mx-1 text-center text-xs font-mono text-gray-700 dark:text-gray-300 w-full max-w-md mx-auto">
-          <div>Your data is not stored or shared.<br />
-            Solara is made for <a href="https://warpcast.com/~/channel/occulture" target="_blank" rel="noopener noreferrer" className="underline hover:text-blue-600 transition-colors">/occulture</a>
+      <footer className="fixed bottom-0 left-0 w-full z-40 bg-white dark:bg-neutral-900 border-t border-gray-400 dark:border-gray-700">
+        <div className="flex justify-center items-center w-full">
+          <div className="p-2 mx-1 text-center text-xs font-mono text-gray-700 dark:text-gray-300 w-full max-w-md mx-auto">
+            <div>Your data is not stored or shared.<br />
+              Solara is made for <OccultureLink />
+            </div>
           </div>
         </div>
-      </div>
+      </footer>
     </div>
   );
 }

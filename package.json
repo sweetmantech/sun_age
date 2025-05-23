@@ -15,8 +15,8 @@
     "@farcaster/auth-kit": "^0.6.0",
     "@farcaster/frame-core": "^0.0.31",
     "@farcaster/frame-node": "^0.0.20",
-    "@farcaster/frame-sdk": "^0.0.34",
-    "@farcaster/frame-wagmi-connector": "^0.0.22",
+    "@farcaster/frame-sdk": "^0.0.50",
+    "@farcaster/frame-wagmi-connector": "^0.0.39",
     "@headlessui/react": "^2.2.4",
     "@hookform/resolvers": "^3.10.0",
     "@neynar/nodejs-sdk": "^2.19.0",
@@ -79,7 +79,7 @@
     "tailwindcss-animate": "^1.0.7",
     "vaul": "^1.1.2",
     "viem": "^2.23.9",
-    "wagmi": "^2.14.13",
+    "wagmi": "^2.15.4",
     "zod": "^3.24.2"
   },
   "devDependencies": {

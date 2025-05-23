@@ -7,7 +7,7 @@ interface FormSectionProps {
 }
 
 const FormSection: React.FC<FormSectionProps> = ({ birthDate, setBirthDate, calculateAge }) => (
-  <div className="flex flex-col items-center w-full px-2 sm:px-4 pb-16">
+  <div className="flex flex-col items-center w-full px-2 sm:px-4 pb-16 mb-24">
     <form className="w-full max-w-md mx-auto flex flex-col items-center">
       <label htmlFor="birth" className="block text-xs tracking-widest font-mono uppercase mb-2 text-center" style={{ color: '#6c6f7d' }}>
         ENTER BIRTH DATE

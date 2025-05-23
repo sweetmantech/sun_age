@@ -1,7 +1,7 @@
 import { PROJECT_TITLE, PROJECT_DESCRIPTION } from "~/lib/constants";
 
 export async function GET() {
-  const appUrl = "https://sun-age.vercel.app";
+  const appUrl = "https://solara.fyi";
 
   const config = {
       "accountAssociation": {

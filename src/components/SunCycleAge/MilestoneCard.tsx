@@ -1,4 +1,5 @@
 import React from "react";
+import { motion } from "framer-motion";
 
 interface MilestoneCardProps {
   number?: string | number; // e.g., 12345 or "Winter Solstice"
@@ -29,32 +30,60 @@ const MilestoneCard: React.FC<MilestoneCardProps> = ({
   // Custom styles for bookmark variant
   const isBookmark = variant === "bookmark";
   return (
-    <div
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -20 }}
+      transition={{ duration: 0.4 }}
+      whileHover={{ scale: 1.02 }}
       className={`relative overflow-hidden bg-white/80 dark:bg-neutral-900/80 border border-gray-400 dark:border-gray-700 ${isBookmark ? "px-2 py-6" : "px-4 py-6"} text-xs font-mono text-gray-800 dark:text-gray-100 rounded-none w-full text-center shadow ${highlight ? 'ring-2 ring-yellow-400 dark:ring-yellow-500' : ''}`}
       style={{ marginBottom: '0.5rem', minHeight: isBookmark ? '140px' : '140px' }}
     >
       {/* Decorative background sun illustration */}
-      <img
+      <motion.img
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 0.7 }}
+        transition={{ duration: 0.6, delay: 0.2 }}
         src={bgImages[variant]}
         alt=""
         aria-hidden="true"
-        className={`absolute inset-0 w-full h-full object-cover opacity-70 pointer-events-none select-none z-0 ${isBookmark ? 'object-[center_60%]' : ''}`}
+        className={`absolute inset-0 w-full h-full object-cover pointer-events-none select-none z-0 ${isBookmark ? 'object-[center_60%]' : ''}`}
         draggable="false"
       />
       {/* Card content */}
-      <div className={`relative z-10 flex flex-col items-center justify-center h-full ${isBookmark ? "leading-tight" : ""}`}>
-        <div
+      <motion.div 
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.4, delay: 0.3 }}
+        className={`relative z-10 flex flex-col items-center justify-center h-full ${isBookmark ? "leading-tight" : ""}`}
+      >
+        <motion.div
+          initial={{ y: 10, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ duration: 0.4, delay: 0.4 }}
           className={
             isBookmark
               ? "flex items-center justify-center gap-2 mb-1 text-xs font-bold uppercase tracking-widest text-center"
               : "flex items-center justify-center gap-2 mb-1 font-semibold uppercase tracking-widest text-xs"
           }
         >
-          {emoji && <span className="text-lg" role="img" aria-label={label}>{emoji}</span>}
+          {emoji && <motion.span 
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ duration: 0.4, delay: 0.5, type: "spring" }}
+            className="text-lg" 
+            role="img" 
+            aria-label={label}
+          >
+            {emoji}
+          </motion.span>}
           <span>{label}</span>
-        </div>
+        </motion.div>
         {number && (
-          <div
+          <motion.div
+            initial={{ scale: 0.5, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ duration: 0.6, delay: 0.6, type: "spring" }}
             className={
               isBookmark
                 ? "text-3xl font-extrabold font-serif tracking-tight text-gray-900 dark:text-white mb-1 leading-none"
@@ -62,11 +91,14 @@ const MilestoneCard: React.FC<MilestoneCardProps> = ({
             }
           >
             {number}
-          </div>
+          </motion.div>
         )}
         {/* Days to milestone and date, styled as in the mockup */}
         {typeof daysToMilestone === 'number' && milestoneDate && (
-          <div
+          <motion.div
+            initial={{ y: 10, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ duration: 0.4, delay: 0.7 }}
             className={
               isBookmark
                 ? "text-base font-mono text-gray-900 dark:text-white font-normal mb-1 text-center"
@@ -74,10 +106,13 @@ const MilestoneCard: React.FC<MilestoneCardProps> = ({
             }
           >
             <span className="font-bold">{daysToMilestone} days</span> (<span className="font-normal">{milestoneDate}</span>)
-          </div>
+          </motion.div>
         )}
         {description && (
-          <div
+          <motion.div
+            initial={{ y: 10, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ duration: 0.4, delay: 0.8 }}
             className={
               isBookmark
                 ? "text-xs text-gray-700 dark:text-gray-400 italic mt-1 text-center"
@@ -85,10 +120,10 @@ const MilestoneCard: React.FC<MilestoneCardProps> = ({
             }
           >
             {description}
-          </div>
+          </motion.div>
         )}
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 };
 

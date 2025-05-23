@@ -1,11 +1,11 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
-import { useMemo, useEffect } from "react";
+import { useMemo, useEffect, Suspense } from "react";
 import { useFrameSDK } from "~/hooks/useFrameSDK";
 import { Button } from "~/components/ui/button";
 
-export default function ForwardPage() {
+function ForwardContent() {
   const searchParams = useSearchParams();
   const { isSDKLoaded, sdk } = useFrameSDK();
 
@@ -51,5 +51,17 @@ export default function ForwardPage() {
         Continue
       </Button>
     </div>
+  );
+}
+
+export default function ForwardPage() {
+  return (
+    <Suspense fallback={
+      <div className="container mx-auto p-6">
+        <p className="text-center text-gray-500">Loading...</p>
+      </div>
+    }>
+      <ForwardContent />
+    </Suspense>
   );
 }
