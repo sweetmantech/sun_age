@@ -14,7 +14,7 @@ import { Dialog, DialogTrigger, DialogContent, DialogTitle } from "~/components/
 import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
 import Header from "../components/SunCycleAge/Header";
 import { Inter } from "next/font/google";
-import { PostHogIdentify } from "~/components/posthog-identify";
+// import { PostHogIdentify } from "~/components/posthog-identify";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -95,7 +95,7 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>
         <Providers>
-          <PostHogIdentify />
+          {/* <PostHogIdentify /> */}
           {/* Skip to content link */}
           <a href="#main-content" className="skip-link absolute left-2 top-2 z-50 bg-white text-gray-800 px-4 py-2 rounded focus:block focus:outline-none focus:ring-2 focus:ring-blue-400 sr-only focus:not-sr-only">Skip to content</a>
           <ThemeProviderClient>
