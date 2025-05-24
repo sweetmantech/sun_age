@@ -1,4 +1,5 @@
-import { PROJECT_TITLE, PROJECT_DESCRIPTION } from "~/lib/constants";
+const PROJECT_TITLE = "Solara—a cosmic age calculator";
+const PROJECT_DESCRIPTION = "Solara is a Farcaster app that allows you to track your sun cycle age and receive milestone notifications.";
 
 export async function GET() {
   const appUrl = "https://solara.fyi";

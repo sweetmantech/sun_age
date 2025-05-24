@@ -38,8 +38,30 @@ interface SunCycleAgeProps {
   initialConsentData?: any[] | null;
 }
 
-function BookmarkCard({ bookmark, milestone, milestoneDate, daysToMilestone, onRecalculate, onClear, isRecalculating, sinceLastVisit, milestoneCard, showMilestoneModal, setShowMilestoneModal, nextNumericalMilestones, onShare, isSharing }) {
-  const [tab, setTab] = useState<'age' | 'reflections' | 'signature'>('age');
+function BookmarkCard({ bookmark, milestone, milestoneDate, daysToMilestone, onRecalculate, onClear, isRecalculating, sinceLastVisit, milestoneCard, showMilestoneModal, setShowMilestoneModal, nextNumericalMilestones, onShare, isSharing, initialTab }) {
+  const [tab, setTab] = useState<'age' | 'reflections' | 'signature' | 'convergence'>(initialTab || 'age');
+  const { context } = useFrameSDK();
+  const [isSigning, setIsSigning] = useState(false);
+  const [signError, setSignError] = useState<Error | null>(null);
+  const [signSuccess, setSignSuccess] = useState(false);
+  const handleSign = async () => {
+    setSignError(null);
+    setIsSigning(true);
+    setTimeout(() => {
+      if (Math.random() < 0.25) {
+        setIsSigning(false);
+        setSignError(new Error('Failed to sign. Please try again.'));
+        return;
+      }
+      setIsSigning(false);
+      setSignSuccess(true);
+    }, 1600);
+  };
+  const handleSignModalClose = () => {
+    setIsSigning(false);
+    setSignError(null);
+    setSignSuccess(false);
+  };
   return (
     <div className="bg-[rgba(255,252,242,0.3)] dark:bg-[rgba(24,24,28,0.3)] border border-gray-200 dark:border-gray-700 rounded-none shadow p-8 max-w-md w-full flex flex-col items-center space-y-6 relative mt-0">
       <Image
@@ -57,6 +79,7 @@ function BookmarkCard({ bookmark, milestone, milestoneDate, daysToMilestone, onR
       {/* Tabs */}
       <div className="flex w-full border-b border-gray-300 dark:border-gray-700 mb-4">
         <button onClick={() => setTab('age')} className={`flex-1 py-2 text-xs font-mono uppercase tracking-widest ${tab==='age' ? 'border-b-2 border-black dark:border-white font-bold' : 'text-gray-400'}`}>Age</button>
+        <button onClick={() => setTab('convergence')} className={`flex-1 py-2 text-xs font-mono uppercase tracking-widest ${tab==='convergence' ? 'border-b-2 border-black dark:border-white font-bold' : 'text-gray-400'}`}>Convergence</button>
         <button onClick={() => setTab('reflections')} className={`flex-1 py-2 text-xs font-mono uppercase tracking-widest ${tab==='reflections' ? 'border-b-2 border-black dark:border-white font-bold' : 'text-gray-400'}`}>Reflections</button>
         <button onClick={() => setTab('signature')} className={`flex-1 py-2 text-xs font-mono uppercase tracking-widest ${tab==='signature' ? 'border-b-2 border-black dark:border-white font-bold' : 'text-gray-400'}`}>Signature</button>
       </div>
@@ -134,6 +157,40 @@ function BookmarkCard({ bookmark, milestone, milestoneDate, daysToMilestone, onR
           {/* Divider before quote */}
           <div className="border-t border-gray-300 dark:border-gray-700 my-4" />
           <div className="text-xs font-sans text-gray-400 italic text-left">Your journey began {bookmark.days.toLocaleString()} days ago. Each rotation represents both repetition and change.</div>
+        </div>
+      )}
+      {tab === 'convergence' && (
+        <div className="w-full text-center text-base font-mono text-yellow-700 dark:text-yellow-300 py-8 border border-yellow-200 dark:border-yellow-700 bg-yellow-50 dark:bg-neutral-900/80 rounded-none">
+          <div className="text-lg font-serif font-bold mb-2">Cosmic Convergence</div>
+          {context?.user?.fid ? (
+            <>
+              {!signSuccess ? (
+                <>
+                  <div className="mb-4">To complete your cosmic commitment, please sign onchain.</div>
+                  <button
+                    onClick={handleSign}
+                    disabled={isSigning}
+                    className="px-6 py-2 border border-yellow-500 bg-yellow-400 text-black rounded-none uppercase tracking-widest font-mono text-sm font-bold hover:bg-yellow-300 transition-colors disabled:opacity-50 mb-4"
+                  >
+                    {isSigning ? "Signing..." : signError ? "Retry" : "Sign Commitment"}
+                  </button>
+                  {signError && (
+                    <div className="mb-2 text-sm text-red-600 dark:text-red-400 text-center">{signError.message}</div>
+                  )}
+                  {isSigning && (
+                    <div className="flex flex-col items-center justify-center my-4">
+                      <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-yellow-500 mb-2"></div>
+                      <div className="text-base font-mono text-yellow-700 dark:text-yellow-300 text-center">Please sign to complete your cosmic commitment…</div>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <div className="text-green-700 dark:text-green-400 font-mono font-semibold">Commitment signed! You are ready for stellar recognition!</div>
+              )}
+            </>
+          ) : (
+            <div>You are ready for stellar recognition!<br/>Stay tuned for the next phase of your cosmic journey.</div>
+          )}
         </div>
       )}
       {tab === 'reflections' && (
@@ -547,9 +604,6 @@ export default function SunCycleAge({ initialConsentData }: SunCycleAgeProps) {
   const [isRecalculating, setIsRecalculating] = useState(false);
   const [showConfirmClear, setShowConfirmClear] = useState(false);
 
-  // Add state to control pin prompt visibility
-  const [showPinPrompt, setShowPinPrompt] = useState(true);
-
   // Add state for modal
   const [showMilestoneModal, setShowMilestoneModal] = useState(false);
 
@@ -560,14 +614,6 @@ export default function SunCycleAge({ initialConsentData }: SunCycleAgeProps) {
       ? getNextNumericalMilestones(days, new Date(birthDate), 10)
       : [];
   const nextMilestoneObj = nextNumericalMilestones.length > 0 ? nextNumericalMilestones[0] : null;
-
-  // Debug log before rendering bookmark card
-  console.log('bookmark:', bookmark, 'showBookmark:', showBookmark, 'nextMilestoneObj:', nextMilestoneObj);
-
-  // Add this near the top of the SunCycleAge component
-  useEffect(() => {
-    console.log('[PinModal Debug] isInFrame:', isInFrame, '| isFramePinned:', isFramePinned, '| showPinPrompt:', showPinPrompt, '| isSDKLoaded:', isSDKLoaded);
-  }, [isInFrame, isFramePinned, showPinPrompt, isSDKLoaded]);
 
   // Helper for Farcaster-aware link
   function OccultureLink() {
@@ -596,6 +642,33 @@ export default function SunCycleAge({ initialConsentData }: SunCycleAgeProps) {
   // Add state for error handling
   const [error, setError] = useState<Error | null>(null);
 
+  // Add state for commit modal and flow
+  const [showCommitModal, setShowCommitModal] = useState(false);
+  const [isCommitting, setIsCommitting] = useState(false);
+  const [commitSuccess, setCommitSuccess] = useState(false);
+
+  // Add state for dev commit button toggle
+  const [devShowCommit, setDevShowCommit] = useState(false);
+
+  // Effect to sync devShowCommit with window.__showCommitButton
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      (window as any).__showCommitButton = devShowCommit;
+    }
+  }, [devShowCommit]);
+
+  // Helper to determine if commit button should show
+  const shouldShowCommit = (context?.user?.fid || devShowCommit);
+
+  // Go to bookmark page with convergence tab
+  const handleCommit = () => {
+    setShowBookmark(true);
+    setShowConvergenceTab(true);
+  };
+
+  // State to control showing convergence tab after commit
+  const [showConvergenceTab, setShowConvergenceTab] = useState(false);
+
   if (!isSDKLoaded) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -609,44 +682,22 @@ export default function SunCycleAge({ initialConsentData }: SunCycleAgeProps) {
 
   return (
     <div className="relative w-full min-h-screen flex flex-col items-center justify-between z-0">
+      {/* Dev-only toggle for Commit Cosmic Journey button */}
+      {process.env.NODE_ENV === "development" && (
+        <div className="fixed top-2 left-1/2 -translate-x-1/2 z-50">
+          <button
+            onClick={() => setDevShowCommit(v => !v)}
+            className={`px-3 py-1 rounded font-mono text-xs border ${devShowCommit ? 'bg-yellow-400 text-black border-yellow-600' : 'bg-gray-200 text-gray-700 border-gray-400'} shadow`}
+          >
+            {devShowCommit ? 'Hide' : 'Show'} Commit Button
+          </button>
+        </div>
+      )}
+
       {/* Debug info - only show in development */}
       {process.env.NODE_ENV === "development" && (
         <div className="fixed top-0 left-0 bg-black/80 text-white p-2 text-xs font-mono z-50">
           SDK: {isSDKLoaded ? '✓' : '✗'} | Frame: {isFramePinned ? '✓' : '✗'} | Context: {context ? '✓' : '✗'}
-        </div>
-      )}
-
-      {/* New Pin Modal */}
-      {isInFrame && !isFramePinned && showPinPrompt && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-neutral-900 border border-gray-200 dark:border-gray-700 max-w-md w-full p-6 rounded-none shadow-lg">
-            <div className="text-center mb-6">
-              <h2 className="text-xl font-serif font-bold mb-2">Add Solara</h2>
-              <p className="text-sm text-gray-600 dark:text-gray-300 mb-4">
-                Pin Solara to track your Sol Age through time and receive milestone notifications.
-              </p>
-              {error && (
-                <div className="text-sm text-red-500 dark:text-red-400 mb-4">
-                  {error.message}
-                </div>
-              )}
-            </div>
-            <div className="flex flex-col gap-3">
-              <button
-                onClick={pinFrame}
-                disabled={loading}
-                className="w-full px-4 py-3 bg-black dark:bg-white text-white dark:text-black rounded-none uppercase tracking-widest font-mono text-sm font-bold hover:bg-gray-900 dark:hover:bg-gray-100 transition-colors disabled:opacity-50"
-              >
-                {loading ? "ADDING..." : "ADD SOLARA"}
-              </button>
-              <button
-                onClick={() => setShowPinPrompt(false)}
-                className="w-full px-4 py-3 border border-gray-200 dark:border-gray-700 bg-transparent text-gray-600 dark:text-gray-300 rounded-none uppercase tracking-widest font-mono text-sm hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
-              >
-                NOT NOW
-              </button>
-            </div>
-          </div>
         </div>
       )}
 
@@ -690,6 +741,7 @@ export default function SunCycleAge({ initialConsentData }: SunCycleAgeProps) {
             nextNumericalMilestones={nextNumericalMilestones}
             onShare={onShare}
             isSharing={isSharing}
+            initialTab={showConvergenceTab ? 'convergence' : 'age'}
           />
         </div>
       ) : (
@@ -729,6 +781,9 @@ export default function SunCycleAge({ initialConsentData }: SunCycleAgeProps) {
                     variant="results"
                   />
                 }
+                onCommit={shouldShowCommit ? handleCommit : undefined}
+                isCommitting={isCommitting}
+                birthDate={birthDate}
               />
             </div>
           )}
@@ -761,11 +816,11 @@ export default function SunCycleAge({ initialConsentData }: SunCycleAgeProps) {
         </RadixDialog>
       )}
       {/* Footer */}
-      <footer className="fixed bottom-0 left-0 w-full z-40 bg-white dark:bg-neutral-900 border-t border-gray-400 dark:border-gray-700">
+      <footer className="bottom-0 left-0 w-full z-40 bg-white dark:bg-neutral-900 border-t border-gray-400 dark:border-gray-700">
         <div className="flex justify-center items-center w-full">
           <div className="p-2 mx-1 text-center text-xs font-mono text-gray-700 dark:text-gray-300 w-full max-w-md mx-auto">
             <div>Your data is not stored or shared.<br />
-              Solara is made for <OccultureLink />
+              Solara is made for <OccultureLink /><br /><br /><br />
             </div>
           </div>
         </div>
