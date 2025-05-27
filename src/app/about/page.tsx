@@ -175,11 +175,11 @@ export default function AboutSolara() {
       <section className="w-full bg-[#F8F6E6] py-8 px-4">
         <div className="max-w-4xl mx-auto flex flex-col items-center relative">
           <div className="flex items-center gap-8 mb-8">
-            <Image src="/sunsun.png" alt="Sun" width={64} height={64} />
+            <Image src="/sunsun.png" alt="Sun" width={64} height={64} className="spin-slow" />
             <span className="font-serif text-3xl text-gray-900 text-center font-normal" style={{ lineHeight: 1.05, letterSpacing: '-0.02em' }}>
               every sunrise is <br />a new rotation
             </span>
-            <Image src="/sunsun.png" alt="Sun" width={64} height={64} />
+            <Image src="/sunsun.png" alt="Sun" width={64} height={64} className="spin-slow" />
           </div>
           <div className="w-full flex justify-center items-center mt-8" style={{ position: 'relative', zIndex: 0 }}>
             <Image src="/logo.svg" alt="SOLARA" width={800} height={160} className="opacity-20 select-none" style={{ maxWidth: '100%', height: 'auto' }} />

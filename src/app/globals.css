@@ -122,3 +122,32 @@ body {
         --sidebar-ring: 217.2 91.2% 59.8%;
     }
 }
+
+/* Sunrise gradient background for Solara */
+.bg-solara-sunrise {
+  background: linear-gradient(180deg, #F2F9FF 0%, #FFF4AA 75%, #FFBD5B 100%);
+  opacity: 0.6;
+}
+
+/* Gold button style for primary CTAs */
+.btn-gold {
+  background-color: #D6AD30;
+  border: 2px solid #AEBC25;
+  color: #222;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  transition: background 0.2s, border 0.2s, color 0.2s;
+}
+.btn-gold:hover, .btn-gold:focus {
+  background-color: #FFD700;
+  border-color: #FFD700;
+  color: #111;
+}
+
+@keyframes spin-slow {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+.spin-slow {
+  animation: spin-slow 8s linear infinite;
+}
