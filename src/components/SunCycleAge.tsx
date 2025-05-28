@@ -19,6 +19,7 @@ import {
 } from "../components/ui/dialog";
 import MilestoneCard from "./SunCycleAge/MilestoneCard";
 import sdk from "@farcaster/frame-sdk";
+import { useRouter } from "next/navigation";
 // import { revokeUserConsent } from "~/lib/consent";
 
 function WarpcastEmbed({ url }: { url: string }) {
@@ -39,11 +40,15 @@ interface SunCycleAgeProps {
 }
 
 function BookmarkCard({ bookmark, milestone, milestoneDate, daysToMilestone, onRecalculate, onClear, isRecalculating, sinceLastVisit, milestoneCard, showMilestoneModal, setShowMilestoneModal, nextNumericalMilestones, onShare, isSharing, initialTab }) {
-  const [tab, setTab] = useState<'age' | 'reflections' | 'signature' | 'convergence'>(initialTab || 'age');
+  const [tab, setTab] = useState<'sol age' | 'sol vows' | 'journal' | 'sol sign'>(initialTab || 'sol age');
   const { context } = useFrameSDK();
   const [isSigning, setIsSigning] = useState(false);
   const [signError, setSignError] = useState<Error | null>(null);
   const [signSuccess, setSignSuccess] = useState(false);
+
+  // Add touch feedback state
+  const [touchFeedback, setTouchFeedback] = useState<string | null>(null);
+
   const handleSign = async () => {
     setSignError(null);
     setIsSigning(true);
@@ -57,64 +62,79 @@ function BookmarkCard({ bookmark, milestone, milestoneDate, daysToMilestone, onR
       setSignSuccess(true);
     }, 1600);
   };
+
   const handleSignModalClose = () => {
     setIsSigning(false);
     setSignError(null);
     setSignSuccess(false);
   };
+
   return (
-    <div className="bg-[rgba(255,252,242,0.3)] dark:bg-[rgba(24,24,28,0.3)] border border-gray-200 dark:border-gray-700 rounded-none shadow p-8 max-w-md w-full flex flex-col items-center space-y-6 relative mt-0">
+    <div className="max-w-md w-full flex flex-col items-center space-y-4 sm:space-y-6 relative mt-24 px-0 sm:px-0">
       <Image
         src="/sunsun.png"
         alt="Sun"
         width={72}
         height={72}
-        className="w-20 h-20 object-contain mx-auto mb-2"
+        className="w-16 h-16 sm:w-20 sm:h-20 object-contain mx-auto mb-2"
         style={{ filter: 'drop-shadow(0 0 40px #FFD700cc) drop-shadow(0 0 16px #FFB30099)' }}
         priority
       />
       <div className="text-xs font-mono tracking-widest text-gray-500 dark:text-gray-300 text-center uppercase mb-2">WELCOME BACK TRAVELER...</div>
-      <div className="text-5xl font-serif font-extrabold tracking-tight text-gray-800 dark:text-white text-center mb-1">{bookmark.days} <span className="font-serif">Sol Age</span></div>
+      <div className="text-4xl sm:text-5xl font-serif font-extrabold tracking-tight text-gray-800 dark:text-white text-center mb-1">{bookmark.days} <span className="font-serif">Sol Age</span></div>
       <div className="text-xs font-mono text-gray-500 dark:text-gray-400 text-center mb-2">+{sinceLastVisit} since your last visit</div>
-      {/* Tabs */}
-      <div className="flex w-full border-b border-gray-300 dark:border-gray-700 mb-4">
-        <button onClick={() => setTab('age')} className={`flex-1 py-2 text-xs font-mono uppercase tracking-widest ${tab==='age' ? 'border-b-2 border-black dark:border-white font-bold' : 'text-gray-400'}`}>Age</button>
-        <button onClick={() => setTab('convergence')} className={`flex-1 py-2 text-xs font-mono uppercase tracking-widest ${tab==='convergence' ? 'border-b-2 border-black dark:border-white font-bold' : 'text-gray-400'}`}>Convergence</button>
-        <button onClick={() => setTab('reflections')} className={`flex-1 py-2 text-xs font-mono uppercase tracking-widest ${tab==='reflections' ? 'border-b-2 border-black dark:border-white font-bold' : 'text-gray-400'}`}>Reflections</button>
-        <button onClick={() => setTab('signature')} className={`flex-1 py-2 text-xs font-mono uppercase tracking-widest ${tab==='signature' ? 'border-b-2 border-black dark:border-white font-bold' : 'text-gray-400'}`}>Signature</button>
+      
+      {/* Enhanced Tabs with better mobile support */}
+      <div className="flex w-full border-b border-gray-300 dark:border-gray-700 mb-4 overflow-x-auto">
+        {['sol age', 'sol vows', 'journal', 'sol sign'].map((tabName) => (
+          <button
+            key={tabName}
+            onClick={() => setTab(tabName as any)}
+            className={`flex-1 min-w-[100px] py-3 px-2 text-xs font-mono uppercase tracking-widest transition-colors duration-200 ${
+              tab === tabName 
+                ? 'border-b-2 border-black dark:border-white font-bold' 
+                : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-200'
+            }`}
+          >
+            {tabName.toUpperCase()}
+          </button>
+        ))}
       </div>
-      {/* Tab Content */}
-      {tab === 'age' && (
-        <div className="w-full text-sm font-mono space-y-2">
-          <div className="flex justify-between items-center">
+
+      {/* Tab Content with improved mobile spacing */}
+      {tab === 'sol age' && (
+        <div className="w-full text-sm font-mono space-y-3">
+          <div className="flex justify-between items-center p-2 hover:bg-gray-50 dark:hover:bg-gray-800/50 rounded transition-colors">
             <span className="text-gray-500">FROM BIRTH</span>
             <span className="font-bold text-right">{bookmark.days.toLocaleString()} DAYS</span>
           </div>
-          <div className="flex justify-between items-center">
+          <div className="flex justify-between items-center p-2 hover:bg-gray-50 dark:hover:bg-gray-800/50 rounded transition-colors">
             <span className="text-gray-500">BIRTH DATE</span>
             <span className="font-bold text-right">{bookmark.birthDate.replace(/-/g, ".")}</span>
           </div>
-          <div className="flex justify-between items-center">
+          <div className="flex justify-between items-center p-2 hover:bg-gray-50 dark:hover:bg-gray-800/50 rounded transition-colors">
             <span className="text-gray-500">NEXT MILESTONE</span>
             <span className="font-bold text-right">{milestone} <span className="font-normal">(in {daysToMilestone} days)</span></span>
           </div>
-          {/* Milestone card and View More Milestones link */}
+          
+          {/* Enhanced Milestone Card Section */}
           {milestoneCard && (
             <div className="w-full flex flex-col items-center my-4">
               {milestoneCard}
               <button
-                className="mt-2 text-sm underline text-black hover:text-gray-800 dark:text-white dark:hover:text-gray-200 font-mono font-semibold"
+                className="mt-3 text-sm underline text-black hover:text-gray-800 dark:text-white dark:hover:text-gray-200 font-mono font-semibold transition-colors duration-200"
                 onClick={() => setShowMilestoneModal(true)}
               >
                 View More Milestones ↗
               </button>
-              {/* Modal for more milestones */}
+              
+              {/* Enhanced Modal */}
               {showMilestoneModal && (
                 <RadixDialog open={showMilestoneModal} onOpenChange={setShowMilestoneModal}>
-                  <DialogOverlay />
-                  <DialogContent className="w-4/5 max-w-lg border border-gray-400 bg-[rgba(255,252,242,0.7)] dark:bg-[rgba(24,24,28,0.7)] p-6 rounded-none shadow-md backdrop-blur-lg">
-                    <DialogTitle className="text-lg font-serif font-bold mb-4">Upcoming Milestones</DialogTitle>
-                    <div className="space-y-6 max-h-96 overflow-y-auto">
+                  <DialogOverlay className="bg-black/50 backdrop-blur-sm" />
+                  <DialogContent className="w-[95vw] sm:w-4/5 max-w-lg border border-gray-400 bg-[rgba(255,252,242,0.95)] dark:bg-[rgba(24,24,28,0.95)] p-4 sm:p-6 rounded-none shadow-md backdrop-blur-lg">
+                    <DialogTitle className="text-2xl font-serif font-bold mb-4">Upcoming Milestones</DialogTitle>
+                    <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-2">
                       {(() => {
                         const milestoneTypes = [
                           { type: 'interval', label: 'Numerical Milestone' },
@@ -128,7 +148,7 @@ function BookmarkCard({ bookmark, milestone, milestoneDate, daysToMilestone, onR
                           const m = milestoneByType[type];
                           if (!m) return null;
                           return (
-                            <div key={type}>
+                            <div key={type} className="hover:bg-gray-50 dark:hover:bg-gray-800/50 p-2 rounded transition-colors">
                               <div className="font-mono text-xs uppercase tracking-widest text-gray-500 mb-1">{label}</div>
                               <MilestoneCard
                                 number={m.cycles}
@@ -146,7 +166,7 @@ function BookmarkCard({ bookmark, milestone, milestoneDate, daysToMilestone, onR
                     </div>
                     <div className="flex justify-end mt-6">
                       <DialogClose asChild>
-                        <button className="px-6 py-2 border border-gray-400 dark:border-gray-700 bg-gray-100 dark:bg-neutral-800 text-gray-700 dark:text-gray-200 rounded-none uppercase tracking-widest font-mono text-sm">CLOSE</button>
+                        <button className="px-6 py-2 border border-gray-400 dark:border-gray-700 bg-gray-100 dark:bg-neutral-800 text-gray-700 dark:text-gray-200 rounded-none uppercase tracking-widest font-mono text-sm hover:bg-gray-200 dark:hover:bg-neutral-700 transition-colors">CLOSE</button>
                       </DialogClose>
                     </div>
                   </DialogContent>
@@ -154,76 +174,38 @@ function BookmarkCard({ bookmark, milestone, milestoneDate, daysToMilestone, onR
               )}
             </div>
           )}
-          {/* Divider before quote */}
+          
+          {/* Enhanced Divider and Quote */}
           <div className="border-t border-gray-300 dark:border-gray-700 my-4" />
-          <div className="text-xs font-sans text-gray-400 italic text-left">Your journey began {bookmark.days.toLocaleString()} days ago. Each rotation represents both repetition and change.</div>
+          <div className="text-xs font-sans text-gray-400 italic text-left p-2 bg-gray-50 dark:bg-gray-800/50 rounded">
+            Your journey began {bookmark.days.toLocaleString()} days ago. Each rotation represents both repetition and change.
+          </div>
         </div>
       )}
-      {tab === 'convergence' && (
-        <div className="w-full text-center text-base font-mono text-yellow-700 dark:text-yellow-300 py-8 border border-yellow-200 dark:border-yellow-700 bg-yellow-50 dark:bg-neutral-900/80 rounded-none">
-          <div className="text-lg font-serif font-bold mb-2">Cosmic Convergence</div>
-          {context?.user?.fid ? (
-            <>
-              {!signSuccess ? (
-                <>
-                  <div className="mb-4">To complete your cosmic commitment, please sign onchain.</div>
-                  <button
-                    onClick={handleSign}
-                    disabled={isSigning}
-                    className="px-6 py-2 border border-yellow-500 bg-yellow-400 text-black rounded-none uppercase tracking-widest font-mono text-sm font-bold hover:bg-yellow-300 transition-colors disabled:opacity-50 mb-4"
-                  >
-                    {isSigning ? "Signing..." : signError ? "Retry" : "Sign Commitment"}
-                  </button>
-                  {signError && (
-                    <div className="mb-2 text-sm text-red-600 dark:text-red-400 text-center">{signError.message}</div>
-                  )}
-                  {isSigning && (
-                    <div className="flex flex-col items-center justify-center my-4">
-                      <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-yellow-500 mb-2"></div>
-                      <div className="text-base font-mono text-yellow-700 dark:text-yellow-300 text-center">Please sign to complete your cosmic commitment…</div>
-                    </div>
-                  )}
-                </>
-              ) : (
-                <div className="text-green-700 dark:text-green-400 font-mono font-semibold">Commitment signed! You are ready for stellar recognition!</div>
-              )}
-            </>
-          ) : (
-            <div>You are ready for stellar recognition!<br/>Stay tuned for the next phase of your cosmic journey.</div>
-          )}
+
+      {tab === 'sol vows' && (
+        <div className="w-full text-sm font-mono space-y-3 flex flex-col items-center justify-center p-8 text-center">
+          <div className="text-3xl mb-2">🌞</div>
+          <div className="text-lg font-bold mb-1">Nothing here yet</div>
+          <div className="text-gray-500">Your future vows and commitments will appear here.</div>
         </div>
       )}
-      {tab === 'reflections' && (
-        <div className="w-full text-center text-xs font-mono text-gray-500 py-8 border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-neutral-900/80">Reflections coming soon.</div>
-      )}
-      {tab === 'signature' && (
-        <div className="w-full text-center text-xs font-mono text-gray-500 py-8 border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-neutral-900/80">Signature coming soon.</div>
-      )}
-      {/* Actions */}
-      <div className="w-full mt-6">
-        <div className="flex w-full gap-2 mb-2">
-          <button
-            onClick={onShare}
-            disabled={isSharing}
-            className="flex-1 border border-black dark:border-white bg-transparent dark:bg-black text-black dark:text-white uppercase tracking-widest font-mono py-2.5 px-2 text-sm transition-colors hover:bg-gray-100 dark:hover:bg-gray-900 rounded-none"
-          >
-            {isSharing ? "SHARING..." : "SHARE SOL AGE"}
-          </button>
-          <button
-            onClick={onRecalculate}
-            disabled={isRecalculating}
-            className="flex-1 border border-black dark:border-white bg-transparent dark:bg-black text-black dark:text-white uppercase tracking-widest font-mono py-2.5 px-2 text-sm transition-colors hover:bg-gray-100 dark:hover:bg-gray-900 rounded-none"
-          >
-            {isRecalculating ? "RECALCULATING..." : "RECALCULATE"}
-          </button>
+
+      {tab === 'journal' && (
+        <div className="w-full text-sm font-mono space-y-3 flex flex-col items-center justify-center p-8 text-center">
+          <div className="text-3xl mb-2">📓</div>
+          <div className="text-lg font-bold mb-1">Nothing here yet</div>
+          <div className="text-gray-500">Your journal entries and reflections will appear here.</div>
         </div>
-        <button
-          onClick={onClear}
-          className="w-full border border-black dark:border-white bg-black dark:bg-white text-white dark:text-black uppercase tracking-widest font-mono py-2.5 px-2 text-sm transition-colors hover:bg-gray-900 dark:hover:bg-gray-100 rounded-none"
-        >
-          CLEAR BOOKMARK
-        </button>
-      </div>
+      )}
+
+      {tab === 'sol sign' && (
+        <div className="w-full text-sm font-mono space-y-3 flex flex-col items-center justify-center p-8 text-center">
+          <div className="text-3xl mb-2">✍️</div>
+          <div className="text-lg font-bold mb-1">Nothing here yet</div>
+          <div className="text-gray-500">Your sol signature and sign-ins will appear here.</div>
+        </div>
+      )}
     </div>
   );
 }
@@ -239,6 +221,7 @@ export default function SunCycleAge({ initialConsentData }: SunCycleAgeProps) {
     isConnected,
     address
   } = useFrameSDK();
+  const router = useRouter();
   const [birthDate, setBirthDate] = useState<string>("");
   const [days, setDays] = useState<number | null>(null);
   const [approxYears, setApproxYears] = useState<number | null>(null);
@@ -342,8 +325,9 @@ export default function SunCycleAge({ initialConsentData }: SunCycleAgeProps) {
     const diffMs = now.getTime() - birth.getTime();
     const totalDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
     const years = Math.floor(totalDays / 365.25);
-    setDays(totalDays);
-    setApproxYears(years);
+    
+    // Navigate to results page with query parameters
+    router.push(`/results?days=${totalDays}&approxYears=${years}&birthDate=${birthDate}`);
   };
 
   const onShare = async () => {
@@ -374,72 +358,6 @@ export default function SunCycleAge({ initialConsentData }: SunCycleAgeProps) {
   ];
   const randomFact = facts[Math.floor(days !== null ? days % facts.length : 0)];
 
-  // Main content (header, orbits, form) container
-  const showMain = days === null;
-
-  // Add this before the component
-  function SunSVG() {
-    return (
-      <svg
-        width="80"
-        height="80"
-        viewBox="0 0 80 80"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
-        className="mx-auto mb-2 drop-shadow-lg"
-      >
-        <circle
-          cx="40"
-          cy="40"
-          r="16"
-          fill="url(#sun-gradient)"
-          stroke="#FFD700"
-          strokeWidth="2"
-          filter="url(#glow)"
-        />
-        {/* Rays */}
-        {[...Array(12)].map((_, i) => {
-          const angle = (i * 30) * (Math.PI / 180);
-          const x1 = 40 + Math.cos(angle) * 22;
-          const y1 = 40 + Math.sin(angle) * 22;
-          const x2 = 40 + Math.cos(angle) * 32;
-          const y2 = 40 + Math.sin(angle) * 32;
-          return (
-            <line
-              key={i}
-              x1={x1}
-              y1={y1}
-              x2={x2}
-              y2={y2}
-              stroke="#FFD700"
-              strokeWidth="2"
-              strokeLinecap="round"
-              opacity="0.8"
-            />
-          );
-        })}
-        <defs>
-          <radialGradient id="sun-gradient" cx="0.5" cy="0.5" r="0.5" fx="0.5" fy="0.5">
-            <stop offset="0%" stopColor="#FFF9C4" />
-            <stop offset="100%" stopColor="#FFD700" />
-          </radialGradient>
-          <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
-            <feGaussianBlur stdDeviation="4" result="coloredBlur" />
-            <feMerge>
-              <feMergeNode in="coloredBlur" />
-              <feMergeNode in="SourceGraphic" />
-            </feMerge>
-          </filter>
-        </defs>
-      </svg>
-    );
-  }
-
-  useEffect(() => {
-    setDays(null);
-    setApproxYears(null);
-  }, []);
-
   // Bookmark state
   const [bookmark, setBookmark] = useState<{
     days: number;
@@ -451,6 +369,9 @@ export default function SunCycleAge({ initialConsentData }: SunCycleAgeProps) {
 
   // Add a state to control showing the bookmark card or calculation page
   const [showBookmark, setShowBookmark] = useState(true);
+
+  // Main content (header, orbits, form) container
+  const showMain = !showBookmark && days === null;
 
   // Update useEffect to only show bookmark if it exists
   useEffect(() => {
@@ -669,6 +590,9 @@ export default function SunCycleAge({ initialConsentData }: SunCycleAgeProps) {
   // State to control showing convergence tab after commit
   const [showConvergenceTab, setShowConvergenceTab] = useState(false);
 
+  // Tooltip modal state
+  const [showTooltip, setShowTooltip] = useState(false);
+
   if (!isSDKLoaded) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -681,172 +605,111 @@ export default function SunCycleAge({ initialConsentData }: SunCycleAgeProps) {
   }
 
   return (
-    <div className="relative w-full min-h-screen flex flex-col items-center justify-between z-0">
-      {/* Dev-only toggle for Commit Cosmic Journey button */}
-      {process.env.NODE_ENV === "development" && (
-        <div className="fixed top-2 left-1/2 -translate-x-1/2 z-50">
-          <button
-            onClick={() => setDevShowCommit(v => !v)}
-            className={`px-3 py-1 rounded font-mono text-xs border ${devShowCommit ? 'bg-yellow-400 text-black border-yellow-600' : 'bg-gray-200 text-gray-700 border-gray-400'} shadow`}
-          >
-            {devShowCommit ? 'Hide' : 'Show'} Commit Button
-          </button>
+    <div className="relative w-full min-h-screen flex flex-col items-center bg-white">
+      {/* Top Section: Solar System + Tagline with off-white background */}
+      <div className="w-full flex flex-col items-center" style={{ background: 'rgba(255,252,242,0.5)' }}>
+        <div className="w-full flex justify-center mb-8 mt-28">
+          <div className="mx-auto" style={{ maxWidth: 360, width: '100%' }}>
+            <SolarSystemGraphic />
+          </div>
         </div>
-      )}
-
-      {/* Debug info - only show in development */}
-      {process.env.NODE_ENV === "development" && (
-        <div className="fixed top-0 left-0 bg-black/80 text-white p-2 text-xs font-mono z-50">
-          SDK: {isSDKLoaded ? '✓' : '✗'} | Frame: {isFramePinned ? '✓' : '✗'} | Context: {context ? '✓' : '✗'}
+        {/* Tagline and Tooltip Trigger as 3-column layout */}
+        <div className="w-full flex flex-row items-center justify-between px-4 mb-10 max-w-md mx-auto" style={{ minHeight: 56 }}>
+          <div className="flex-1" />
+          <div className="flex-[4] flex items-center justify-center">
+            <span
+              className="block text-center"
+              style={{
+                fontFamily: 'GT Alpina, serif',
+                fontWeight: 100,
+                fontSize: '26pt',
+                lineHeight: '24pt',
+                letterSpacing: '-0.06em',
+                color: '#222'
+              }}
+            >
+              measure your age in<br />solar rotations*
+            </span>
+          </div>
+          <div className="flex-1 flex justify-end">
+            <button
+              aria-label="Solara explained"
+              onClick={() => setShowTooltip(true)}
+              className="w-10 h-10 flex items-center justify-center bg-white focus:outline-none transition-colors ml-4"
+              style={{ border: 'none', borderRadius: 0, padding: 0, fontFamily: 'Geist Mono, monospace', fontWeight: 400 }}
+            >
+              <Image src="/asterisk_icon.svg" alt="*" width={32} height={32} style={{ display: 'block', width: 32, height: 32 }} />
+            </button>
+          </div>
         </div>
-      )}
-
-      {/* Show BookmarkCard if bookmark exists */}
-      {bookmark && showBookmark ? (
-        <div className="mb-24">
-          <BookmarkCard
-            bookmark={bookmark}
-            milestone={nextMilestoneObj ? nextMilestoneObj.cycles : undefined}
-            milestoneDate={nextMilestoneObj ? nextMilestoneObj.milestoneDate : undefined}
-            daysToMilestone={nextMilestoneObj ? nextMilestoneObj.daysToMilestone : undefined}
-            onRecalculate={async () => {
-              setIsRecalculating(true);
-              await new Promise(r => setTimeout(r, 1200));
-              calculateAge();
-              setBookmark(prev => prev && days !== null ? {
-                ...prev,
-                lastVisitDays: days,
-                lastVisitDate: new Date().toISOString(),
-              } : prev);
-              setIsRecalculating(false);
-            }}
-            onClear={() => setShowConfirmClear(true)}
-            isRecalculating={isRecalculating}
-            sinceLastVisit={bookmark && bookmark.lastVisitDays !== undefined ? Math.max(0, bookmark.days - bookmark.lastVisitDays) : 0}
-            milestoneCard={
-              nextMilestoneObj ? (
-                <MilestoneCard
-                  number={nextMilestoneObj.cycles}
-                  label={nextMilestoneObj.label}
-                  emoji={nextMilestoneObj.emoji}
-                  description={nextMilestoneObj.description}
-                  daysToMilestone={nextMilestoneObj.daysToMilestone}
-                  milestoneDate={nextMilestoneObj.milestoneDate}
-                  variant="bookmark"
-                />
-              ) : null
-            }
-            showMilestoneModal={showMilestoneModal}
-            setShowMilestoneModal={setShowMilestoneModal}
-            nextNumericalMilestones={nextNumericalMilestones}
-            onShare={onShare}
-            isSharing={isSharing}
-            initialTab={showConvergenceTab ? 'convergence' : 'age'}
-          />
-        </div>
-      ) : (
-        // Show calculator/intro/main content if no bookmark
-        <>
-          {/* Main Content: Only one of calculator, results, or bookmark card is shown */}
-          {days !== null && nextMilestoneObj && (
-            <div className="flex-1 flex flex-col items-center justify-center w-full">
-              <ResultCard
-                days={days}
-                approxYears={approxYears!}
-                nextMilestone={nextMilestoneObj.cycles}
-                daysToMilestone={nextMilestoneObj.daysToMilestone}
-                milestoneDate={nextMilestoneObj.milestoneDate}
-                quote={quote}
-                showDetails={showDetails}
-                setShowDetails={setShowDetails}
-                onShare={onShare}
-                isSharing={isSharing}
-                onRecalculate={() => {
-                  setBirthDate("");
-                  setDays(null);
-                  setApproxYears(null);
-                  setShowDetails(false);
-                }}
-                bookmark={bookmark}
-                handleBookmark={handleBookmark}
-                formattedDate={formattedDate}
-                milestoneCard={
-                  <MilestoneCard
-                    number={nextMilestoneObj.cycles}
-                    label={nextMilestoneObj.label}
-                    emoji={nextMilestoneObj.emoji}
-                    description={nextMilestoneObj.description}
-                    daysToMilestone={nextMilestoneObj.daysToMilestone}
-                    milestoneDate={nextMilestoneObj.milestoneDate}
-                    variant="results"
-                  />
-                }
-                onCommit={shouldShowCommit ? handleCommit : undefined}
-                isCommitting={isCommitting}
-                birthDate={birthDate}
-              />
-            </div>
-          )}
-          {/* Show calculator/intro if no days calculated yet */}
-          {days === null && (
-            <div className="flex-1 flex flex-col items-center justify-center w-full">
-              <Header formattedDate={formattedDate} />
-              <div className="border-b border-gray-200 dark:border-gray-800 mt-4 mb-2 w-full mx-0 sm:mx-4" />
-              <SolarSystemGraphic />
-              <div className="mb-10" />
-              <FormSection birthDate={birthDate} setBirthDate={setBirthDate} calculateAge={calculateAge} />
-            </div>
-          )}
-        </>
-      )}
-      {/* Confirmation dialog: */}
-      {showConfirmClear && (
-        <RadixDialog open={showConfirmClear} onOpenChange={setShowConfirmClear}>
-          <DialogOverlay />
-          <DialogContent className="max-w-md w-full border border-gray-400 bg-[rgba(255,252,242,0.3)] dark:bg-[rgba(24,24,28,0.3)] p-6 rounded-none shadow-md backdrop-blur-sm" style={{ boxShadow: '0 4px 24px 0 rgba(0,0,0,0.08)' }}>
-            <DialogTitle className="text-lg font-serif font-bold mb-2">Clear Bookmark?</DialogTitle>
-            <div className="mb-6 text-sm text-gray-600 dark:text-gray-300">Are you sure you want to remove your bookmark? This cannot be undone.</div>
-            <div className="flex gap-4 justify-center">
-              <DialogClose asChild>
-                <button className="px-6 py-2 border border-gray-400 dark:border-gray-700 bg-gray-100 dark:bg-neutral-800 text-gray-700 dark:text-gray-200 rounded-none uppercase tracking-widest font-mono text-sm">CANCEL</button>
-              </DialogClose>
-              <button onClick={() => { handleClearBookmark(); setShowConfirmClear(false); setShowBookmark(false); }} className="px-6 py-2 bg-black dark:bg-white text-white dark:text-black border border-black dark:border-white rounded-none uppercase tracking-widest font-mono text-sm">CLEAR</button>
-            </div>
-          </DialogContent>
-        </RadixDialog>
-      )}
-      {/* Footer */}
-      <footer className="bottom-0 left-0 w-full z-40 bg-white dark:bg-neutral-900 border-t border-gray-400 dark:border-gray-700">
-        <div className="flex justify-center items-center w-full">
-          <div className="p-2 mx-1 text-center text-xs font-mono text-gray-700 dark:text-gray-300 w-full max-w-md mx-auto">
-            <div>Your data is not stored or shared.<br />
-              Solara is made for <OccultureLink /><br /><br /><br />
+      </div>
+      {/* Divider line between sections */}
+      <div className="w-full h-px bg-gray-200" style={{ margin: 0 }} />
+      {/* Add more space between divider and form */}
+      <div style={{ height: 24 }} />
+      
+      {/* Show the form */}
+      <div className="w-full flex flex-col items-center pb-0 px-2 max-w-[390px] mx-auto bg-white mb-0">
+        <FormSection birthDate={birthDate} setBirthDate={setBirthDate} calculateAge={calculateAge} />
+      </div>
+      
+      {/* Tooltip Modal and Gradient Overlay */}
+      {showTooltip && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          {/* Restore the colorful sunrise gradient overlay (no blur) */}
+          <div className="absolute inset-0 bg-solara-sunrise" style={{ opacity: 0.6 }} />
+          {/* Modal with blur effect */}
+          <div className="relative z-10">
+            <div className="backdrop-blur-md bg-[#FFFCF2]/50 border border-gray-200 p-6 max-w-[360px] mx-auto">
+              <div className="flex justify-between items-center mb-3">
+                <div className="text-2xl" style={{ fontFamily: 'GT Alpina, serif', fontWeight: 300, letterSpacing: '-0.06em' }}>Solara, explained</div>
+                <button onClick={() => setShowTooltip(false)} aria-label="Close" className="text-gray-500 hover:text-gray-800 text-xl font-bold">×</button>
+              </div>
+              <div className="text-xs font-mono text-gray-500 mb-5 tracking-widest uppercase">MEASURE YOUR SOL AGE AND BECOME ONE WITH YOUR INNER SELF</div>
+              <ul className="space-y-5">
+                <li className="flex items-start gap-3">
+                  <span className="text-2xl">⭐️</span>
+                  <div>
+                    <div className="text-lg mb-1" style={{ fontFamily: 'GT Alpina, serif', fontWeight: 300, letterSpacing: '-0.06em' }}>Find your solar age</div>
+                    <div className="text-sm" style={{ fontFamily: 'Geist, Geist Mono, monospace', fontWeight: 400 }}>
+                      One day = one rotation. Enter your birth date to see how many rotations you&apos;ve completed.
+                    </div>
+                  </div>
+                </li>
+                <li className="flex items-start gap-3">
+                  <span className="text-2xl">🌌</span>
+                  <div>
+                    <div className="text-lg mb-1" style={{ fontFamily: 'GT Alpina, serif', fontWeight: 300, letterSpacing: '-0.06em' }}>Align yourself with the cosmos</div>
+                    <div className="text-sm" style={{ fontFamily: 'Geist, Geist Mono, monospace', fontWeight: 400 }}>
+                      Track meaningful numbers in your orbit and use those milestones to reflect and celebrate.
+                    </div>
+                  </div>
+                </li>
+                <li className="flex items-start gap-3">
+                  <span className="text-2xl">🔋</span>
+                  <div>
+                    <div className="text-lg mb-1" style={{ fontFamily: 'GT Alpina, serif', fontWeight: 300, letterSpacing: '-0.06em' }}>Pledge a commitment to yourself</div>
+                    <div className="text-sm" style={{ fontFamily: 'Geist, Geist Mono, monospace', fontWeight: 400 }}>
+                      Bank $SOLAR energy behind promises to yourself. Get rewarded for follow-through.
+                    </div>
+                  </div>
+                </li>
+              </ul>
             </div>
           </div>
         </div>
-      </footer>
-      {/* Render the bookmark success modal */}
-      {showBookmarkSuccess && (
-        <RadixDialog open={showBookmarkSuccess} onOpenChange={(open) => {
-          setShowBookmarkSuccess(open);
-          if (!open) setShowBookmark(true); // Load bookmark page after closing modal
-        }}>
-          <DialogOverlay />
-          <DialogContent className="max-w-md w-full border border-gray-400 bg-[rgba(255,252,242,0.95)] dark:bg-[rgba(24,24,28,0.95)] p-6 rounded-none shadow-md backdrop-blur-sm">
-            <DialogTitle className="text-lg font-serif font-bold mb-2 text-center">Sol Age Bookmarked!</DialogTitle>
-            <div className="mb-6 text-sm text-gray-700 dark:text-gray-200 text-center">You can revisit your journey anytime from your bookmark page.</div>
-            <div className="flex justify-center">
-              <button
-                onClick={() => { setShowBookmarkSuccess(false); setShowBookmark(true); }}
-                className="px-6 py-2 border border-gray-400 dark:border-gray-700 bg-black dark:bg-white text-white dark:text-black rounded-none uppercase tracking-widest font-mono text-sm"
-              >
-                VIEW MY BOOKMARK
-              </button>
-            </div>
-          </DialogContent>
-        </RadixDialog>
       )}
+      {/* Footer - close to form, not at bottom */}
+      <footer className="w-full border-t border-gray-200 bg-transparent pt-2 pb-2">
+        <div className="flex flex-col items-center justify-center">
+          <div className="text-sm font-mono text-gray-500 text-center">
+            Solara is made for <a href="https://farcaster.xyz/~/channel/occulture" className="underline transition-colors hover:text-[#D6AD30] active:text-[#D6AD30] focus:text-[#D6AD30]" target="_blank" rel="noopener noreferrer">/occulture</a> <br />
+            built by <a href="https://farcaster.xyz/sirsu.eth" className="underline transition-colors hover:text-[#D6AD30] active:text-[#D6AD30] focus:text-[#D6AD30]" target="_blank" rel="noopener noreferrer">sirsu</a>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }
 
+export { BookmarkCard };
