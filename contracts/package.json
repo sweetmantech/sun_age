@@ -1,0 +1,22 @@
+{
+  "name": "solar-pledge-contracts",
+  "version": "1.0.0",
+  "description": "Smart contracts for Solara's solar pledge system",
+  "main": "index.js",
+  "scripts": {
+    "compile": "hardhat compile",
+    "test": "hardhat test",
+    "deploy:local": "hardhat run scripts/deploy.js --network localhost",
+    "deploy:testnet": "hardhat run scripts/deploy.js --network sepolia",
+    "deploy:mainnet": "hardhat run scripts/deploy.js --network mainnet"
+  },
+  "dependencies": {
+    "@openzeppelin/contracts": "^5.0.1"
+  },
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^4.0.0",
+    "@nomicfoundation/hardhat-verify": "^2.0.0",
+    "dotenv": "^16.4.1",
+    "hardhat": "^2.19.4"
+  }
+} 

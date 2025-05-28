@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "test": "hardhat test"
   },
   "dependencies": {
     "@daimo/contract": "^1.6.0",
@@ -58,6 +59,7 @@
     "cmdk": "1.0.0",
     "cross-fetch": "^4.1.0",
     "date-fns": "^3.6.0",
+    "dotenv": "^16.5.0",
     "embla-carousel-react": "^8.5.2",
     "framer-motion": "^12.12.1",
     "html-to-image": "^1.11.13",
@@ -77,6 +79,7 @@
     "react-hook-form": "^7.54.2",
     "react-resizable-panels": "^2.1.7",
     "recharts": "^2.15.1",
+    "siwe": "^2.1.4",
     "sonner": "^1.7.4",
     "tailwind-merge": "^2.6.0",
     "tailwindcss-animate": "^1.0.7",
@@ -86,13 +89,30 @@
     "zod": "^3.24.2"
   },
   "devDependencies": {
+    "@nomicfoundation/hardhat-chai-matchers": "^2.0.8",
+    "@nomicfoundation/hardhat-ethers": "^3.0.0",
+    "@nomicfoundation/hardhat-network-helpers": "^1.0.12",
+    "@nomicfoundation/hardhat-toolbox": "^4.0.0",
+    "@nomicfoundation/hardhat-verify": "^2.0.14",
+    "@openzeppelin/contracts": "^4.9.3",
+    "@typechain/ethers-v6": "^0.5.1",
+    "@typechain/hardhat": "^9.1.0",
+    "@types/chai": "^4.3.20",
+    "@types/mocha": "^10.0.10",
     "@types/node": "^20.17.48",
     "@types/react": "^18.3.21",
     "@types/react-dom": "^18.3.5",
+    "chai": "^4.3.7",
     "eslint": "^8.57.1",
     "eslint-config-next": "15.0.3",
+    "ethers": "^6.14.3",
+    "hardhat": "^2.19.0",
+    "hardhat-gas-reporter": "^1.0.10",
     "postcss": "^8.5.3",
+    "solidity-coverage": "^0.8.16",
     "tailwindcss": "^3.4.17",
+    "ts-node": "^10.9.2",
+    "typechain": "^8.3.2",
     "typescript": "^5.8.2"
   }
 }
