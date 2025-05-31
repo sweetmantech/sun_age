@@ -9,5 +9,13 @@
     "@typescript-eslint/no-inferrable-types": "off",
     "@typescript-eslint/no-implicit-any": "off",
     "prefer-const": "off"
-  }
+  },
+  "overrides": [
+    {
+      "files": ["**/node_modules/**"],
+      "rules": {
+        "@typescript-eslint/no-import-type-side-effects": "off"
+      }
+    }
+  ]
 }
