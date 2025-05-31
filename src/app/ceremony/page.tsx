@@ -3,9 +3,10 @@
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useSolarPledge } from "~/hooks/useSolarPledge";
-import { useAccount } from "wagmi";
+import { useSolarPledge } from "../../hooks/useSolarPledge";
+import { useAccount, useConnect, useReadContract } from "wagmi";
 import { useFrameSDK } from '~/hooks/useFrameSDK';
+import { SOLAR_PLEDGE_ADDRESS, SolarPledgeABI } from '../../lib/contracts';
 
 const steps = ["prepare", "inscribe", "empower", "sealed"];
 
@@ -59,10 +60,47 @@ export default function CeremonyStepper() {
   const [commitment, setCommitment] = useState("");
   const [farcasterHandle, setFarcasterHandle] = useState("");
 
+  // Calculate sponsoredCount and multiplier for step 2
+  const overage = Math.max(0, pledge - 1);
+  const sponsoredCount = Math.floor(overage * 0.5);
+  const multiplier = Math.min(5, (1 + (pledge - 1) * 0.1)).toFixed(1);
+
   // Step navigation
   const next = () => setStep((s) => Math.min(s + 1, steps.length - 1));
   const prev = () => setStep((s) => Math.max(s - 1, 0));
-  const cancel = () => router.push("/results");
+  const cancel = () => {
+    if (solAge && birthDate) {
+      const approxYears = Math.floor(solAge / 365.25);
+      router.push(`/results?days=${solAge}&birthDate=${birthDate}&approxYears=${approxYears}`);
+    } else {
+      router.push('/');
+    }
+  };
+
+  // Handler for returning to results with fallback logic
+  const handleReturnToResults = () => {
+    // Try in-memory data first
+    if (solAge && birthDate) {
+      const approxYears = Math.floor(solAge / 365.25);
+      router.push(`/results?days=${solAge}&birthDate=${birthDate}&approxYears=${approxYears}`);
+      return;
+    }
+    // Fallback to localStorage
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('sunCycleBookmark');
+      if (saved) {
+        try {
+          const bookmark = JSON.parse(saved);
+          if (bookmark.days && bookmark.birthDate && bookmark.approxYears) {
+            router.push(`/results?days=${bookmark.days}&birthDate=${bookmark.birthDate}&approxYears=${bookmark.approxYears}`);
+            return;
+          }
+        } catch {}
+      }
+    }
+    // Final fallback
+    router.push('/');
+  };
 
   // Handle pledge creation
   const handlePledge = async () => {
@@ -136,7 +174,7 @@ export default function CeremonyStepper() {
                   <div className="text-xs font-mono text-gray-500 mb-2 uppercase tracking-widest">Your Cosmic Journey Thus Far</div>
                   <div className="flex items-center justify-center gap-2 mb-1">
                     <span className="text-2xl">⭐</span>
-                    <span className="text-3xl font-serif font-bold">{solAge?.toLocaleString()}</span>
+                    <span className="text-3xl font-serif font-bold">{solAge ? solAge.toLocaleString() : ""}</span>
                     <span className="text-2xl">⭐</span>
                   </div>
                   <div className="text-xs font-mono text-gray-500 mb-2">Solar rotations since {birthDate}</div>
@@ -157,34 +195,6 @@ export default function CeremonyStepper() {
                 <Image src="/pinky_promise.png" alt="Fist" width={200} height={200} className="mb-6 self-center" style={{ filter: 'drop-shadow(0 0 50px #FFD700cc) drop-shadow(0 0 20px #FFB30099)' }} />
                 <div className="text-2xl font-serif font-normal mb-1 w-full text-center leading-tighter">Inscribe Your Solar Vow</div>
                 <div className="text-xs font-mono text-gray-500 mb-6 uppercase tracking-widest w-full text-center">A sacred inscription of your journey</div>
-                
-                {/* Commitment Input */}
-                <div className="w-full border border-gray-300 rounded-none p-4 mb-4 bg-white/90 text-left">
-                  <div className="text-xs font-mono text-gray-700 mb-2 uppercase tracking-widest font-bold">YOUR SOLAR VOW</div>
-                  <textarea
-                    value={commitment}
-                    onChange={(e) => setCommitment(e.target.value)}
-                    placeholder="Write your commitment here..."
-                    className="w-full px-4 py-2 border border-black font-mono text-base rounded-none mb-4 min-h-[100px]"
-                    maxLength={160}
-                  />
-                  <div className="text-xs font-mono text-gray-500 mb-2">
-                    {160 - commitment.length} characters remaining
-                  </div>
-                </div>
-
-                {/* Farcaster Handle Input */}
-                <div className="w-full border border-gray-300 rounded-none p-4 mb-4 bg-white/90 text-left">
-                  <div className="text-xs font-mono text-gray-700 mb-2 uppercase tracking-widest font-bold">FARCASTER HANDLE</div>
-                  <input
-                    type="text"
-                    value={farcasterHandle}
-                    onChange={(e) => setFarcasterHandle(e.target.value)}
-                    placeholder="Enter your Farcaster handle..."
-                    className="w-full px-4 py-2 border border-black font-mono text-base rounded-none"
-                  />
-                </div>
-
                 {/* Message to Sign Callout */}
                 <div className="w-full border border-gray-300 rounded-none p-4 mb-4 bg-white/90 text-left">
                   <div className="text-xs font-mono text-gray-500 mb-4 uppercase tracking-widest">Message to Sign</div>
@@ -193,25 +203,7 @@ export default function CeremonyStepper() {
                   </div>
                   <div className="text-sm text-gray-500 mt-12 text-left">Your vow is an onchain signature transforming intention into cosmic law, creating an unbreakable bond with your future self. This is proof of your word.</div>
                 </div>
-
-                {/* Navigation Buttons */}
-                <div className="w-full flex gap-4">
-                  <button
-                    onClick={prev}
-                    className="flex-1 px-4 py-2 border border-black font-mono text-base rounded-none bg-white hover:bg-gray-50"
-                  >
-                    Back
-                  </button>
-                  <button
-                    onClick={next}
-                    disabled={!commitment.trim()}
-                    className={`flex-1 px-4 py-2 border border-black font-mono text-base rounded-none ${
-                      !commitment.trim() ? 'bg-gray-200' : 'bg-[#d4af37] hover:bg-[#c19b2e]'
-                    }`}
-                  >
-                    Next
-                  </button>
-                </div>
+                
               </div>
             </>
           )}
@@ -257,30 +249,12 @@ export default function CeremonyStepper() {
                 <div className="w-full border border-gray-300 rounded-none p-4 mb-4" style={{ background: '#F6F5E6' }}>
                   <div className="text-xs font-mono text-gray-700 mb-2 uppercase tracking-widest font-bold">YOUR ${pledge} SOLAR VOW WILL:</div>
                   <ul className="text-sm font-mono text-gray-700 list-none ml-0 mt-1">
-                    <li className="mb-1">🌞 Enable (sponsoredCount) free ceremonies</li>
+                    <li className="mb-1">🌞 Enable {sponsoredCount} free ceremonies</li>
                     <li className="mb-1">🌊 Add ${pledge} to Genesis pool</li>
-                    <li>🔒 Secure your vow with (multiplier)x energy</li>
+                    <li>🔒 Secure your vow with {multiplier}x energy</li>
                   </ul>
                 </div>
-                {/* Add pledge button */}
-                <button
-                  onClick={handlePledge}
-                  disabled={isLoading || !address}
-                  className={`w-full px-4 py-2 border border-black font-mono text-base rounded-none ${
-                    isLoading ? 'bg-gray-200' : 'bg-[#d4af37] hover:bg-[#c19b2e]'
-                  }`}
-                >
-                  {isLoading ? 'Processing...' : 'Create Pledge'}
-                </button>
-                
-                {error && (
-                  <div className="w-full mt-4 p-4 border border-red-200 bg-red-50 text-red-700 text-sm">
-                    {error.message}
-                  </div>
-                )}
               </div>
-
-              {/* TODO: Wallet signature and USDC pledge logic here */}
             </>
           )}
 
@@ -355,7 +329,7 @@ export default function CeremonyStepper() {
                 <div className="flex w-full items-center justify-center gap-0 mt-0 mb-6">
                   <button
                     className="flex-1 font-mono text-base text-sm uppercase underline underline-offset-2 border-none rounded-none bg-transparent text-black py-2 px-0 hover:text-[#d4af37] transition-colors"
-                    onClick={() => router.push('/results')}
+                    onClick={handleReturnToResults}
                   >
                     RETURN TO RESULTS
                   </button>
@@ -375,12 +349,12 @@ export default function CeremonyStepper() {
                   className="w-full py-4 mb-4 bg-[#d4af37] text-black font-mono text-sm tracking-widest uppercase border border-black rounded-none hover:bg-[#e6c75a] transition-colors"
                   onClick={next}
                 >
-                  SIGN TO INSCRIBE YOUR VOW
+                  SIGN TO INSCRIBE VOW
                 </button>
                 <div className="flex w-full items-center justify-center gap-0 mt-0 mb-6">
                   <button
                     className="flex-1 font-mono text-base text-sm uppercase underline underline-offset-2 border-none rounded-none bg-transparent text-black py-2 px-0 hover:text-[#d4af37] transition-colors"
-                    onClick={cancel}
+                    onClick={handleReturnToResults}
                   >
                     RETURN TO RESULTS
                   </button>
@@ -412,7 +386,7 @@ export default function CeremonyStepper() {
                   <span className="w-px h-8 bg-black mx-6" style={{ minWidth: '1px' }} />
                   <button
                     className="flex-1 font-mono text-base text-sm uppercase underline underline-offset-2 border-none rounded-none bg-transparent text-black py-2 px-0 hover:text-[#d4af37] transition-colors text-right"
-                    onClick={prev}
+                    onClick={handleReturnToResults}
                   >
                     CANCEL COMMITMENT
                   </button>
