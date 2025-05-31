@@ -144,7 +144,7 @@ export default function ResultsPage() {
             <div className="text-2xl font-serif font-bold text-center mb-2">The Cosmic Convergence</div>
             <div className="text-xs font-mono text-center text-gray-600 mb-4 tracking-normal uppercase">THE BEGINNING TO YOUR BRIGHTEST SELF.<br />A PLEDGE TO BECOME BETTER, TOGETHER.</div>
             <div className="text-base text-gray-800 font-sans text-left mb-6">
-              The Cosmic Convergence is a ceremony where accumulated rotations around our star crystallize into $SOLAR tokens. Only committed cosmic travelers who inscribe a Solar Vow will receive stellar essence based on their journey's length.<br /><br />
+              The Cosmic Convergence is a ceremony where accumulated rotations around our star crystallize into $SOLAR tokens. Only committed cosmic travelers who inscribe a Solar Vow will receive stellar essence based on their journey&apos;s length.<br /><br />
               Or you can simply bookmark and keep tabs on your Sol Age as you reach new milestones in your own cosmic journey.
             </div>
             <button
