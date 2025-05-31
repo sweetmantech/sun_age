@@ -69,7 +69,7 @@ const SolarSystemGraphic: React.FC<SolarSystemGraphicProps> = ({ profilePhotoUrl
               }}
             >
               <div
-                className="w-16 h-16 border border-gray-400 dark:border-white rounded-full mx-auto flex items-center justify-center bg-white dark:bg-black overflow-hidden"
+                className="w-16 h-16 border-4 border-white rounded-full mx-auto flex items-center justify-center bg-white overflow-hidden"
               >
                 {profilePhotoUrl ? (
                   <Image src={profilePhotoUrl} alt="Profile" width={48} height={48} className="w-12 h-12 rounded-full object-cover" />

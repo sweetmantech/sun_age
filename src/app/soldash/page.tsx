@@ -6,6 +6,7 @@ import { BookmarkCard } from "../../components/SunCycleAge";
 import { getNextMilestone, getNextNumericalMilestones, getNextMilestoneByType } from "../../lib/milestones";
 import MilestoneCard from "../../components/SunCycleAge/MilestoneCard";
 import { Dialog as RadixDialog, DialogContent, DialogTitle, DialogClose, DialogOverlay } from "../../components/ui/dialog";
+import { useSolarPledge } from "../../hooks/useSolarPledge";
 
 // Bookmark type
 interface Bookmark {
@@ -23,12 +24,23 @@ export default function SolDashPage() {
   const [isSharing, setIsSharing] = useState(false);
   const [isRecalculating, setIsRecalculating] = useState(false);
   const [showConfirmClear, setShowConfirmClear] = useState(false);
+  const { hasPledged: onChainHasPledged } = useSolarPledge();
+  const [ceremony, setCeremony] = useState({ hasPledged: false, vow: "" });
 
   useEffect(() => {
     const saved = localStorage.getItem("sunCycleBookmark");
     if (saved) {
       try {
         setBookmark(JSON.parse(saved));
+      } catch {}
+    }
+  }, []);
+
+  useEffect(() => {
+    const saved = localStorage.getItem("sunCycleCeremony");
+    if (saved) {
+      try {
+        setCeremony(JSON.parse(saved));
       } catch {}
     }
   }, []);
@@ -54,6 +66,9 @@ export default function SolDashPage() {
   const daysToMilestone = milestone ? milestone.daysToMilestone : 0;
   const milestoneDate = milestone ? milestone.milestoneDate : "";
   const nextNumericalMilestones = getNextNumericalMilestones(bookmark.days, new Date(bookmark.birthDate), 10);
+
+  const hasPledged = ceremony.hasPledged || onChainHasPledged;
+  const vow = ceremony.vow;
 
   // Construct the milestoneCard element for the next milestone
   const milestoneCard = milestone ? (
@@ -96,7 +111,9 @@ export default function SolDashPage() {
               setTimeout(() => setIsSharing(false), 1000);
             }}
             isSharing={isSharing}
-            initialTab={"sol-age"}
+            initialTab={"sol age"}
+            hasPledged={hasPledged}
+            vow={vow}
           />
         </div>
       </div>
@@ -144,31 +161,41 @@ export default function SolDashPage() {
       </footer>
 
       {/* Confirm Clear Modal */}
-      <RadixDialog open={showConfirmClear} onOpenChange={setShowConfirmClear}>
-        <DialogOverlay className="bg-black/40 backdrop-blur-sm" />
-        <DialogContent className="max-w-xs w-full p-6 bg-white border border-gray-300 rounded-none shadow-lg flex flex-col items-center">
-          <DialogTitle className="text-lg font-bold mb-4 text-center">Are you sure you want to clear your bookmark?</DialogTitle>
-          <div className="flex gap-4 w-full mt-2">
-            <button
-              className="flex-1 border border-gray-400 bg-white text-black font-mono uppercase tracking-widest py-2 px-2 text-sm hover:bg-gray-100 rounded-none"
-              onClick={() => setShowConfirmClear(false)}
-            >
-              Cancel
-            </button>
-            <button
-              className="flex-1 border border-red-800 bg-red-600 text-white font-mono uppercase tracking-widest py-2 px-2 text-sm hover:bg-red-700 rounded-none"
-              onClick={() => {
-                localStorage.removeItem("sunCycleBookmark");
-                setBookmark(null);
-                setShowConfirmClear(false);
-                router.push("/");
-              }}
-            >
-              Clear
-            </button>
+      {showConfirmClear && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          {/* Sunrise gradient overlay */}
+          <div className="absolute inset-0 bg-solara-sunrise" style={{ opacity: 0.6 }} />
+          {/* Modal with blur effect */}
+          <div className="relative z-10 w-full">
+            <div className="backdrop-blur-md bg-[#FFFCF2]/50 border border-gray-200 p-6 max-w-[360px] mx-auto">
+              <div className="flex justify-between items-center mb-3">
+                <div className="text-xl font-serif font-bold" style={{ letterSpacing: '-0.06em' }}>Clear Bookmark</div>
+                <button onClick={() => setShowConfirmClear(false)} aria-label="Close" className="text-gray-500 hover:text-gray-800 text-xl font-bold">×</button>
+              </div>
+              <div className="text-xs font-mono text-gray-500 mb-5 tracking-widest uppercase">Are you sure you want to clear your bookmark?</div>
+              <div className="flex justify-between gap-4 mt-6">
+                <button
+                  className="flex-1 px-6 py-3 border border-gray-400 bg-gray-100 text-gray-700 rounded-none uppercase tracking-widest font-mono text-base hover:bg-gray-200 transition-colors"
+                  onClick={() => setShowConfirmClear(false)}
+                >
+                  Cancel
+                </button>
+                <button
+                  className="flex-1 px-6 py-3 border border-red-500 bg-red-100 text-red-700 rounded-none uppercase tracking-widest font-mono text-base hover:bg-red-200 transition-colors"
+                  onClick={() => {
+                    localStorage.removeItem("sunCycleBookmark");
+                    setBookmark(null);
+                    setShowConfirmClear(false);
+                    router.push("/");
+                  }}
+                >
+                  Clear
+                </button>
+              </div>
+            </div>
           </div>
-        </DialogContent>
-      </RadixDialog>
+        </div>
+      )}
     </div>
   );
 } 

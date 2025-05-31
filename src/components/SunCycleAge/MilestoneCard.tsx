@@ -36,7 +36,7 @@ const MilestoneCard: React.FC<MilestoneCardProps> = ({
       exit={{ opacity: 0, y: -20 }}
       transition={{ duration: 0.4 }}
       whileHover={{ scale: 1.02 }}
-      className={`relative overflow-hidden bg-white/80 dark:bg-neutral-900 border border-gray-400 dark:border-gray-600 ${isBookmark ? "px-2 py-6" : "px-4 py-6"} text-xs font-mono text-gray-800 dark:text-gray-100 rounded-none w-full text-center shadow ${highlight ? 'ring-2 ring-yellow-400 dark:ring-yellow-500' : ''}`}
+      className={`relative overflow-hidden bg-white/80 border border-gray-400 ${isBookmark ? "px-2 py-6" : "px-4 py-6"} text-xs font-mono text-gray-800 rounded-none w-full text-center shadow ${highlight ? 'ring-2 ring-yellow-400' : ''}`}
       style={{ marginBottom: '0.5rem', minHeight: isBookmark ? '140px' : '140px' }}
     >
       {/* Decorative background sun illustration */}
@@ -50,7 +50,7 @@ const MilestoneCard: React.FC<MilestoneCardProps> = ({
             src={bgImages[variant]}
             alt=""
             aria-hidden="true"
-            className={`absolute inset-0 w-full h-full object-cover pointer-events-none select-none z-0 dark:hidden ${isBookmark ? 'object-[center_60%]' : ''}`}
+            className={`absolute inset-0 w-full h-full object-cover pointer-events-none select-none z-0 ${isBookmark ? 'object-[center_60%]' : ''}`}
             draggable="false"
           />
         </>
@@ -91,8 +91,8 @@ const MilestoneCard: React.FC<MilestoneCardProps> = ({
             transition={{ duration: 0.6, delay: 0.6, type: "spring" }}
             className={
               isBookmark
-                ? "text-3xl font-extrabold font-serif tracking-tight text-gray-900 dark:text-white mb-1 leading-none"
-                : "text-3xl font-extrabold font-serif tracking-tight text-gray-900 dark:text-white mb-1"
+                ? "text-3xl font-extrabold font-serif tracking-tight text-black mb-1 leading-none"
+                : "text-3xl font-extrabold font-serif tracking-tight text-black mb-1"
             }
           >
             {number}
@@ -106,8 +106,8 @@ const MilestoneCard: React.FC<MilestoneCardProps> = ({
             transition={{ duration: 0.4, delay: 0.7 }}
             className={
               isBookmark
-                ? "text-base font-mono text-gray-900 dark:text-white font-normal mb-1 text-center"
-                : "text-base font-mono text-gray-900 dark:text-white font-bold mb-1"
+                ? "text-base font-mono text-black font-normal mb-1 text-center"
+                : "text-base font-mono text-black font-bold mb-1"
             }
           >
             <span className="font-bold">{daysToMilestone} days</span> (<span className="font-normal">{milestoneDate}</span>)
@@ -120,8 +120,8 @@ const MilestoneCard: React.FC<MilestoneCardProps> = ({
             transition={{ duration: 0.4, delay: 0.8 }}
             className={
               isBookmark
-                ? "text-xs text-gray-700 dark:text-gray-400 italic mt-1 text-center"
-                : "text-xs text-gray-700 dark:text-gray-400 italic mt-1"
+                ? "text-xs text-gray-600 italic mt-1 text-center"
+                : "text-xs text-gray-600 italic mt-1"
             }
           >
             {description}

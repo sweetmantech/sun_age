@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useEffect, useRef } from 'react';
-import { useTheme } from 'next-themes';
 
 interface Star {
   x: number;
@@ -13,7 +12,6 @@ interface Star {
 
 export function CosmicBackground() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const { theme } = useTheme();
   const stars = useRef<Star[]>([]);
   const animationFrameId = useRef<number>();
 
@@ -58,22 +56,6 @@ export function CosmicBackground() {
         }
       });
 
-      // Draw constellation lines
-      if (theme === 'dark') {
-        stars.current.forEach((star, i) => {
-          const nextStar = stars.current[(i + 1) % stars.current.length];
-          const distance = Math.hypot(nextStar.x - star.x, nextStar.y - star.y);
-          
-          if (distance < 100) {
-            ctx.beginPath();
-            ctx.moveTo(star.x, star.y);
-            ctx.lineTo(nextStar.x, nextStar.y);
-            ctx.strokeStyle = `rgba(255, 255, 255, ${0.1 * (1 - distance / 100)})`;
-            ctx.stroke();
-          }
-        });
-      }
-
       animationFrameId.current = requestAnimationFrame(drawStars);
     };
 
@@ -92,12 +74,12 @@ export function CosmicBackground() {
       }
       window.removeEventListener('resize', resizeCanvas);
     };
-  }, [theme]);
+  }, []);
 
   return (
     <canvas
       ref={canvasRef}
-      className="fixed inset-0 pointer-events-none z-[-1] opacity-0 dark:opacity-100 transition-opacity duration-500"
+      className="fixed inset-0 pointer-events-none z-[-1] opacity-0 transition-opacity duration-500"
     />
   );
 } 

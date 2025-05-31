@@ -7,6 +7,7 @@ import { useFrameSDK } from '~/hooks/useFrameSDK';
 import Image from 'next/image';
 
 export default function ResultsPage() {
+  console.log("DEBUG: ResultsPage rendered");
   const searchParams = useSearchParams();
   const router = useRouter();
   const { context } = useFrameSDK();
@@ -56,12 +57,15 @@ export default function ResultsPage() {
 
   if (!days || !birthDate) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <p className="text-gray-600 dark:text-gray-400">No calculation data found. Please calculate your age first.</p>
-          <button 
+      <div className="flex items-center justify-center min-h-screen bg-white z-20">
+        <div className="max-w-md w-full px-6 py-16 border border-gray-200 bg-white/90 rounded-none shadow text-center">
+          <div className="text-2xl font-serif font-bold mb-4 text-black">No Calculation Data</div>
+          <div className="text-base font-mono text-gray-600 mb-8">
+            We couldn't find your Sol Age calculation. Please calculate your age to continue.
+          </div>
+          <button
             onClick={() => router.push('/')}
-            className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+            className="w-full py-4 bg-[#d4af37] text-black font-mono text-base tracking-widest uppercase border border-black rounded-none hover:bg-[#e6c75a] transition-colors"
           >
             Calculate Age
           </button>
@@ -79,7 +83,7 @@ export default function ResultsPage() {
   }).replace(/\//g, ".");
 
   return (
-    <div className="w-full min-h-screen flex flex-col items-center bg-white relative">
+    <div className="w-full min-h-screen flex flex-col items-center bg-white relative z-20">
       {/* Main content section with background, border, and margin */}
       <div className="w-full flex flex-col items-center justify-center" style={{ background: 'rgba(255,252,242,0.5)', borderTop: '1px solid #9CA3AF', borderBottom: '1px solid #9CA3AF' }}>
         <div className="max-w-md mx-auto w-full px-6 pt-8 pb-6 min-h-[60vh]">
@@ -147,7 +151,26 @@ export default function ResultsPage() {
               className="w-full py-4 mt-2 mb-2 bg-[#d4af37] text-black font-mono text-base tracking-widest uppercase border-none rounded-none hover:bg-[#e6c75a] transition-colors"
               onClick={() => {
                 setShowCeremonyModal(false);
-                router.push('/ceremony');
+                // Try to get from URL params first
+                if (days && birthDate && approxYears) {
+                  router.push(`/ceremony?days=${days}&birthDate=${birthDate}&approxYears=${approxYears}`);
+                  return;
+                }
+                // Fallback to localStorage
+                if (typeof window !== 'undefined') {
+                  const saved = localStorage.getItem('sunCycleBookmark');
+                  if (saved) {
+                    try {
+                      const bookmark = JSON.parse(saved);
+                      if (bookmark.days && bookmark.birthDate && bookmark.approxYears) {
+                        router.push(`/ceremony?days=${bookmark.days}&birthDate=${bookmark.birthDate}&approxYears=${bookmark.approxYears}`);
+                        return;
+                      }
+                    } catch {}
+                  }
+                }
+                // Final fallback
+                router.push('/');
               }}
             >
               I WANT TO TAKE A VOW

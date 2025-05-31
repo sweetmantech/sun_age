@@ -39,7 +39,7 @@ interface SunCycleAgeProps {
   initialConsentData?: any[] | null;
 }
 
-function BookmarkCard({ bookmark, milestone, milestoneDate, daysToMilestone, onRecalculate, onClear, isRecalculating, sinceLastVisit, milestoneCard, showMilestoneModal, setShowMilestoneModal, nextNumericalMilestones, onShare, isSharing, initialTab }) {
+function BookmarkCard({ bookmark, milestone, milestoneDate, daysToMilestone, onRecalculate, onClear, isRecalculating, sinceLastVisit, milestoneCard, showMilestoneModal, setShowMilestoneModal, nextNumericalMilestones, onShare, isSharing, initialTab, hasPledged, vow }) {
   const [tab, setTab] = useState<'sol age' | 'sol vows' | 'journal' | 'sol sign'>(initialTab || 'sol age');
   const { context } = useFrameSDK();
   const [isSigning, setIsSigning] = useState(false);
@@ -80,20 +80,20 @@ function BookmarkCard({ bookmark, milestone, milestoneDate, daysToMilestone, onR
         style={{ filter: 'drop-shadow(0 0 40px #FFD700cc) drop-shadow(0 0 16px #FFB30099)' }}
         priority
       />
-      <div className="text-xs font-mono tracking-widest text-gray-500 dark:text-gray-300 text-center uppercase mb-2">WELCOME BACK TRAVELER...</div>
-      <div className="text-4xl sm:text-5xl font-serif font-extrabold tracking-tight text-gray-800 dark:text-white text-center mb-1">{bookmark.days} <span className="font-serif">Sol Age</span></div>
-      <div className="text-xs font-mono text-gray-500 dark:text-gray-400 text-center mb-2">+{sinceLastVisit} since your last visit</div>
+      <div className="text-xs font-mono tracking-widest text-gray-600 text-center uppercase mb-2">WELCOME BACK TRAVELER...</div>
+      <div className="text-4xl sm:text-5xl font-serif font-extrabold tracking-tight text-black text-center mb-1">{bookmark.days} <span className="font-serif">Sol Age</span></div>
+      <div className="text-xs font-mono text-gray-600 text-center mb-2">+{sinceLastVisit} since your last visit</div>
       
       {/* Enhanced Tabs with better mobile support */}
-      <div className="flex w-full border-b border-gray-300 dark:border-gray-700 mb-4 overflow-x-auto">
+      <div className="flex w-full border-b border-gray-300 mb-4 overflow-x-auto">
         {['sol age', 'sol vows', 'journal', 'sol sign'].map((tabName) => (
           <button
             key={tabName}
             onClick={() => setTab(tabName as any)}
             className={`flex-1 min-w-[100px] py-3 px-2 text-xs font-mono uppercase tracking-widest transition-colors duration-200 ${
               tab === tabName 
-                ? 'border-b-2 border-black dark:border-white font-bold' 
-                : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-200'
+                ? 'border-b-2 border-black font-bold' 
+                : 'text-gray-600 hover:text-black'
             }`}
           >
             {tabName.toUpperCase()}
@@ -104,16 +104,16 @@ function BookmarkCard({ bookmark, milestone, milestoneDate, daysToMilestone, onR
       {/* Tab Content with improved mobile spacing */}
       {tab === 'sol age' && (
         <div className="w-full text-sm font-mono space-y-3">
-          <div className="flex justify-between items-center p-2 hover:bg-gray-50 dark:hover:bg-gray-800/50 rounded transition-colors">
-            <span className="text-gray-500">FROM BIRTH</span>
+          <div className="flex justify-between items-center p-2 hover:bg-gray-50 rounded transition-colors">
+            <span className="text-gray-600">FROM BIRTH</span>
             <span className="font-bold text-right">{bookmark.days.toLocaleString()} DAYS</span>
           </div>
-          <div className="flex justify-between items-center p-2 hover:bg-gray-50 dark:hover:bg-gray-800/50 rounded transition-colors">
-            <span className="text-gray-500">BIRTH DATE</span>
+          <div className="flex justify-between items-center p-2 hover:bg-gray-50 rounded transition-colors">
+            <span className="text-gray-600">BIRTH DATE</span>
             <span className="font-bold text-right">{bookmark.birthDate.replace(/-/g, ".")}</span>
           </div>
-          <div className="flex justify-between items-center p-2 hover:bg-gray-50 dark:hover:bg-gray-800/50 rounded transition-colors">
-            <span className="text-gray-500">NEXT MILESTONE</span>
+          <div className="flex justify-between items-center p-2 hover:bg-gray-50 rounded transition-colors">
+            <span className="text-gray-600">NEXT MILESTONE</span>
             <span className="font-bold text-right">{milestone} <span className="font-normal">(in {daysToMilestone} days)</span></span>
           </div>
           
@@ -122,7 +122,7 @@ function BookmarkCard({ bookmark, milestone, milestoneDate, daysToMilestone, onR
             <div className="w-full flex flex-col items-center my-4">
               {milestoneCard}
               <button
-                className="mt-3 text-sm underline text-black hover:text-gray-800 dark:text-white dark:hover:text-gray-200 font-mono font-semibold transition-colors duration-200"
+                className="mt-3 text-sm underline text-black hover:text-gray-800 font-mono font-semibold transition-colors duration-200"
                 onClick={() => setShowMilestoneModal(true)}
               >
                 View More Milestones ↗
@@ -130,54 +130,59 @@ function BookmarkCard({ bookmark, milestone, milestoneDate, daysToMilestone, onR
               
               {/* Enhanced Modal */}
               {showMilestoneModal && (
-                <RadixDialog open={showMilestoneModal} onOpenChange={setShowMilestoneModal}>
-                  <DialogOverlay className="bg-black/50 backdrop-blur-sm" />
-                  <DialogContent className="w-[95vw] sm:w-4/5 max-w-lg border border-gray-400 bg-[rgba(255,252,242,0.95)] dark:bg-[rgba(24,24,28,0.95)] p-4 sm:p-6 rounded-none shadow-md backdrop-blur-lg">
-                    <DialogTitle className="text-2xl font-serif font-bold mb-4">Upcoming Milestones</DialogTitle>
-                    <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-2">
-                      {(() => {
-                        const milestoneTypes = [
-                          { type: 'interval', label: 'Numerical Milestone' },
-                          { type: 'palindrome', label: 'Palindrome Day' },
-                          { type: 'interesting', label: 'Interesting Number' },
-                          { type: 'cosmic', label: 'Cosmic (Solar Return or Special)' },
-                          { type: 'angel', label: 'Angel Number' },
-                        ];
-                        const milestoneByType = getNextMilestoneByType(bookmark.days, new Date(bookmark.birthDate));
-                        return milestoneTypes.map(({ type, label }) => {
-                          const m = milestoneByType[type];
-                          if (!m) return null;
-                          return (
-                            <div key={type} className="hover:bg-gray-50 dark:hover:bg-gray-800/50 p-2 rounded transition-colors">
-                              <div className="font-mono text-xs uppercase tracking-widest text-gray-500 mb-1">{label}</div>
-                              <MilestoneCard
-                                number={m.cycles}
-                                label={m.label}
-                                emoji={m.emoji}
-                                description={m.description}
-                                daysToMilestone={m.daysToMilestone}
-                                milestoneDate={m.milestoneDate}
-                                variant="bookmark"
-                              />
-                            </div>
-                          );
-                        });
-                      })()}
+                <div className="fixed inset-0 z-50 flex items-center justify-center">
+                  {/* Sunrise gradient overlay */}
+                  <div className="absolute inset-0 bg-solara-sunrise" style={{ opacity: 0.6 }} />
+                  {/* Modal with blur effect */}
+                  <div className="relative z-10 w-full">
+                    <div className="backdrop-blur-md bg-[#FFFCF2]/50 border border-gray-200 p-6 max-w-[360px] mx-auto">
+                      <div className="flex justify-between items-center mb-3">
+                        <div className="text-2xl font-serif font-bold" style={{ letterSpacing: '-0.06em' }}>Upcoming Milestones</div>
+                        <button onClick={() => setShowMilestoneModal(false)} aria-label="Close" className="text-gray-500 hover:text-gray-800 text-xl font-bold">×</button>
+                      </div>
+                      <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-2">
+                        {(() => {
+                          const milestoneTypes = [
+                            { type: 'interval', label: 'Numerical Milestone' },
+                            { type: 'palindrome', label: 'Palindrome Day' },
+                            { type: 'interesting', label: 'Interesting Number' },
+                            { type: 'cosmic', label: 'Cosmic (Solar Return or Special)' },
+                            { type: 'angel', label: 'Angel Number' },
+                          ];
+                          const milestoneByType = getNextMilestoneByType(bookmark.days, new Date(bookmark.birthDate));
+                          return milestoneTypes.map(({ type, label }) => {
+                            const m = milestoneByType[type];
+                            if (!m) return null;
+                            return (
+                              <div key={type} className="hover:bg-gray-50 p-2 rounded transition-colors">
+                                <div className="font-mono text-xs uppercase tracking-widest text-gray-600 mb-1">{label}</div>
+                                <MilestoneCard
+                                  number={m.cycles}
+                                  label={m.label}
+                                  emoji={m.emoji}
+                                  description={m.description}
+                                  daysToMilestone={m.daysToMilestone}
+                                  milestoneDate={m.milestoneDate}
+                                  variant="bookmark"
+                                />
+                              </div>
+                            );
+                          });
+                        })()}
+                      </div>
+                      <div className="flex justify-end mt-6">
+                        <button className="px-6 py-2 border border-gray-400 bg-gray-100 text-gray-700 rounded-none uppercase tracking-widest font-mono text-sm hover:bg-gray-200 transition-colors" onClick={() => setShowMilestoneModal(false)}>CLOSE</button>
+                      </div>
                     </div>
-                    <div className="flex justify-end mt-6">
-                      <DialogClose asChild>
-                        <button className="px-6 py-2 border border-gray-400 dark:border-gray-700 bg-gray-100 dark:bg-neutral-800 text-gray-700 dark:text-gray-200 rounded-none uppercase tracking-widest font-mono text-sm hover:bg-gray-200 dark:hover:bg-neutral-700 transition-colors">CLOSE</button>
-                      </DialogClose>
-                    </div>
-                  </DialogContent>
-                </RadixDialog>
+                  </div>
+                </div>
               )}
             </div>
           )}
           
           {/* Enhanced Divider and Quote */}
-          <div className="border-t border-gray-300 dark:border-gray-700 my-4" />
-          <div className="text-xs font-sans text-gray-400 italic text-left p-2 bg-gray-50 dark:bg-gray-800/50 rounded">
+          <div className="border-t border-gray-300 my-4" />
+          <div className="text-xs font-sans text-gray-600 italic text-left p-2 bg-gray-50 rounded">
             Your journey began {bookmark.days.toLocaleString()} days ago. Each rotation represents both repetition and change.
           </div>
         </div>
@@ -187,7 +192,7 @@ function BookmarkCard({ bookmark, milestone, milestoneDate, daysToMilestone, onR
         <div className="w-full text-sm font-mono space-y-3 flex flex-col items-center justify-center p-8 text-center">
           <div className="text-3xl mb-2">🌞</div>
           <div className="text-lg font-bold mb-1">Nothing here yet</div>
-          <div className="text-gray-500">Your future vows and commitments will appear here.</div>
+          <div className="text-gray-600">Your future vows and commitments will appear here.</div>
         </div>
       )}
 
@@ -195,15 +200,41 @@ function BookmarkCard({ bookmark, milestone, milestoneDate, daysToMilestone, onR
         <div className="w-full text-sm font-mono space-y-3 flex flex-col items-center justify-center p-8 text-center">
           <div className="text-3xl mb-2">📓</div>
           <div className="text-lg font-bold mb-1">Nothing here yet</div>
-          <div className="text-gray-500">Your journal entries and reflections will appear here.</div>
+          <div className="text-gray-600">Your journal entries and reflections will appear here.</div>
         </div>
       )}
 
       {tab === 'sol sign' && (
         <div className="w-full text-sm font-mono space-y-3 flex flex-col items-center justify-center p-8 text-center">
-          <div className="text-3xl mb-2">✍️</div>
-          <div className="text-lg font-bold mb-1">Nothing here yet</div>
-          <div className="text-gray-500">Your sol signature and sign-ins will appear here.</div>
+          {/* Cosmic Convergence Callout */}
+          <div className="w-full border border-yellow-400 bg-yellow-50 rounded p-4 mb-4">
+            <img src="/cosmicConverge_small.svg" alt="Cosmic Convergence" className="mx-auto mb-2" width={60} />
+            <div className="font-mono text-base text-yellow-900 uppercase tracking-widest mb-2">
+              The Cosmic Convergence Awaits
+            </div>
+            <div className="text-xs text-yellow-800">
+              Commit your Solar Vow to unlock $SOLAR rewards and join the cosmic journey.
+            </div>
+          </div>
+          {hasPledged && vow ? (
+            <>
+              <div className="text-3xl mb-2">🌞</div>
+              <div className="text-lg font-bold mb-1">Your Solar Vow</div>
+              <div className="italic text-gray-700 border border-gray-200 rounded p-3 bg-white">{vow}</div>
+            </>
+          ) : (
+            <>
+              <div className="text-3xl mb-2">✍️</div>
+              <div className="text-lg font-bold mb-1">No Vow Yet</div>
+              <div className="text-gray-600 mb-4">You haven't made your Solar Vow. Make your pledge to join the convergence.</div>
+              <button
+                className="w-full py-3 bg-[#d4af37] text-black font-mono text-base tracking-widest uppercase border border-black rounded hover:bg-[#e6c75a] transition-colors"
+                onClick={() => window.location.href = '/ceremony'}
+              >
+                Make Your Solar Vow
+              </button>
+            </>
+          )}
         </div>
       )}
     </div>
@@ -708,6 +739,37 @@ export default function SunCycleAge({ initialConsentData }: SunCycleAgeProps) {
           </div>
         </div>
       </footer>
+      {/* Clear bookmark confirmation modal */}
+      {showConfirmClear && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          {/* Sunrise gradient overlay */}
+          <div className="absolute inset-0 bg-solara-sunrise" style={{ opacity: 0.6 }} />
+          {/* Modal with blur effect */}
+          <div className="relative z-10 w-full">
+            <div className="backdrop-blur-md bg-[#FFFCF2]/50 border border-gray-200 p-6 max-w-[360px] mx-auto">
+              <div className="flex justify-between items-center mb-3">
+                <div className="text-xl font-serif font-bold" style={{ letterSpacing: '-0.06em' }}>Clear Bookmark</div>
+                <button onClick={() => setShowConfirmClear(false)} aria-label="Close" className="text-gray-500 hover:text-gray-800 text-xl font-bold">×</button>
+              </div>
+              <div className="text-xs font-mono text-gray-500 mb-5 tracking-widest uppercase">Are you sure you want to clear your bookmark?</div>
+              <div className="flex justify-between gap-4 mt-6">
+                <button
+                  className="flex-1 px-6 py-3 border border-gray-400 bg-gray-100 text-gray-700 rounded-none uppercase tracking-widest font-mono text-base hover:bg-gray-200 transition-colors"
+                  onClick={() => setShowConfirmClear(false)}
+                >
+                  Cancel
+                </button>
+                <button
+                  className="flex-1 px-6 py-3 border border-red-500 bg-red-100 text-red-700 rounded-none uppercase tracking-widest font-mono text-base hover:bg-red-200 transition-colors"
+                  onClick={() => { handleClearBookmark(); setShowConfirmClear(false); }}
+                >
+                  Clear
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -1,8 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import "~/app/globals.css";
 import type { Metadata } from "next";
-import { ThemeProviderClient } from "~/components/providers/theme-provider-client";
-import { ThemeToggle } from "~/components/ui/theme-toggle";
+import ThemeProviderClient from "~/components/providers/theme-provider-client";
 import { CosmicBackground } from "~/components/ui/cosmic-background";
 import { PROJECT_TITLE, PROJECT_DESCRIPTION } from "../lib/constants";
 import { Providers } from "./providers";
@@ -100,10 +99,9 @@ export default function RootLayout({
           <a href="#main-content" className="skip-link absolute left-2 top-2 z-50 bg-white text-gray-800 px-4 py-2 rounded focus:block focus:outline-none focus:ring-2 focus:ring-blue-400 sr-only focus:not-sr-only">Skip to content</a>
           <ThemeProviderClient>
             {/* Light mode: solid background. Dark mode: gradient. */}
-            <div className="pointer-events-none fixed inset-0 z-0 dark:hidden" style={{ background: '#ffffff' }} />
+            <div className="pointer-events-none fixed inset-0 z-0" style={{ background: '#ffffff' }} />
             {/* Light mode: noise texture overlay */}
-            <div className="pointer-events-none fixed inset-0 z-10 opacity-20 mix-blend-soft-light dark:hidden" aria-hidden="true" style={{ backgroundImage: "url('/noise.png')" }} />
-            <div className="pointer-events-none fixed inset-0 z-0 hidden dark:block" style={{ background: "linear-gradient(180deg, #23232a 0%, #18181c 100%)" }} />
+            <div className="pointer-events-none fixed inset-0 z-10 opacity-20 mix-blend-soft-light" aria-hidden="true" style={{ backgroundImage: "url('/noise.png')" }} />
             <CosmicBackground />
             {/* App header - now global, with About and $SOLAR icons handled in Header */}
             <HeaderClient formattedDate={formattedDate} />

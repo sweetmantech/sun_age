@@ -8,6 +8,13 @@ const nextConfig = {
     };
     return config;
   },
+  // Merged from next.config.ts
+  allowedDevOrigins: [
+    "localhost",
+    "127.0.0.1",
+    "*.modal.host",
+    "*.trycloudflare.com",
+  ],
 };
 
 module.exports = nextConfig; 
