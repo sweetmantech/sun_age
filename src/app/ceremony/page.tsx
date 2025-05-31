@@ -182,7 +182,7 @@ export default function CeremonyStepper() {
                 {/* Commitment Callout */}
                 <div className="w-full border border-gray-300 rounded-none p-4 mb-0">
                   <div className="text-xs font-mono text-gray-700 mb-2 uppercase tracking-widest font-bold">The Commitment</div>
-                  <div className="text-sm font-mono text-gray-700">A Solar Vow is a sacred commitment to your cosmic journey, inscribed permanently in the celestial record.<br /><br />At <span className="font-bold">{solAge?.toLocaleString()}</span> rotations around our star, you're ready to make your mark on the universe.</div>
+                  <div className="text-sm font-mono text-gray-700">A Solar Vow is a sacred commitment to your cosmic journey, inscribed permanently in the celestial record.<br /><br />At <span className="font-bold">{solAge?.toLocaleString()}</span> rotations around our star, you&apos;re ready to make your mark on the universe.</div>
                 </div>
               </div>
             </>
@@ -300,7 +300,7 @@ export default function CeremonyStepper() {
                   <ul className="list-none ml-0 mt-1 font-sans text-sm text-gray-700">
                     <li className="mb-1">✨ Your solar journey is permanently inscribed in starlight</li>
                     <li className="mb-1">🌟 Stellar rewards will manifest when Genesis arrives</li>
-                    <li>💫 Your cosmic signature will evolve through your vow's power</li>
+                    <li>💫 Your cosmic signature will evolve through your vow&apos;s power</li>
                   </ul>
                 </div>
                 {/* Vow Quote Callout */}
