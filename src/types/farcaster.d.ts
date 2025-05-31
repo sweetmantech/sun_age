@@ -49,4 +49,8 @@ declare module '@farcaster/frame-core' {
   // Ethereum types
   export type EthProvideRequest = (...args: any[]) => Promise<any>
   export type RpcTransport = (...args: any[]) => Promise<any>
+
+  // Override problematic exports
+  export type { DEFAULT_READY_OPTIONS as DEFAULT_READY_OPTIONS_TYPE, ReadyOptions as ReadyOptionsType } from './actions/Ready'
+  export type { SignInOptions as SignInOptionsType } from './actions/SignIn'
 } 

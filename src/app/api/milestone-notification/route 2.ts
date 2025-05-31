@@ -56,7 +56,7 @@ export async function POST(request: NextRequest) {
   const sendResult = await sendFrameNotification({
     fid: parseInt(fid),
     title: `Milestone Reached: ${currentMilestone.cycles} Cycles`,
-    body: `${currentMilestone.description}\n\n${currentMilestone.name}`,
+    body: `${currentMilestone.description}\n\n${currentMilestone.label}`,
   });
 
   if (sendResult.state === "error") {
