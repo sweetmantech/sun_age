@@ -1,8 +1,11 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useSolarPledge } from "~/hooks/useSolarPledge";
+import { useAccount } from "wagmi";
+import { useFrameSDK } from '~/hooks/useFrameSDK';
 
 const steps = ["prepare", "inscribe", "empower", "sealed"];
 
@@ -11,19 +14,77 @@ const OFFWHITE = '#FFFCF2';
 export default function CeremonyStepper() {
   const [step, setStep] = useState(0);
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const { context } = useFrameSDK();
+  const { address } = useAccount();
+  const { approveUSDC, createPledge, isApproved, isLoading, error, hasPledged } = useSolarPledge();
+
+  // Try to get solar age and birthDate from URL params
+  const urlDays = searchParams?.get('days');
+  const urlBirthDate = searchParams?.get('birthDate');
+
+  // Try to get from bookmark/localStorage
+  let bookmark: any = null;
+  if (typeof window !== 'undefined') {
+    const saved = localStorage.getItem('sunCycleBookmark');
+    if (saved) {
+      try { bookmark = JSON.parse(saved); } catch {}
+    }
+  }
+
+  // Determine solar age and birthDate
+  const solAge = urlDays ? Number(urlDays) : bookmark?.days;
+  const birthDate = urlBirthDate || bookmark?.birthDate;
+
+  // Fallback: if not available, prompt user to recalculate
+  useEffect(() => {
+    if (!solAge || !birthDate) {
+      alert('No calculation data found. Please calculate your Sol Age first.');
+      router.push('/');
+    }
+  }, [solAge, birthDate, router]);
+
+  // Today's date
+  const today = new Date().toLocaleDateString('en-US', { year: 'numeric', month: '2-digit', day: '2-digit' }).replace(/\//g, ".");
+
+  // Dynamic FID from Farcaster context
+  const fid = context?.user?.fid;
+
+  // Dynamic signature message
+  const signatureMsg = `I inscribe this Solar Vow into eternity: FID ${fid ?? '...'} has completed ${solAge?.toLocaleString() ?? '...'} rotations around our star, sealed by cosmic signature on ${today}`;
 
   // Placeholder data (replace with real data/props)
-  const solAge = 11425;
-  const birthDate = "02.10.1994";
-  const today = "05.21.2025";
-  const signatureMsg = `I inscribe this Solar Vow into eternity: FID 12345 has completed ${solAge} rotations around our star, sealed by cosmic signature on ${today}`;
   const [pledge, setPledge] = useState(5);
   const [customPledge, setCustomPledge] = useState("");
+  const [commitment, setCommitment] = useState("");
+  const [farcasterHandle, setFarcasterHandle] = useState("");
 
   // Step navigation
   const next = () => setStep((s) => Math.min(s + 1, steps.length - 1));
   const prev = () => setStep((s) => Math.max(s - 1, 0));
   const cancel = () => router.push("/results");
+
+  // Handle pledge creation
+  const handlePledge = async () => {
+    if (!address) {
+      alert("Please connect your wallet first");
+      return;
+    }
+
+    try {
+      // First approve USDC if not already approved
+      if (!isApproved(pledge)) {
+        await approveUSDC(BigInt(pledge * 1_000_000));
+      }
+
+      // Then create the pledge
+      await createPledge(commitment, farcasterHandle, pledge);
+      next(); // Move to next step on success
+    } catch (err) {
+      console.error("Failed to create pledge:", err);
+      alert("Failed to create pledge. Please try again.");
+    }
+  };
 
   // SunGlow component for glowing effect behind the sun
   function SunGlow() {
@@ -75,7 +136,7 @@ export default function CeremonyStepper() {
                   <div className="text-xs font-mono text-gray-500 mb-2 uppercase tracking-widest">Your Cosmic Journey Thus Far</div>
                   <div className="flex items-center justify-center gap-2 mb-1">
                     <span className="text-2xl">⭐</span>
-                    <span className="text-3xl font-serif font-bold">{solAge.toLocaleString()}</span>
+                    <span className="text-3xl font-serif font-bold">{solAge?.toLocaleString()}</span>
                     <span className="text-2xl">⭐</span>
                   </div>
                   <div className="text-xs font-mono text-gray-500 mb-2">Solar rotations since {birthDate}</div>
@@ -83,7 +144,7 @@ export default function CeremonyStepper() {
                 {/* Commitment Callout */}
                 <div className="w-full border border-gray-300 rounded-none p-4 mb-0">
                   <div className="text-xs font-mono text-gray-700 mb-2 uppercase tracking-widest font-bold">The Commitment</div>
-                  <div className="text-sm font-mono text-gray-700">A Solar Vow is a sacred commitment to your cosmic journey, inscribed permanently in the celestial record.<br /><br />At <span className="font-bold">{solAge.toLocaleString()}</span> rotations around our star, you're ready to make your mark on the universe.</div>
+                  <div className="text-sm font-mono text-gray-700">A Solar Vow is a sacred commitment to your cosmic journey, inscribed permanently in the celestial record.<br /><br />At <span className="font-bold">{solAge?.toLocaleString()}</span> rotations around our star, you're ready to make your mark on the universe.</div>
                 </div>
               </div>
             </>
@@ -96,6 +157,34 @@ export default function CeremonyStepper() {
                 <Image src="/pinky_promise.png" alt="Fist" width={200} height={200} className="mb-6 self-center" style={{ filter: 'drop-shadow(0 0 50px #FFD700cc) drop-shadow(0 0 20px #FFB30099)' }} />
                 <div className="text-2xl font-serif font-normal mb-1 w-full text-center leading-tighter">Inscribe Your Solar Vow</div>
                 <div className="text-xs font-mono text-gray-500 mb-6 uppercase tracking-widest w-full text-center">A sacred inscription of your journey</div>
+                
+                {/* Commitment Input */}
+                <div className="w-full border border-gray-300 rounded-none p-4 mb-4 bg-white/90 text-left">
+                  <div className="text-xs font-mono text-gray-700 mb-2 uppercase tracking-widest font-bold">YOUR SOLAR VOW</div>
+                  <textarea
+                    value={commitment}
+                    onChange={(e) => setCommitment(e.target.value)}
+                    placeholder="Write your commitment here..."
+                    className="w-full px-4 py-2 border border-black font-mono text-base rounded-none mb-4 min-h-[100px]"
+                    maxLength={160}
+                  />
+                  <div className="text-xs font-mono text-gray-500 mb-2">
+                    {160 - commitment.length} characters remaining
+                  </div>
+                </div>
+
+                {/* Farcaster Handle Input */}
+                <div className="w-full border border-gray-300 rounded-none p-4 mb-4 bg-white/90 text-left">
+                  <div className="text-xs font-mono text-gray-700 mb-2 uppercase tracking-widest font-bold">FARCASTER HANDLE</div>
+                  <input
+                    type="text"
+                    value={farcasterHandle}
+                    onChange={(e) => setFarcasterHandle(e.target.value)}
+                    placeholder="Enter your Farcaster handle..."
+                    className="w-full px-4 py-2 border border-black font-mono text-base rounded-none"
+                  />
+                </div>
+
                 {/* Message to Sign Callout */}
                 <div className="w-full border border-gray-300 rounded-none p-4 mb-4 bg-white/90 text-left">
                   <div className="text-xs font-mono text-gray-500 mb-4 uppercase tracking-widest">Message to Sign</div>
@@ -104,9 +193,26 @@ export default function CeremonyStepper() {
                   </div>
                   <div className="text-sm text-gray-500 mt-12 text-left">Your vow is an onchain signature transforming intention into cosmic law, creating an unbreakable bond with your future self. This is proof of your word.</div>
                 </div>
+
+                {/* Navigation Buttons */}
+                <div className="w-full flex gap-4">
+                  <button
+                    onClick={prev}
+                    className="flex-1 px-4 py-2 border border-black font-mono text-base rounded-none bg-white hover:bg-gray-50"
+                  >
+                    Back
+                  </button>
+                  <button
+                    onClick={next}
+                    disabled={!commitment.trim()}
+                    className={`flex-1 px-4 py-2 border border-black font-mono text-base rounded-none ${
+                      !commitment.trim() ? 'bg-gray-200' : 'bg-[#d4af37] hover:bg-[#c19b2e]'
+                    }`}
+                  >
+                    Next
+                  </button>
+                </div>
               </div>
-           
-              {/* TODO: Wallet signature logic here */}
             </>
           )}
 
@@ -156,6 +262,22 @@ export default function CeremonyStepper() {
                     <li>🔒 Secure your vow with (multiplier)x energy</li>
                   </ul>
                 </div>
+                {/* Add pledge button */}
+                <button
+                  onClick={handlePledge}
+                  disabled={isLoading || !address}
+                  className={`w-full px-4 py-2 border border-black font-mono text-base rounded-none ${
+                    isLoading ? 'bg-gray-200' : 'bg-[#d4af37] hover:bg-[#c19b2e]'
+                  }`}
+                >
+                  {isLoading ? 'Processing...' : 'Create Pledge'}
+                </button>
+                
+                {error && (
+                  <div className="w-full mt-4 p-4 border border-red-200 bg-red-50 text-red-700 text-sm">
+                    {error.message}
+                  </div>
+                )}
               </div>
 
               {/* TODO: Wallet signature and USDC pledge logic here */}
@@ -179,7 +301,7 @@ export default function CeremonyStepper() {
                   <div className="flex flex-col items-center mb-2">
                     <div className="text-3xl font-serif font-bold mb-1 flex items-center gap-2" style={{ color: '#15803D' }}>
                       <span>⭐</span>
-                      <span>{solAge.toLocaleString()}</span>
+                      <span>{solAge?.toLocaleString()}</span>
                       <span>⭐</span>
                     </div>
                     <div className="text-xs font-mono uppercase mb-2 text-center" style={{ color: '#15803D', letterSpacing: '0.08em' }}>
