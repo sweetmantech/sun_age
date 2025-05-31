@@ -1,0 +1,13 @@
+diff --git a/node_modules/@farcaster/frame-core/src/types.ts b/node_modules/@farcaster/frame-core/src/types.ts
+index cdb3c8b..db00f41 100644
+--- a/node_modules/@farcaster/frame-core/src/types.ts
++++ b/node_modules/@farcaster/frame-core/src/types.ts
+@@ -28,7 +28,7 @@ export type SetPrimaryButtonOptions = {
+ 
+ // start backwards compat, remove in 1.0
+ export * from './wallet/ethereum.ts'
+-export { DEFAULT_READY_OPTIONS, ReadyOptions } from './actions/Ready.ts'
++export type { DEFAULT_READY_OPTIONS, ReadyOptions } from './actions/Ready.ts'
+ export type SignInOptions = SignIn.SignInOptions
+ // end backwards compat
+ 
