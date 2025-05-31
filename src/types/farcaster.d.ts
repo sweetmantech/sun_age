@@ -1,9 +1,5 @@
 declare module '@farcaster/frame-core' {
-  export type * from '@farcaster/frame-core/src/types';
-  export type { DEFAULT_READY_OPTIONS, ReadyOptions } from '@farcaster/frame-core/src/actions/Ready';
-  export type SignInOptions = import('@farcaster/frame-core/src/actions/SignIn').SignInOptions;
-  export type * from '@farcaster/frame-core/src/wallet/ethereum';
-
+  // Core types
   export type SetPrimaryButtonOptions = {
     text: string
     loading?: boolean
@@ -32,10 +28,25 @@ declare module '@farcaster/frame-core' {
   export type GetCapabilities = () => Promise<MiniAppHostCapability[]>
   export type GetChains = () => Promise<string[]>
 
+  // Frame types
   export type FrameClientEvent = {
     event: string
     [key: string]: any
   }
 
+  // Ready types
+  export type ReadyOptions = {
+    [key: string]: any
+  }
+
   export const DEFAULT_READY_OPTIONS: ReadyOptions
+
+  // SignIn types
+  export type SignInOptions = {
+    [key: string]: any
+  }
+
+  // Ethereum types
+  export type EthProvideRequest = (...args: any[]) => Promise<any>
+  export type RpcTransport = (...args: any[]) => Promise<any>
 } 
