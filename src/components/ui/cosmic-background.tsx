@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 interface Star {
   x: number;
@@ -13,7 +13,8 @@ interface Star {
 export function CosmicBackground() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const stars = useRef<Star[]>([]);
-  const animationFrameId = useRef<number>();
+  const animationFrameId = useRef<number | undefined>(undefined);
+  const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -63,23 +64,31 @@ export function CosmicBackground() {
     createStars();
     drawStars();
 
-    window.addEventListener('resize', () => {
+    const handleResize = () => {
       resizeCanvas();
       createStars();
-    });
+    };
+
+    window.addEventListener('resize', handleResize);
+
+    // Fade in the canvas after a short delay
+    const fadeInTimer = setTimeout(() => {
+      setIsVisible(true);
+    }, 100);
 
     return () => {
       if (animationFrameId.current) {
         cancelAnimationFrame(animationFrameId.current);
       }
-      window.removeEventListener('resize', resizeCanvas);
+      window.removeEventListener('resize', handleResize);
+      clearTimeout(fadeInTimer);
     };
   }, []);
 
   return (
     <canvas
       ref={canvasRef}
-      className="fixed inset-0 pointer-events-none z-[-1] opacity-0 transition-opacity duration-500"
+      className={`fixed inset-0 pointer-events-none z-[-1] transition-opacity duration-500 ${isVisible ? 'opacity-100' : 'opacity-0'}`}
     />
   );
 } 
