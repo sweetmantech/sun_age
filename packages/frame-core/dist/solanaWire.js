@@ -1,8 +1,4 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.wrapSolanaProviderRequest = wrapSolanaProviderRequest;
-exports.unwrapSolanaProviderRequest = unwrapSolanaProviderRequest;
-const web3_js_1 = require("@solana/web3.js");
+import { Transaction as SolanaTransaction, VersionedMessage as SolanaVersionedMessage, VersionedTransaction as SolanaVersionedTransaction, } from '@solana/web3.js';
 function serializeTransaction(transaction) {
     return Buffer.from(transaction.serialize({
         verifySignatures: false,
@@ -10,12 +6,12 @@ function serializeTransaction(transaction) {
 }
 function unserializeTransaction(transaction) {
     const bytes = Buffer.from(transaction, 'base64');
-    const version = web3_js_1.VersionedMessage.deserializeMessageVersion(bytes);
+    const version = SolanaVersionedMessage.deserializeMessageVersion(bytes);
     return version === 'legacy'
-        ? web3_js_1.VersionedTransaction.deserialize(bytes)
-        : web3_js_1.Transaction.from(bytes);
+        ? SolanaVersionedTransaction.deserialize(bytes)
+        : SolanaTransaction.from(bytes);
 }
-function wrapSolanaProviderRequest(requestFn) {
+export function wrapSolanaProviderRequest(requestFn) {
     const wrappedFn = async (request) => {
         if (request.method === 'connect') {
             return await requestFn(request);
@@ -50,7 +46,7 @@ function wrapSolanaProviderRequest(requestFn) {
     };
     return wrappedFn;
 }
-function unwrapSolanaProviderRequest(wrappedRequestFn) {
+export function unwrapSolanaProviderRequest(wrappedRequestFn) {
     const unwrappedFn = async (request) => {
         if (request.method === 'connect') {
             return await wrappedRequestFn(request);

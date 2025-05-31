@@ -9,6 +9,15 @@
   },
   "main": "dist/index.js",
   "module": "esm/index.js",
+  "types": "esm/index.d.ts",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./esm/index.d.ts",
+      "import": "./esm/index.js",
+      "require": "./dist/index.js"
+    }
+  },
   "scripts": {
     "clean": "rm -rf dist esm",
     "prebuild": "npm run clean",

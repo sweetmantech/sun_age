@@ -1,7 +1,4 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.BaseError = void 0;
-class BaseError extends Error {
+export class BaseError extends Error {
     name = 'BaseError';
     cause;
     constructor(message, options = {}) {
@@ -9,4 +6,3 @@ class BaseError extends Error {
         this.cause = options.cause;
     }
 }
-exports.BaseError = BaseError;

@@ -1,7 +1,4 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.jsonFarcasterSignatureHeaderSchema = exports.encodedJsonFarcasterSignatureSchema = exports.aspectRatioSchema = exports.hexColorSchema = exports.caip19TokenSchema = exports.buttonTitleSchema = exports.frameNameSchema = exports.secureUrlSchema = exports.createSimpleStringSchema = void 0;
-const zod_1 = require("zod");
+import { z } from 'zod';
 const SPECIAL_CHARS_PATTERN = /[@#$%^&*+=\/\\|~«»]/;
 const REPEATED_PUNCTUATION_PATTERN = /(!{2,}|\?{2,}|-{2,})/;
 // Unicode ranges for emoji detection:
@@ -10,13 +7,13 @@ const REPEATED_PUNCTUATION_PATTERN = /(!{2,}|\?{2,}|-{2,})/;
 // \u{2600}-\u{26FF} - Miscellaneous Symbols
 // \u{2B00}-\u{2BFF} - Miscellaneous Symbols and Arrows
 const EMOJI_PATTERN = /[\u{1F300}-\u{1F9FF}]|[\u{2702}-\u{27B0}]|[\u{2600}-\u{26FF}]|[\u{2B00}-\u{2BFF}]/u;
-const createSimpleStringSchema = ({ max, noSpaces, } = {}) => {
+export const createSimpleStringSchema = ({ max, noSpaces, } = {}) => {
     const stringValidations = noSpaces
-        ? zod_1.z
+        ? z
             .string()
             .max(max ?? Number.POSITIVE_INFINITY)
             .regex(/^\S*$/, 'Spaces are not allowed')
-        : zod_1.z.string().max(max ?? Number.POSITIVE_INFINITY);
+        : z.string().max(max ?? Number.POSITIVE_INFINITY);
     return stringValidations
         .refine((value) => !EMOJI_PATTERN.test(value), {
         message: 'Emojis and symbols are not allowed',
@@ -28,31 +25,30 @@ const createSimpleStringSchema = ({ max, noSpaces, } = {}) => {
         message: 'Repeated punctuations (!!, ??, --) are not allowed',
     });
 };
-exports.createSimpleStringSchema = createSimpleStringSchema;
-exports.secureUrlSchema = zod_1.z
+export const secureUrlSchema = z
     .string()
     .url()
     .startsWith('https://', { message: 'Must be an https url' })
     .max(1024);
-exports.frameNameSchema = zod_1.z.string().max(32);
-exports.buttonTitleSchema = zod_1.z.string().max(32);
+export const frameNameSchema = z.string().max(32);
+export const buttonTitleSchema = z.string().max(32);
 const CAIP_19_REGEX = /^[-a-z0-9]{3,8}:[-_a-zA-Z0-9]{1,32}\/(?:[-a-z0-9]{3,8}:[-.%a-zA-Z0-9]{1,128}(?:\/[-.%a-zA-Z0-9]{1,78})?|native)$/;
-exports.caip19TokenSchema = zod_1.z
+export const caip19TokenSchema = z
     .string()
     .regex(CAIP_19_REGEX, { message: 'Invalid CAIP-19 asset ID' });
-exports.hexColorSchema = zod_1.z
+export const hexColorSchema = z
     .string()
     .regex(/^#([0-9A-F]{3}|[0-9A-F]{6})$/i, {
     message: 'Invalid hex color code. It should be in the format #RRGGBB or #RGB.',
 });
-exports.aspectRatioSchema = zod_1.z.union([zod_1.z.literal('1:1'), zod_1.z.literal('3:2')]);
-exports.encodedJsonFarcasterSignatureSchema = zod_1.z.object({
-    header: zod_1.z.string(),
-    payload: zod_1.z.string(),
-    signature: zod_1.z.string(),
+export const aspectRatioSchema = z.union([z.literal('1:1'), z.literal('3:2')]);
+export const encodedJsonFarcasterSignatureSchema = z.object({
+    header: z.string(),
+    payload: z.string(),
+    signature: z.string(),
 });
-exports.jsonFarcasterSignatureHeaderSchema = zod_1.z.object({
-    fid: zod_1.z.number(),
-    type: zod_1.z.literal('app_key'),
-    key: zod_1.z.string().startsWith('0x'),
+export const jsonFarcasterSignatureHeaderSchema = z.object({
+    fid: z.number(),
+    type: z.literal('app_key'),
+    key: z.string().startsWith('0x'),
 });

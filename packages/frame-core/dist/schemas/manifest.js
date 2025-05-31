@@ -1,10 +1,7 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.domainManifestSchema = exports.domainFrameConfigSchema = void 0;
-const zod_1 = require("zod");
-const types_ts_1 = require("../types.js");
-const shared_ts_1 = require("./shared.js");
-const primaryCategorySchema = zod_1.z.enum([
+import { z } from 'zod';
+import { miniAppHostCapabilityList } from "../types.js";
+import { buttonTitleSchema, createSimpleStringSchema, encodedJsonFarcasterSignatureSchema, frameNameSchema, hexColorSchema, secureUrlSchema, } from "./shared.js";
+const primaryCategorySchema = z.enum([
     'games',
     'social',
     'finance',
@@ -37,50 +34,50 @@ const chainList = [
     'eip155:42220', // Celo
     'solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp', // Solana
 ];
-exports.domainFrameConfigSchema = zod_1.z.object({
+export const domainFrameConfigSchema = z.object({
     // 0.0.0 and 0.0.1 are not technically part of the spec but kept for
     // backwards compatibility. next should always resolve to the most recent
     // schema version.
-    version: zod_1.z.union([
-        zod_1.z.literal('0.0.0'),
-        zod_1.z.literal('0.0.1'),
-        zod_1.z.literal('1'),
-        zod_1.z.literal('next'),
+    version: z.union([
+        z.literal('0.0.0'),
+        z.literal('0.0.1'),
+        z.literal('1'),
+        z.literal('next'),
     ]),
-    name: shared_ts_1.frameNameSchema,
-    iconUrl: shared_ts_1.secureUrlSchema,
-    homeUrl: shared_ts_1.secureUrlSchema,
+    name: frameNameSchema,
+    iconUrl: secureUrlSchema,
+    homeUrl: secureUrlSchema,
     /** deprecated, set ogImageUrl instead */
-    imageUrl: shared_ts_1.secureUrlSchema.optional(),
+    imageUrl: secureUrlSchema.optional(),
     /** deprecated, will rely on fc:frame meta tag */
-    buttonTitle: shared_ts_1.buttonTitleSchema.optional(),
-    splashImageUrl: shared_ts_1.secureUrlSchema.optional(),
-    splashBackgroundColor: shared_ts_1.hexColorSchema.optional(),
-    webhookUrl: shared_ts_1.secureUrlSchema.optional(),
+    buttonTitle: buttonTitleSchema.optional(),
+    splashImageUrl: secureUrlSchema.optional(),
+    splashBackgroundColor: hexColorSchema.optional(),
+    webhookUrl: secureUrlSchema.optional(),
     /** see: https://github.com/farcasterxyz/miniapps/discussions/191 */
-    subtitle: (0, shared_ts_1.createSimpleStringSchema)({ max: 30 }).optional(),
-    description: (0, shared_ts_1.createSimpleStringSchema)({ max: 170 }).optional(),
-    screenshotUrls: zod_1.z.array(shared_ts_1.secureUrlSchema).max(3).optional(),
+    subtitle: createSimpleStringSchema({ max: 30 }).optional(),
+    description: createSimpleStringSchema({ max: 170 }).optional(),
+    screenshotUrls: z.array(secureUrlSchema).max(3).optional(),
     primaryCategory: primaryCategorySchema.optional(),
-    tags: zod_1.z
-        .array((0, shared_ts_1.createSimpleStringSchema)({ max: 20, noSpaces: true }))
+    tags: z
+        .array(createSimpleStringSchema({ max: 20, noSpaces: true }))
         .max(5)
         .optional(),
-    heroImageUrl: shared_ts_1.secureUrlSchema.optional(),
-    tagline: (0, shared_ts_1.createSimpleStringSchema)({ max: 30 }).optional(),
-    ogTitle: (0, shared_ts_1.createSimpleStringSchema)({ max: 30 }).optional(),
-    ogDescription: (0, shared_ts_1.createSimpleStringSchema)({ max: 100 }).optional(),
-    ogImageUrl: shared_ts_1.secureUrlSchema.optional(),
+    heroImageUrl: secureUrlSchema.optional(),
+    tagline: createSimpleStringSchema({ max: 30 }).optional(),
+    ogTitle: createSimpleStringSchema({ max: 30 }).optional(),
+    ogDescription: createSimpleStringSchema({ max: 100 }).optional(),
+    ogImageUrl: secureUrlSchema.optional(),
     /** see: https://github.com/farcasterxyz/miniapps/discussions/204 */
-    noindex: zod_1.z.boolean().optional(),
+    noindex: z.boolean().optional(),
     /** see https://github.com/farcasterxyz/miniapps/discussions/256 */
-    requiredChains: zod_1.z.array(zod_1.z.enum(chainList)).max(chainList.length).optional(),
-    requiredCapabilities: zod_1.z
-        .array(zod_1.z.enum(types_ts_1.miniAppHostCapabilityList))
-        .max(types_ts_1.miniAppHostCapabilityList.length)
+    requiredChains: z.array(z.enum(chainList)).max(chainList.length).optional(),
+    requiredCapabilities: z
+        .array(z.enum(miniAppHostCapabilityList))
+        .max(miniAppHostCapabilityList.length)
         .optional(),
 });
-exports.domainManifestSchema = zod_1.z.object({
-    accountAssociation: shared_ts_1.encodedJsonFarcasterSignatureSchema,
-    frame: exports.domainFrameConfigSchema.optional(),
+export const domainManifestSchema = z.object({
+    accountAssociation: encodedJsonFarcasterSignatureSchema,
+    frame: domainFrameConfigSchema.optional(),
 });

@@ -1,4 +1,4 @@
-import type { FrameNotificationDetails } from './schemas/index.ts'
+import type { FrameNotificationDetails } from './schemas/index'
 
 export type CastEmbedLocationContext = {
   type: 'cast_embed'

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import sdk from "@farcaster/frame-sdk";
-import type { FrameContext } from "@farcaster/frame-core/dist/context";
+import type { FrameContext } from "@farcaster/frame-core";
 import { useAccount, useConnect } from 'wagmi';
 // import { updateUserConsent } from "~/lib/consent";
 

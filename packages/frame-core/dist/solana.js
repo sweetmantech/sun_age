@@ -1,9 +1,6 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.createSolanaWalletProvider = exports.SolanaConnection = void 0;
-const web3_js_1 = require("@solana/web3.js");
-Object.defineProperty(exports, "SolanaConnection", { enumerable: true, get: function () { return web3_js_1.Connection; } });
-const createSolanaWalletProvider = (request) => ({
+import { Connection as SolanaConnection, } from '@solana/web3.js';
+export { SolanaConnection };
+export const createSolanaWalletProvider = (request) => ({
     request,
     signMessage: (msg) => request({ method: 'signMessage', params: { message: msg } }),
     signTransaction: (transaction) => request({ method: 'signTransaction', params: { transaction } }),
@@ -12,4 +9,3 @@ const createSolanaWalletProvider = (request) => ({
         params: input,
     }),
 });
-exports.createSolanaWalletProvider = createSolanaWalletProvider;

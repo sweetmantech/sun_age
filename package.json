@@ -12,7 +12,7 @@
     "@daimo/pay": "^1.7.4",
     "@farcaster/auth-client": "^0.6.0",
     "@farcaster/auth-kit": "^0.8.0",
-    "@farcaster/frame-core": "https://github.com/SirSuhayb/miniapps.git#fix-type-exports",
+    "@farcaster/frame-core": "file:packages/frame-core",
     "@farcaster/frame-node": "^0.0.32",
     "@farcaster/frame-sdk": "^0.0.53",
     "@farcaster/frame-wagmi-connector": "^0.0.42",
