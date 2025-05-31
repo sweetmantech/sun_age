@@ -36,7 +36,7 @@ export default function ResultsPage() {
   const handleShare = async () => {
     if (!days) return;
     const url = process.env.NEXT_PUBLIC_URL || window.location.origin;
-    const message = `Forget birthdays—I've completed ${days} rotations around the sun ☀️🌎 What's your Sol Age? ${url}`;
+    const message = `Forget birthdays—I&apos;ve completed ${days} rotations around the sun ☀️🌎 What&apos;s your Sol Age? ${url}`;
     window.location.href = `https://warpcast.com/~/compose?text=${encodeURIComponent(message)}`;
   };
   const handleRecalculate = () => router.push('/');
@@ -61,7 +61,7 @@ export default function ResultsPage() {
         <div className="max-w-md w-full px-6 py-16 border border-gray-200 bg-white/90 rounded-none shadow text-center">
           <div className="text-2xl font-serif font-bold mb-4 text-black">No Calculation Data</div>
           <div className="text-base font-mono text-gray-600 mb-8">
-            We couldn't find your Sol Age calculation. Please calculate your age to continue.
+            We couldn&apos;t find your Sol Age calculation. Please calculate your age to continue.
           </div>
           <button
             onClick={() => router.push('/')}
