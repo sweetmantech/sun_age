@@ -7,7 +7,6 @@ import { PROJECT_TITLE, PROJECT_DESCRIPTION } from "../lib/constants";
 import { Providers } from "./providers";
 import { Info } from "lucide-react";
 // import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "~/components/ui/tooltip";
-import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
 import HeaderClient from "../components/SunCycleAge/HeaderClient";
 import { Inter } from "next/font/google";
 // import { PostHogIdentify } from "~/components/posthog-identify";
