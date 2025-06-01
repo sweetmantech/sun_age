@@ -1,10 +1,7 @@
 import React, { useRef, useEffect, useState } from "react";
 import type { StaticImageData } from "next/image";
 import Image from "next/image";
-import { toPng } from "html-to-image";
-import ResultCardExport from "./ResultCardExport";
 import { useFrameSDK } from "~/hooks/useFrameSDK";
-import { createRoot } from "react-dom/client";
 import Header from "./Header";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -75,45 +72,6 @@ const ResultCard: React.FC<ResultCardProps> = (props) => {
     }, 1000 * 60 * 60); // update every hour
     return () => clearInterval(interval);
   }, []);
-
-  const handleSaveImage = async () => {
-    // Create a container for the export card
-    const exportContainer = document.createElement("div");
-    exportContainer.style.position = "absolute";
-    exportContainer.style.left = "-9999px";
-    exportContainer.style.top = "0";
-    document.body.appendChild(exportContainer);
-
-    // Render the export card into the container
-    const exportCard = (
-      <ResultCardExport
-        days={days}
-        approxYears={approxYears}
-        nextMilestone={nextMilestone}
-        daysToMilestone={daysToMilestone}
-        milestoneDate={milestoneDate}
-        quote={quote}
-        displayName={displayName}
-      />
-    );
-    // Use ReactDOM to render
-    const root = createRoot(exportContainer);
-    root.render(exportCard);
-    setTimeout(async () => {
-      try {
-        if (exportContainer.firstChild && exportContainer.firstChild instanceof HTMLElement) {
-          const dataUrl = await toPng(exportContainer.firstChild, { cacheBust: true, backgroundColor: "#fffbe6" });
-          const link = document.createElement("a");
-          link.download = "sun-cycle-bookmark.png";
-          link.href = dataUrl;
-          link.click();
-        }
-      } finally {
-        root.unmount();
-        document.body.removeChild(exportContainer);
-      }
-    }, 100);
-  };
 
   // Fallback OccultureLink if not imported
   const OccultureLink = () => (
