@@ -6,11 +6,14 @@ import dynamic from "next/dynamic";
 // import { PostHogProvider as PHProvider } from "posthog-js/react";
 // import { getUUID } from "~/lib/utils";
 
-const WagmiProvider = dynamic(
-  () => import("~/components/providers/WagmiProvider"),
-  {
-    ssr: false,
-  },
+// @ts-expect-error Next.js dynamic import expects no extension, but TS wants .js with node16
+const WagmiProvider = dynamic(() =>
+  import("../components/providers/WagmiProvider").then(mod => {
+    const Wrapped = (props) => <mod.default {...props} />;
+    Wrapped.displayName = "WagmiProviderDynamic";
+    return Wrapped;
+  }),
+  { ssr: false }
 );
 
 // export function PostHogProvider({ children }: { children: React.ReactNode }) {
