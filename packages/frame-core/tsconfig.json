@@ -1,17 +1,17 @@
 {
   "extends": "@farcaster/tsconfig/browser.json",
   "include": ["src"],
-  "exclude": ["esm", "dist", "build", "node_modules"],
+  "exclude": ["esm", "dist", "build", "node_modules", "test-import.ts", "**/*.test.ts", "**/*.spec.ts"],
   "compilerOptions": {
     "outDir": "esm",
     "module": "esnext",
     "moduleResolution": "node",
     "declaration": true,
-    "emitDeclarationOnly": true,
     "allowJs": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
     "skipLibCheck": true,
-    "esModuleInterop": true
+    "esModuleInterop": true,
+    "emitDeclarationOnly": false
   }
 }
