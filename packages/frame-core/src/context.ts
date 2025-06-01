@@ -1,4 +1,4 @@
-import type { FrameNotificationDetails } from './schemas/index'
+import type { FrameNotificationDetails } from './schemas/index.js'
 
 export type CastEmbedLocationContext = {
   type: 'cast_embed'
@@ -88,3 +88,6 @@ export type FrameContext = {
   user: UserContext
   location?: LocationContext
 }
+
+// Add a value export for type checking
+export const __typecheck_FrameContext: undefined = undefined;
