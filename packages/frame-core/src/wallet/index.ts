@@ -1,1 +1,1 @@
-export * as Ethereum from './ethereum.ts'
+export * as Ethereum from './ethereum.js';
