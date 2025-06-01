@@ -8,16 +8,16 @@ import type {
   ViewCast,
   ViewProfile,
   ViewToken,
-} from './actions/index.ts'
-import type { FrameContext } from './context.ts'
+} from './actions/index.js'
+import type { FrameContext } from './context.js'
 import type {
   EventFrameAdded,
   EventFrameRemoved,
   EventNotificationsDisabled,
   EventNotificationsEnabled,
-} from './schemas/index.ts'
-import type { SolanaRequestFn, SolanaWireRequestFn } from './solana.ts'
-import type { Ethereum } from './wallet/index.ts'
+} from './schemas/index.js'
+import type { SolanaRequestFn, SolanaWireRequestFn } from './solana.js'
+import type { Ethereum } from './wallet/index.js'
 
 export type SetPrimaryButtonOptions = {
   text: string
@@ -28,7 +28,7 @@ export type SetPrimaryButtonOptions = {
 
 // start backwards compat, remove in 1.0
 export * from './wallet/ethereum.ts'
-export type { DEFAULT_READY_OPTIONS, ReadyOptions } from './actions/Ready.ts'
+export type { DEFAULT_READY_OPTIONS, ReadyOptions } from './actions/Ready.js'
 export type SignInOptions = SignIn.SignInOptions
 // end backwards compat
 
