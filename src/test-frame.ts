@@ -1,4 +1,4 @@
-import { type FrameContext } from '@farcaster/frame-core';
+import { type FrameContext } from '@farcaster/frame-core/context';
 
 // Example usage of FrameContext
 const frameContext: FrameContext = {

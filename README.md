@@ -25,7 +25,6 @@ Solara began as an experiment on [vibes.engineering](https://warpcast.com/vibes.
 - Tailwind CSS for styling
 - shadcn/ui for UI components
 - Supabase for optional storage
-- Radix UI for accessible dialogs
 - Mini Apps SDK for Farcaster integration
 
 ## Getting Started

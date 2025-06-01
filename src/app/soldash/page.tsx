@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { BookmarkCard } from "../../components/SunCycleAge";
 import { getNextMilestone, getNextNumericalMilestones, getNextMilestoneByType } from "../../lib/milestones";
 import MilestoneCard from "../../components/SunCycleAge/MilestoneCard";
-import { Dialog as RadixDialog, DialogContent, DialogTitle, DialogClose, DialogOverlay } from "../../components/ui/dialog";
 import { useSolarPledge } from "../../hooks/useSolarPledge";
 
 // Bookmark type

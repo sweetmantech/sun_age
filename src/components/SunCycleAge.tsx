@@ -10,13 +10,6 @@ import ResultCard from "./SunCycleAge/ResultCard";
 import FormSection from "./SunCycleAge/FormSection";
 import MilestoneOrbit from "./SunCycleAge/MilestoneOrbit";
 import { getNextMilestone, getProgressToNextMilestone, getNextNumericalMilestones, getNextMilestoneByType } from "~/lib/milestones";
-import {
-  Dialog as RadixDialog,
-  DialogContent,
-  DialogTitle,
-  DialogClose,
-  DialogOverlay,
-} from "./ui/dialog";
 import MilestoneCard from "./SunCycleAge/MilestoneCard";
 import sdk from "@farcaster/frame-sdk";
 import { useRouter } from "next/navigation";
