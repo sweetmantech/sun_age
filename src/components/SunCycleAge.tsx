@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useMemo } from "react";
 import { useFrameSDK } from "~/hooks/useFrameSDK";
-import type { FrameContext } from "~/types/frame";
+import type { FrameContext } from "@farcaster/frame-core/context";
 import Image from "next/image";
 import Header from "./SunCycleAge/Header";
 import SolarSystemGraphic from "./SunCycleAge/SolarSystemGraphic";
@@ -16,7 +16,7 @@ import {
   DialogTitle,
   DialogClose,
   DialogOverlay,
-} from "../components/ui/dialog";
+} from "./ui/dialog";
 import MilestoneCard from "./SunCycleAge/MilestoneCard";
 import sdk from "@farcaster/frame-sdk";
 import { useRouter } from "next/navigation";
