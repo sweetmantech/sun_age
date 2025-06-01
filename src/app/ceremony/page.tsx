@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useSolarPledge } from "../../hooks/useSolarPledge";
+// @ts-expect-error wagmi is ESM-only
 import { useAccount, useConnect, useReadContract } from "wagmi";
 import { useFrameSDK } from '~/hooks/useFrameSDK';
 import { SOLAR_PLEDGE_ADDRESS, SolarPledgeABI } from '../../lib/contracts';
