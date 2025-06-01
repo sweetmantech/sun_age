@@ -6,7 +6,9 @@
     "outDir": "dist",
     "module": "esnext",
     "moduleResolution": "node",
-    "esModuleInterop": true
+    "esModuleInterop": true,
+    "declaration": true,
+    "emitDeclarationOnly": false
   }
 }
 
