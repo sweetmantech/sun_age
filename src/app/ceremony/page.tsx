@@ -20,6 +20,7 @@ export default function CeremonyStepper() {
   const { address } = useAccount();
   const { approveUSDC, createPledge, isApproved, isLoading, error, hasPledged } = useSolarPledge();
   const { connect, connectors, isPending: isConnecting } = useConnect();
+  const [uiError, setUiError] = useState<string | null>(null);
 
   // Try to get solar age and birthDate from URL params
   const urlDays = searchParams?.get('days');
@@ -111,17 +112,17 @@ export default function CeremonyStepper() {
     }
 
     try {
+      setUiError(null);
       // First approve USDC if not already approved
       if (!isApproved(pledge)) {
         await approveUSDC(BigInt(pledge * 1_000_000));
+        return; // Wait for user to click again to seal
       }
-
       // Then create the pledge
       await createPledge(commitment, farcasterHandle, pledge);
       next(); // Move to next step on success
     } catch (err) {
-      console.error("Failed to create pledge:", err);
-      alert("Failed to create pledge. Please try again.");
+      setUiError(err instanceof Error ? err.message : "Failed to process transaction");
     }
   };
 
@@ -322,19 +323,25 @@ export default function CeremonyStepper() {
             {step === 0 && (
               <>
                 <button
-                  className="w-full py-4 mb-4 bg-[#d4af37] text-black font-mono text-sm tracking-widest uppercase border border-black rounded-none hover:bg-[#e6c75a] transition-colors"
+                  className="w-full py-4 mb-2 bg-[#d4af37] text-black font-mono text-sm tracking-widest uppercase border border-black rounded-none hover:bg-[#e6c75a] transition-colors"
                   onClick={async () => {
                     if (!address && connectors.length > 0) {
                       await connect({ connector: connectors[0] });
-                    }
-                    if (address || (connectors.length > 0 && isConnecting)) {
+                    } else if (address) {
                       next();
                     }
                   }}
-                  disabled={isConnecting}
+                  disabled={isConnecting || (!address && connectors.length === 0)}
                 >
-                  {isConnecting ? "Connecting..." : "BEGIN SOLAR VOW CEREMONY"}
+                  {isConnecting
+                    ? "Connecting..."
+                    : !address
+                      ? "CONNECT WALLET"
+                      : "BEGIN SOLAR VOW CEREMONY"}
                 </button>
+                {address && (
+                  <div className="text-xs font-mono text-gray-400 mb-4 text-center">Wallet: {address.slice(0, 6)}...{address.slice(-4)}</div>
+                )}
                 <div className="flex w-full items-center justify-center gap-0 mt-0 mb-6">
                   <button
                     className="flex-1 font-mono text-base text-sm uppercase underline underline-offset-2 border-none rounded-none bg-transparent text-black py-2 px-0 hover:text-[#d4af37] transition-colors"
@@ -379,13 +386,19 @@ export default function CeremonyStepper() {
             )}
             {step === 2 && (
               <>
+                {/* Error Callout */}
+                {(uiError || error) && (
+                  <div className="w-full border border-red-300 bg-red-50 text-red-700 rounded-none p-3 font-mono text-sm text-left mb-4">
+                    {uiError || (error && error.message)}
+                  </div>
+                )}
                 <button
                   className="w-full py-4 mb-4 bg-[#d4af37] text-black font-mono text-sm tracking-widest uppercase border border-black rounded-none hover:bg-[#e6c75a] transition-colors"
                   onClick={handlePledge}
-                  disabled={isConnecting}
+                  disabled={isLoading}
                 >
-                  {isConnecting
-                    ? "Processing..."
+                  {isLoading
+                    ? (!isApproved(pledge) ? "Waiting for wallet..." : "Sealing your vow...")
                     : !isApproved(pledge)
                       ? "APPROVE USDC"
                       : `SEAL VOW WITH $${pledge} SOLAR ENERGY`}
