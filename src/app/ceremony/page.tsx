@@ -110,17 +110,17 @@ export default function CeremonyStepper() {
     }
 
     try {
-      // First approve USDC if not already approved
       if (!isApproved(pledge)) {
+        // First step: Approve USDC
         await approveUSDC(BigInt(pledge * 1_000_000));
+      } else {
+        // Second step: Create the pledge
+        await createPledge(commitment, farcasterHandle, pledge);
+        next(); // Move to next step on success
       }
-
-      // Then create the pledge
-      await createPledge(commitment, farcasterHandle, pledge);
-      next(); // Move to next step on success
     } catch (err) {
-      console.error("Failed to create pledge:", err);
-      alert("Failed to create pledge. Please try again.");
+      console.error("Failed to process pledge:", err);
+      alert("Failed to process pledge. Please try again.");
     }
   };
 
@@ -194,16 +194,18 @@ export default function CeremonyStepper() {
                 <div className="pt-8" />
                 <Image src="/pinky_promise.png" alt="Fist" width={200} height={200} className="mb-6 self-center" style={{ filter: 'drop-shadow(0 0 50px #FFD700cc) drop-shadow(0 0 20px #FFB30099)' }} />
                 <div className="text-2xl font-serif font-normal mb-1 w-full text-center leading-tighter">Inscribe Your Solar Vow</div>
-                <div className="text-xs font-mono text-gray-500 mb-6 uppercase tracking-widest w-full text-center">A sacred inscription of your journey</div>
+                <div className="text-xs font-mono text-gray-500 mb-6 uppercase tracking-widest w-full text-center">Sign your cosmic journey</div>
                 {/* Message to Sign Callout */}
                 <div className="w-full border border-gray-300 rounded-none p-4 mb-4 bg-white/90 text-left">
                   <div className="text-xs font-mono text-gray-500 mb-4 uppercase tracking-widest">Message to Sign</div>
-                  <div className="w-full border border-blue-200 bg-[#F2F7FF] rounded-none p-3 font-mono text-sm text-left mb-3 whitespace-pre-line select-all" style={{ color: '#2563eb', fontFamily: 'Geist Mono, monospace' }}>
-                    &quot;{signatureMsg}&quot;
-                  </div>
-                  <div className="text-sm text-gray-500 mt-12 text-left">Your vow is an onchain signature transforming intention into cosmic law, creating an unbreakable bond with your future self. This is proof of your word.</div>
+                  <div className="text-sm font-mono text-gray-700 whitespace-pre-wrap">{signatureMsg}</div>
                 </div>
-                
+                <button
+                  onClick={next}
+                  className="w-full bg-black text-white py-3 px-4 rounded-none font-mono text-sm hover:bg-gray-800 transition-colors"
+                >
+                  Continue to Empower
+                </button>
               </div>
             </>
           )}
@@ -212,48 +214,97 @@ export default function CeremonyStepper() {
             <>
               <div className="flex flex-col items-start mb-0">
                 <div className="pt-8" />
-                <Image src="/battery.png" alt="Battery" width={150} height={150} className="mb-6 self-center" style={{ filter: 'drop-shadow(0 0 60px #FFD700cc) drop-shadow(0 0 32px #FFB30099)' }} />
-                <div className="text-2xl font-serif font-bold mb-2 w-full text-center">Empower Your Solar Vow</div>
-                <div className="text-xs font-mono text-gray-500 mb-6 uppercase tracking-widest w-full text-center">A measure of strength through collective energy</div>
-                {/* Cosmic Convergence Callout */}
-                <div className="w-full border border-blue-200 bg-[#F2F7FF] rounded-none p-3 font-mono text-sm text-left mb-4" style={{ color: '#2563eb', fontFamily: 'Geist Mono, monospace' }}>
-                  <span className="font-bold uppercase tracking-widest">COSMIC CONVERGENCE | EPOCH 0</span><br />
-                  <span className="text-xs font-mono" style={{ color: '#2563eb' }}>{`{vows} vows committed • $${pledge} pooled • {days} remaining`}</span>
+                <Image src="/pinky_promise.png" alt="Fist" width={200} height={200} className="mb-6 self-center" style={{ filter: 'drop-shadow(0 0 50px #FFD700cc) drop-shadow(0 0 20px #FFB30099)' }} />
+                <div className="text-2xl font-serif font-normal mb-1 w-full text-center leading-tighter">Empower Your Journey</div>
+                <div className="text-xs font-mono text-gray-500 mb-6 uppercase tracking-widest w-full text-center">Record your vow on-chain</div>
+
+                {/* Commitment Input */}
+                <div className="w-full border border-gray-300 rounded-none p-4 mb-4 bg-white/90">
+                  <div className="text-xs font-mono text-gray-500 mb-2 uppercase tracking-widest">Your Commitment</div>
+                  <textarea
+                    value={commitment}
+                    onChange={(e) => setCommitment(e.target.value)}
+                    placeholder="Write your commitment..."
+                    className="w-full h-24 p-2 border border-gray-300 rounded-none font-mono text-sm"
+                  />
                 </div>
-                {/* Solar Energy Level Card */}
-                <div className="w-full border border-gray-300 rounded-none p-4 mb-4 bg-white/90 text-left">
-                  <div className="text-xs font-mono text-gray-700 mb-2 uppercase tracking-widest font-bold">CHOOSE YOUR SOLAR ENERGY LEVEL</div>
-                  <div className="text-sm font-sans text-gray-700 mb-4">Your contribution joins the solar community and sponsors future vow-makers.</div>
+
+                {/* Farcaster Handle Input */}
+                <div className="w-full border border-gray-300 rounded-none p-4 mb-4 bg-white/90">
+                  <div className="text-xs font-mono text-gray-500 mb-2 uppercase tracking-widest">Farcaster Handle</div>
+                  <input
+                    type="text"
+                    value={farcasterHandle}
+                    onChange={(e) => setFarcasterHandle(e.target.value)}
+                    placeholder="@yourhandle"
+                    className="w-full p-2 border border-gray-300 rounded-none font-mono text-sm"
+                  />
+                </div>
+
+                {/* Pledge Amount Selection */}
+                <div className="w-full border border-gray-300 rounded-none p-4 mb-4 bg-white/90">
+                  <div className="text-xs font-mono text-gray-500 mb-2 uppercase tracking-widest">Pledge Amount (USDC)</div>
                   <div className="flex gap-2 mb-2">
-                    {[1, 5, 10, 25].map((amt) => (
-                      <button key={amt} className={`flex-1 px-4 py-2 border border-black font-mono text-base rounded-none flex items-center justify-center gap-1 text-center ${pledge === amt && !customPledge ? 'bg-[#d4af37] text-black' : 'bg-white text-black'}`} onClick={() => { setPledge(amt); setCustomPledge(''); }}>
-                        ${amt}{amt === 1 ? '⚡' : amt === 5 ? '🌟' : amt === 10 ? '💫' : amt === 25 ? '✨' : ''}
+                    {[1, 5, 10, 25].map((amount) => (
+                      <button
+                        key={amount}
+                        onClick={() => setPledge(amount)}
+                        className={`flex-1 py-2 border ${
+                          pledge === amount
+                            ? "border-black bg-black text-white"
+                            : "border-gray-300 hover:border-black"
+                        } rounded-none font-mono text-sm transition-colors`}
+                      >
+                        {amount}
                       </button>
                     ))}
                   </div>
-                  <div className="w-full mt-2">
+                  <div className="flex gap-2">
                     <input
                       type="number"
-                      min={1}
-                      placeholder="PLEDGE CUSTOM AMOUNT"
-                      className={`w-full px-4 py-2 border border-black font-mono text-base rounded-none ${customPledge ? 'bg-[#d4af37] text-black' : 'bg-white text-black'}`}
                       value={customPledge}
-                      onChange={e => {
-                        setCustomPledge(e.target.value);
-                        setPledge(Number(e.target.value) || 1);
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setCustomPledge(val);
+                        if (val) setPledge(Number(val));
                       }}
+                      placeholder="Custom amount"
+                      className="flex-1 p-2 border border-gray-300 rounded-none font-mono text-sm"
                     />
+                    <button
+                      onClick={() => {
+                        if (customPledge) {
+                          setPledge(Number(customPledge));
+                          setCustomPledge("");
+                        }
+                      }}
+                      className="px-4 py-2 border border-gray-300 rounded-none font-mono text-sm hover:border-black transition-colors"
+                    >
+                      Set
+                    </button>
                   </div>
                 </div>
-                {/* Final Amount Callout */}
-                <div className="w-full border border-gray-300 rounded-none p-4 mb-4" style={{ background: '#F6F5E6' }}>
-                  <div className="text-xs font-mono text-gray-700 mb-2 uppercase tracking-widest font-bold">YOUR ${pledge} SOLAR VOW WILL:</div>
-                  <ul className="text-sm font-mono text-gray-700 list-none ml-0 mt-1">
-                    <li className="mb-1">🌞 Enable {sponsoredCount} free ceremonies</li>
-                    <li className="mb-1">🌊 Add ${pledge} to Genesis pool</li>
-                    <li>🔒 Secure your vow with {multiplier}x energy</li>
-                  </ul>
+
+                {/* Multiplier and Sponsored Info */}
+                <div className="w-full border border-gray-300 rounded-none p-4 mb-4 bg-white/90">
+                  <div className="text-xs font-mono text-gray-500 mb-2 uppercase tracking-widest">Your Impact</div>
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-sm font-mono">Multiplier</span>
+                    <span className="text-sm font-mono font-bold">{multiplier}x</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm font-mono">Sponsored Rotations</span>
+                    <span className="text-sm font-mono font-bold">{sponsoredCount}</span>
+                  </div>
                 </div>
+
+                <button
+                  onClick={handlePledge}
+                  disabled={isLoading || !commitment || !farcasterHandle}
+                  className="w-full bg-black text-white py-3 px-4 rounded-none font-mono text-sm hover:bg-gray-800 transition-colors disabled:bg-gray-400"
+                >
+                  {isLoading ? "Processing..." : isApproved(pledge) ? `SEAL VOW WITH ${pledge} SOLAR ENERGY` : "APPROVE USDC"}
+                </button>
               </div>
             </>
           )}
@@ -262,51 +313,24 @@ export default function CeremonyStepper() {
             <>
               <div className="flex flex-col items-center mb-0">
                 <div className="pt-8" />
-                <Image src="/envelope.png" alt="Seal" width={120} height={120} className="mb-6 self-center" style={{ filter: 'drop-shadow(0 0 60px #22C55E88) drop-shadow(0 0 32px #22C55E44)' }} />
-                <div className="text-2xl font-serif font-bold mb-2 w-full text-center">Solar Vow Sealed</div>
-                <div className="text-xs font-mono text-gray-500 mb-6 uppercase tracking-tight w-full text-center" style={{ letterSpacing: '0.08em' }}>
-                  YOUR PLACE IN THE GENESIS CONVERGENCE IS SECURED
-                </div>
-                {/* Green Card: Solar Vow Inscribed */}
-                <div className="w-full border border-green-200 rounded-none p-4 mb-4" style={{ background: '#EFFDF4', color: '#15803D' }}>
-                  <div className="text-xs font-mono font-bold uppercase mb-2 w-full text-center" style={{ color: '#15803D' }}>
-                    SOLAR VOW INSCRIBED
+                <SunGlow />
+                <div className="text-2xl font-serif font-bold mb-2">Vow Sealed</div>
+                <div className="text-xs font-mono text-gray-500 mb-6 uppercase tracking-widest">Your journey is now eternal</div>
+                {/* Success Message */}
+                <div className="w-full border border-gray-300 rounded-none p-4 mb-4 bg-white/90 text-center">
+                  <div className="text-sm font-mono text-gray-700 mb-4">
+                    Your Solar Vow has been recorded on-chain, forever marking your {solAge?.toLocaleString()} rotations around our star.
                   </div>
-                  <div className="flex flex-col items-center mb-2">
-                    <div className="text-3xl font-serif font-bold mb-1 flex items-center gap-2" style={{ color: '#15803D' }}>
-                      <span>⭐</span>
-                      <span>{solAge?.toLocaleString()}</span>
-                      <span>⭐</span>
-                    </div>
-                    <div className="text-xs font-mono uppercase mb-2 text-center" style={{ color: '#15803D', letterSpacing: '0.08em' }}>
-                      ROTATIONS SEALED IN THE COSMIC LEDGER
-                    </div>
-                  </div>
-                  <div className="w-full h-px bg-green-300 my-2" />
-                  <div className="grid grid-cols-2 gap-y-1 text-xs font-mono" style={{ color: '#15803D' }}>
-                    <div className="text-left">VOW ENERGY:</div>
-                    <div className="text-right font-bold">${pledge}</div>
-                    <div className="text-left">SPONSORED CEREMONIES:</div>
-                    <div className="text-right font-bold">2</div>
-                    <div className="text-left">COMMUNITY CONSTELLATION:</div>
-                    <div className="text-right font-bold">${pledge - 1} TO GENESIS POOL</div>
-                    <div className="text-left">COSMIC CONVERGENCE:</div>
-                    <div className="text-right font-bold">30 DAYS</div>
+                  <div className="text-xs font-mono text-gray-500">
+                    Transaction Hash: {hasPledged ? "0x..." : "Pending..."}
                   </div>
                 </div>
-                {/* Cosmic Convergence Callout */}
-                <div className="w-full border border-gray-300 rounded-none p-4 mb-4 bg-transparent text-left">
-                  <div className="font-mono font-normal mb-2 uppercase">THE COSMIC CONVERGENCE AWAITS</div>
-                  <ul className="list-none ml-0 mt-1 font-sans text-sm text-gray-700">
-                    <li className="mb-1">✨ Your solar journey is permanently inscribed in starlight</li>
-                    <li className="mb-1">🌟 Stellar rewards will manifest when Genesis arrives</li>
-                    <li>💫 Your cosmic signature will evolve through your vow&apos;s power</li>
-                  </ul>
-                </div>
-                {/* Vow Quote Callout */}
-                <div className="w-full rounded-none p-4 mb-6 text-center italic font-serif border border-gray-300" style={{ background: 'rgba(255,255,255,0.4)' }}>
-                  &quot;Your vow echoes through the cosmos, binding your present self to all the futures you will become. You are now part of something infinite.&quot;
-                </div>
+                <button
+                  onClick={handleReturnToResults}
+                  className="w-full bg-black text-white py-3 px-4 rounded-none font-mono text-sm hover:bg-gray-800 transition-colors"
+                >
+                  Return to Results
+                </button>
               </div>
             </>
           )}
