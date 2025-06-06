@@ -18,7 +18,7 @@ export default function CeremonyStepper() {
   const searchParams = useSearchParams();
   const { context, isInFrame } = useFrameSDK();
   const { address } = useAccount();
-  const { approveUSDC, createPledge, isApproved, isLoading, error, hasPledged, debugInfo } = useSolarPledge();
+  const { approveUSDC, createPledge, isApproved, isLoading, error, hasPledged, debugInfo, allowance } = useSolarPledge();
   const { connect, connectors, isPending: isConnecting } = useConnect();
   const [uiError, setUiError] = useState<string | null>(null);
 
@@ -412,9 +412,10 @@ export default function CeremonyStepper() {
                   </div>
                 )}
                 {/* Debug Info Callout */}
-                {debugInfo && (
+                {(debugInfo || allowance !== undefined) && (
                   <div className="w-full border border-yellow-300 bg-yellow-50 text-yellow-700 rounded-none p-3 font-mono text-xs text-left mb-4">
-                    {debugInfo}
+                    {debugInfo && <div>{debugInfo}</div>}
+                    {allowance != null && <div>Allowance: {allowance.toString()}</div>}
                   </div>
                 )}
                 <button

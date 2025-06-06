@@ -108,5 +108,6 @@ export function useSolarPledge() {
     error,
     hasPledged,
     debugInfo,
+    allowance,
   };
 } 
