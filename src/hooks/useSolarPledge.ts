@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useAccount, useWriteContract, useReadContract } from 'wagmi';
+import { useAccount, useWriteContract, useReadContract, useWalletClient } from 'wagmi';
 
 import { SOLAR_PLEDGE_ADDRESS, USDC_ADDRESS, SolarPledgeABI, USDC_ABI } from '~/lib/contracts';
 
@@ -7,9 +7,8 @@ export function useSolarPledge() {
   const { address } = useAccount();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
+  const { data: walletClient } = useWalletClient();
 
-  // Write contract for USDC approve
-  const { writeContract: writeApprove, isPending: isApprovePending } = useWriteContract();
   // Write contract for pledge
   const { writeContract, isPending: isPledgePending } = useWriteContract();
 
@@ -37,7 +36,8 @@ export function useSolarPledge() {
     setError(null);
     setIsLoading(true);
     try {
-      await writeApprove({
+      if (!walletClient) throw new Error("No wallet client available");
+      await walletClient.writeContract({
         address: USDC_ADDRESS,
         abi: USDC_ABI,
         functionName: 'approve',
@@ -83,7 +83,7 @@ export function useSolarPledge() {
     approveUSDC,
     createPledge,
     isApproved,
-    isLoading: isLoading || isApprovePending || isPledgePending,
+    isLoading: isLoading || isPledgePending,
     error,
     hasPledged,
   };
