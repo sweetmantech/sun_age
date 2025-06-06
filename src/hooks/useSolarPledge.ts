@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useAccount, useWriteContract, useReadContract, useWalletClient } from 'wagmi';
+import React, { useState } from 'react';
+import { useAccount, useWriteContract, useReadContract, useWalletClient, useWaitForTransactionReceipt } from 'wagmi';
 
 import { SOLAR_PLEDGE_ADDRESS, USDC_ADDRESS, SolarPledgeABI, USDC_ABI } from '~/lib/contracts';
 
@@ -8,6 +8,10 @@ export function useSolarPledge() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
   const { data: walletClient } = useWalletClient();
+  const [txHash, setTxHash] = useState<`0x${string}` | undefined>(undefined);
+
+  // Wait for transaction confirmation
+  const { isLoading: isConfirming, isSuccess: isConfirmed, isError: isTxError, error: txError } = useWaitForTransactionReceipt({ hash: txHash });
 
   // Write contract for pledge
   const { writeContract, isPending: isPledgePending } = useWriteContract();
@@ -37,20 +41,33 @@ export function useSolarPledge() {
     setIsLoading(true);
     try {
       if (!walletClient) throw new Error("No wallet client available");
-      await walletClient.writeContract({
+      const hash = await walletClient.writeContract({
         address: USDC_ADDRESS,
         abi: USDC_ABI,
         functionName: 'approve',
         args: [SOLAR_PLEDGE_ADDRESS, amount],
       });
-      await refetchAllowance();
-      setAllowanceAmount(amount);
+      setTxHash(hash);
     } catch (err) {
       setError(err instanceof Error ? err : new Error('Failed to approve USDC'));
-    } finally {
       setIsLoading(false);
     }
   };
+
+  // Effect: when transaction is confirmed, refetch allowance and update state
+  React.useEffect(() => {
+    if (isConfirmed && txHash) {
+      refetchAllowance();
+      setAllowanceAmount(BigInt(0)); // Optionally update this based on new allowance
+      setIsLoading(false);
+      setTxHash(undefined);
+    }
+    if (isTxError && txError) {
+      setError(txError instanceof Error ? txError : new Error('Transaction failed'));
+      setIsLoading(false);
+      setTxHash(undefined);
+    }
+  }, [isConfirmed, isTxError, txError, txHash, refetchAllowance]);
 
   // Create pledge (records vow and pledge onchain)
   const createPledge = async (commitment: string, farcasterHandle: string, pledgeAmount: number) => {
@@ -83,7 +100,7 @@ export function useSolarPledge() {
     approveUSDC,
     createPledge,
     isApproved,
-    isLoading: isLoading || isPledgePending,
+    isLoading: isLoading || isPledgePending || isConfirming,
     error,
     hasPledged,
   };
