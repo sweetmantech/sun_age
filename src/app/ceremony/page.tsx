@@ -19,6 +19,7 @@ export default function CeremonyStepper() {
   const { context } = useFrameSDK();
   const { address } = useAccount();
   const { approveUSDC, createPledge, isApproved, isLoading, error, hasPledged } = useSolarPledge();
+  const { connect, connectors, isPending: isConnecting } = useConnect();
 
   // Try to get solar age and birthDate from URL params
   const urlDays = searchParams?.get('days');
@@ -322,9 +323,17 @@ export default function CeremonyStepper() {
               <>
                 <button
                   className="w-full py-4 mb-4 bg-[#d4af37] text-black font-mono text-sm tracking-widest uppercase border border-black rounded-none hover:bg-[#e6c75a] transition-colors"
-                  onClick={next}
+                  onClick={async () => {
+                    if (!address && connectors.length > 0) {
+                      await connect({ connector: connectors[0] });
+                    }
+                    if (address || (connectors.length > 0 && isConnecting)) {
+                      next();
+                    }
+                  }}
+                  disabled={isConnecting}
                 >
-                  BEGIN SOLAR VOW CEREMONY
+                  {isConnecting ? "Connecting..." : "BEGIN SOLAR VOW CEREMONY"}
                 </button>
                 <div className="flex w-full items-center justify-center gap-0 mt-0 mb-6">
                   <button
@@ -373,9 +382,9 @@ export default function CeremonyStepper() {
                 <button
                   className="w-full py-4 mb-4 bg-[#d4af37] text-black font-mono text-sm tracking-widest uppercase border border-black rounded-none hover:bg-[#e6c75a] transition-colors"
                   onClick={handlePledge}
-                  disabled={isLoading}
+                  disabled={isConnecting}
                 >
-                  {isLoading
+                  {isConnecting
                     ? "Processing..."
                     : !isApproved(pledge)
                       ? "APPROVE USDC"
