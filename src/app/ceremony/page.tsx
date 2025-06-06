@@ -4,7 +4,6 @@ import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useSolarPledge } from "../../hooks/useSolarPledge";
-// @ts-expect-error wagmi is ESM-only
 import { useAccount, useConnect, useReadContract } from "wagmi";
 import { useFrameSDK } from '~/hooks/useFrameSDK';
 import { SOLAR_PLEDGE_ADDRESS, SolarPledgeABI } from '../../lib/contracts';
@@ -350,7 +349,7 @@ export default function CeremonyStepper() {
                   className="w-full py-4 mb-4 bg-[#d4af37] text-black font-mono text-sm tracking-widest uppercase border border-black rounded-none hover:bg-[#e6c75a] transition-colors"
                   onClick={next}
                 >
-                  SIGN TO INSCRIBE VOW
+                  EMPOWER YOUR VOW
                 </button>
                 <div className="flex w-full items-center justify-center gap-0 mt-0 mb-6">
                   <button
@@ -373,9 +372,14 @@ export default function CeremonyStepper() {
               <>
                 <button
                   className="w-full py-4 mb-4 bg-[#d4af37] text-black font-mono text-sm tracking-widest uppercase border border-black rounded-none hover:bg-[#e6c75a] transition-colors"
-                  onClick={next}
+                  onClick={handlePledge}
+                  disabled={isLoading}
                 >
-                  SEAL VOW WITH ${pledge} SOLAR ENERGY
+                  {isLoading
+                    ? "Processing..."
+                    : !isApproved(pledge)
+                      ? "APPROVE USDC"
+                      : `SEAL VOW WITH $${pledge} SOLAR ENERGY`}
                 </button>
                 <div className="flex w-full items-center justify-between gap-0 mt-0 mb-6">
                   <button
