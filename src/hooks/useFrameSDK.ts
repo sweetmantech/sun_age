@@ -39,11 +39,6 @@ export function useFrameSDK() {
           frameSDK.on("frameAdded", () => setIsFramePinned(true));
           frameSDK.on("frameRemoved", () => setIsFramePinned(false));
         }
-
-        // Connect to wallet if not already connected
-        if (!isConnected && connectors.length > 0) {
-          await connect({ connector: connectors[0] });
-        }
       } catch (err) {
         console.error("Error initializing SDK:", err);
         setError(err instanceof Error ? err : new Error(String(err)));
@@ -51,7 +46,27 @@ export function useFrameSDK() {
     };
 
     initSDK();
-  }, [isConnected, connect, connectors]);
+  }, []);
+
+  // Separate effect for wallet connection
+  useEffect(() => {
+    const connectWallet = async () => {
+      if (!isSDKLoaded || isConnected || connectors.length === 0) return;
+
+      try {
+        setLoading(true);
+        setError(null);
+        await connect({ connector: connectors[0] });
+      } catch (err) {
+        console.error("Error connecting wallet:", err);
+        setError(err instanceof Error ? err : new Error(String(err)));
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    connectWallet();
+  }, [isSDKLoaded, isConnected, connect, connectors]);
 
   // Pin frame function
   const pinFrame = useCallback(async () => {
@@ -61,11 +76,9 @@ export function useFrameSDK() {
       setLoading(true);
       setError(null);
 
-      // Use addMiniApp instead of addFrame (updated for latest SDK)
       await sdk.actions.addMiniApp();
       setIsFramePinned(true);
 
-      // Send welcome notification if we have a user
       if (context?.user?.fid) {
         try {
           await fetch('/api/milestone-notification', {
@@ -84,7 +97,6 @@ export function useFrameSDK() {
       }
     } catch (err) {
       console.error("Error pinning frame:", err);
-      // Handle specific error cases
       if (err instanceof Error) {
         if (err.message.includes('RejectedByUser')) {
           setError(new Error('You declined to add Solara to your apps.'));
@@ -111,6 +123,6 @@ export function useFrameSDK() {
     error,
     isConnected,
     address,
-    sdk // Return the SDK instance for direct access
+    sdk
   };
 }
