@@ -9,6 +9,7 @@ export function useSolarPledge() {
   const [error, setError] = useState<Error | null>(null);
   const { data: walletClient } = useWalletClient();
   const [txHash, setTxHash] = useState<`0x${string}` | undefined>(undefined);
+  const [debugInfo, setDebugInfo] = useState<string | null>(null);
 
   // Wait for transaction confirmation
   const { isLoading: isConfirming, isSuccess: isConfirmed, isError: isTxError, error: txError } = useWaitForTransactionReceipt({ hash: txHash });
@@ -39,6 +40,7 @@ export function useSolarPledge() {
   const approveUSDC = async (amount: bigint) => {
     setError(null);
     setIsLoading(true);
+    setDebugInfo(null);
     try {
       if (!walletClient) throw new Error("No wallet client available");
       const hash = await walletClient.writeContract({
@@ -47,9 +49,11 @@ export function useSolarPledge() {
         functionName: 'approve',
         args: [SOLAR_PLEDGE_ADDRESS, amount],
       });
+      setDebugInfo(hash ? `Tx Hash: ${hash}` : 'No transaction hash returned');
       setTxHash(hash);
     } catch (err) {
       setError(err instanceof Error ? err : new Error('Failed to approve USDC'));
+      setDebugInfo(`Error: ${err instanceof Error ? err.message : String(err)}`);
       setIsLoading(false);
     }
   };
@@ -103,5 +107,6 @@ export function useSolarPledge() {
     isLoading: isLoading || isPledgePending || isConfirming,
     error,
     hasPledged,
+    debugInfo,
   };
 } 
