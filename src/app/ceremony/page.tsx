@@ -16,7 +16,7 @@ export default function CeremonyStepper() {
   const [step, setStep] = useState(0);
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { context } = useFrameSDK();
+  const { context, isInFrame } = useFrameSDK();
   const { address } = useAccount();
   const { approveUSDC, createPledge, isApproved, isLoading, error, hasPledged } = useSolarPledge();
   const { connect, connectors, isPending: isConnecting } = useConnect();
@@ -140,6 +140,14 @@ export default function CeremonyStepper() {
       />
     );
   }
+
+  // Find the Farcaster frame connector if available
+  const farcasterConnector = connectors.find(
+    (c) => c.id === "farcaster" || c.name.toLowerCase().includes("frame")
+  );
+  const injectedConnector = connectors.find(
+    (c) => c.id === "injected" || c.name.toLowerCase().includes("injected")
+  );
 
   return (
     <div className="w-full min-h-screen flex flex-col items-center bg-white relative">
@@ -325,8 +333,16 @@ export default function CeremonyStepper() {
                 <button
                   className="w-full py-4 mb-2 bg-[#d4af37] text-black font-mono text-sm tracking-widest uppercase border border-black rounded-none hover:bg-[#e6c75a] transition-colors"
                   onClick={async () => {
-                    if (!address && connectors.length > 0) {
-                      await connect({ connector: connectors[0] });
+                    setUiError(null);
+                    if (!address) {
+                      if (isInFrame && farcasterConnector) {
+                        await connect({ connector: farcasterConnector });
+                      } else if (!isInFrame && injectedConnector) {
+                        await connect({ connector: injectedConnector });
+                      } else {
+                        setUiError("No suitable wallet connector found. Please use Farcaster or a browser wallet.");
+                        return;
+                      }
                     } else if (address) {
                       next();
                     }
@@ -339,6 +355,9 @@ export default function CeremonyStepper() {
                       ? "CONNECT WALLET"
                       : "BEGIN SOLAR VOW CEREMONY"}
                 </button>
+                {uiError && (
+                  <div className="text-xs font-mono text-red-600 mb-2 text-center">{uiError}</div>
+                )}
                 {address && (
                   <div className="text-xs font-mono text-gray-400 mb-4 text-center">Wallet: {address.slice(0, 6)}...{address.slice(-4)}</div>
                 )}
