@@ -330,7 +330,7 @@ export default function CeremonyStepper() {
           <div className="max-w-md w-full px-6">
             {step === 0 && (
               <>
-                <button
+        <button
                   className="w-full py-4 mb-2 bg-[#d4af37] text-black font-mono text-sm tracking-widest uppercase border border-black rounded-none hover:bg-[#e6c75a] transition-colors"
                   onClick={async () => {
                     setUiError(null);
@@ -442,8 +442,8 @@ export default function CeremonyStepper() {
                     onClick={handleReturnToResults}
                   >
                     CANCEL COMMITMENT
-                  </button>
-                </div>
+        </button>
+      </div>
               </>
             )}
             {step === 3 && (
