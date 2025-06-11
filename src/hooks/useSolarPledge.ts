@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useAccount, useWriteContract, useReadContract, useWalletClient, useWaitForTransactionReceipt } from 'wagmi';
+import { useFrameSDK } from './useFrameSDK';
 
 import { SOLAR_PLEDGE_ADDRESS, USDC_ADDRESS, SolarPledgeABI, USDC_ABI } from '~/lib/contracts';
 
@@ -10,6 +11,7 @@ export function useSolarPledge() {
   const { data: walletClient } = useWalletClient();
   const [txHash, setTxHash] = useState<`0x${string}` | undefined>(undefined);
   const [debugInfo, setDebugInfo] = useState<string | null>(null);
+  const { isInFrame } = useFrameSDK();
 
   // Wait for transaction confirmation
   const { isLoading: isConfirming, isSuccess: isConfirmed, isError: isTxError, error: txError } = useWaitForTransactionReceipt({ hash: txHash });
@@ -43,14 +45,27 @@ export function useSolarPledge() {
     setDebugInfo(null);
     try {
       if (!walletClient) throw new Error("No wallet client available");
-      const hash = await walletClient.writeContract({
-        address: USDC_ADDRESS,
-        abi: USDC_ABI,
-        functionName: 'approve',
-        args: [SOLAR_PLEDGE_ADDRESS, amount],
-      });
-      setDebugInfo(hash ? `Tx Hash: ${hash}` : 'No transaction hash returned');
-      setTxHash(hash);
+      
+      // If in Farcaster frame, use writeContract directly to trigger the frame wallet
+      if (isInFrame) {
+        await writeContract({
+          address: USDC_ADDRESS,
+          abi: USDC_ABI,
+          functionName: 'approve',
+          args: [SOLAR_PLEDGE_ADDRESS, amount],
+        });
+        // The transaction hash will be handled by the useWaitForTransactionReceipt hook
+      } else {
+        // For regular wallets, use the wallet client
+        const hash = await walletClient.writeContract({
+          address: USDC_ADDRESS,
+          abi: USDC_ABI,
+          functionName: 'approve',
+          args: [SOLAR_PLEDGE_ADDRESS, amount],
+        });
+        setDebugInfo(hash ? `Tx Hash: ${hash}` : 'No transaction hash returned');
+        setTxHash(hash);
+      }
     } catch (err) {
       setError(err instanceof Error ? err : new Error('Failed to approve USDC'));
       setDebugInfo(`Error: ${err instanceof Error ? err.message : String(err)}`);
@@ -77,16 +92,34 @@ export function useSolarPledge() {
   const createPledge = async (commitment: string, farcasterHandle: string, pledgeAmount: number) => {
     setError(null);
     setIsLoading(true);
+    setDebugInfo(null);
     try {
-      await writeContract({
-        address: SOLAR_PLEDGE_ADDRESS,
-        abi: SolarPledgeABI,
-        functionName: 'createPledge',
-        args: [commitment, farcasterHandle, BigInt(pledgeAmount * 1_000_000)],
-      });
+      if (!walletClient) throw new Error("No wallet client available");
+
+      // If in Farcaster frame, use writeContract directly to trigger the frame wallet
+      if (isInFrame) {
+        await writeContract({
+          address: SOLAR_PLEDGE_ADDRESS,
+          abi: SolarPledgeABI,
+          functionName: 'createPledge',
+          args: [commitment, farcasterHandle, BigInt(pledgeAmount * 1_000_000)],
+        });
+        // The transaction hash will be handled by the useWaitForTransactionReceipt hook
+      } else {
+        // For regular wallets, use the wallet client
+        const hash = await walletClient.writeContract({
+          address: SOLAR_PLEDGE_ADDRESS,
+          abi: SolarPledgeABI,
+          functionName: 'createPledge',
+          args: [commitment, farcasterHandle, BigInt(pledgeAmount * 1_000_000)],
+        });
+        setDebugInfo(hash ? `Tx Hash: ${hash}` : 'No transaction hash returned');
+        setTxHash(hash);
+      }
       await refetchPledged();
     } catch (err) {
       setError(err instanceof Error ? err : new Error('Failed to create pledge'));
+      setDebugInfo(`Error: ${err instanceof Error ? err.message : String(err)}`);
     } finally {
       setIsLoading(false);
     }
