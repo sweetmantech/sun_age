@@ -46,16 +46,20 @@ export function useSolarPledge() {
     try {
       if (!walletClient) throw new Error("No wallet client available");
       
+      setDebugInfo(`Starting USDC approval for amount: ${amount}`);
       // If in Farcaster frame, use writeContract directly to trigger the frame wallet
       if (isInFrame) {
+        setDebugInfo('In Farcaster frame, using writeContract directly');
         await writeContract({
           address: USDC_ADDRESS,
           abi: USDC_ABI,
           functionName: 'approve',
           args: [SOLAR_PLEDGE_ADDRESS, amount],
         });
+        setDebugInfo('writeContract called successfully');
         // The transaction hash will be handled by the useWaitForTransactionReceipt hook
       } else {
+        setDebugInfo('Using wallet client for approval');
         // For regular wallets, use the wallet client
         const hash = await walletClient.writeContract({
           address: USDC_ADDRESS,
@@ -68,7 +72,7 @@ export function useSolarPledge() {
       }
     } catch (err) {
       setError(err instanceof Error ? err : new Error('Failed to approve USDC'));
-      setDebugInfo(`Error: ${err instanceof Error ? err.message : String(err)}`);
+      setDebugInfo(`Error in approveUSDC: ${err instanceof Error ? err.message : String(err)}`);
       setIsLoading(false);
     }
   };
@@ -76,6 +80,7 @@ export function useSolarPledge() {
   // Effect: when transaction is confirmed, refetch allowance and update state
   React.useEffect(() => {
     if (isConfirmed && txHash) {
+      setDebugInfo(`Transaction confirmed: ${txHash}`);
       refetchAllowance();
       setAllowanceAmount(BigInt(0)); // Optionally update this based on new allowance
       setIsLoading(false);
@@ -83,6 +88,7 @@ export function useSolarPledge() {
     }
     if (isTxError && txError) {
       setError(txError instanceof Error ? txError : new Error('Transaction failed'));
+      setDebugInfo(`Transaction error: ${txError instanceof Error ? txError.message : String(txError)}`);
       setIsLoading(false);
       setTxHash(undefined);
     }
@@ -96,16 +102,20 @@ export function useSolarPledge() {
     try {
       if (!walletClient) throw new Error("No wallet client available");
 
+      setDebugInfo(`Starting pledge creation for amount: ${pledgeAmount}`);
       // If in Farcaster frame, use writeContract directly to trigger the frame wallet
       if (isInFrame) {
+        setDebugInfo('In Farcaster frame, using writeContract for pledge');
         await writeContract({
           address: SOLAR_PLEDGE_ADDRESS,
           abi: SolarPledgeABI,
           functionName: 'createPledge',
           args: [commitment, farcasterHandle, BigInt(pledgeAmount * 1_000_000)],
         });
+        setDebugInfo('writeContract for pledge called successfully');
         // The transaction hash will be handled by the useWaitForTransactionReceipt hook
       } else {
+        setDebugInfo('Using wallet client for pledge');
         // For regular wallets, use the wallet client
         const hash = await walletClient.writeContract({
           address: SOLAR_PLEDGE_ADDRESS,
@@ -113,13 +123,13 @@ export function useSolarPledge() {
           functionName: 'createPledge',
           args: [commitment, farcasterHandle, BigInt(pledgeAmount * 1_000_000)],
         });
-        setDebugInfo(hash ? `Tx Hash: ${hash}` : 'No transaction hash returned');
+        setDebugInfo(hash ? `Pledge Tx Hash: ${hash}` : 'No pledge transaction hash returned');
         setTxHash(hash);
       }
       await refetchPledged();
     } catch (err) {
       setError(err instanceof Error ? err : new Error('Failed to create pledge'));
-      setDebugInfo(`Error: ${err instanceof Error ? err.message : String(err)}`);
+      setDebugInfo(`Error in createPledge: ${err instanceof Error ? err.message : String(err)}`);
     } finally {
       setIsLoading(false);
     }
@@ -128,8 +138,11 @@ export function useSolarPledge() {
   // Check if approved for the current pledge amount
   const isApproved = (amount: number) => {
     if (typeof allowance === 'bigint') {
-      return allowance >= BigInt(amount * 1_000_000);
+      const isApproved = allowance >= BigInt(amount * 1_000_000);
+      setDebugInfo(`Checking approval: amount=${amount}, allowance=${allowance}, isApproved=${isApproved}`);
+      return isApproved;
     }
+    setDebugInfo('No allowance data available');
     return false;
   };
 
