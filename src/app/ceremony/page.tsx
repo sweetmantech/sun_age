@@ -107,8 +107,24 @@ export default function CeremonyStepper() {
   // Handle pledge creation
   const handlePledge = async () => {
     if (!address) {
-      alert("Please connect your wallet first");
-      return;
+      if (isInFrame && farcasterConnector) {
+        try {
+          await connect({ connector: farcasterConnector });
+        } catch (err) {
+          setUiError("Failed to connect Farcaster wallet. Please try again.");
+          return;
+        }
+      } else if (!isInFrame && injectedConnector) {
+        try {
+          await connect({ connector: injectedConnector });
+        } catch (err) {
+          setUiError("Failed to connect wallet. Please try again.");
+          return;
+        }
+      } else {
+        setUiError("No suitable wallet connector found. Please use Farcaster or a browser wallet.");
+        return;
+      }
     }
 
     try {
@@ -416,6 +432,7 @@ export default function CeremonyStepper() {
                   <div className="w-full border border-yellow-300 bg-yellow-50 text-yellow-700 rounded-none p-3 font-mono text-xs text-left mb-4">
                     {debugInfo && <div>{debugInfo}</div>}
                     {allowance != null && <div>Allowance: {allowance.toString()}</div>}
+                    {isApproved(pledge) && !isLoading && <div className="mt-2">✅ USDC approved! Click the button above to seal your vow.</div>}
                   </div>
                 )}
                 <button
@@ -427,7 +444,7 @@ export default function CeremonyStepper() {
                     ? (!isApproved(pledge) ? "Waiting for wallet..." : "Sealing your vow...")
                     : !isApproved(pledge)
                       ? "APPROVE USDC"
-                      : `SEAL VOW WITH $${pledge} SOLAR ENERGY`}
+                      : `CLICK TO SEAL VOW WITH $${pledge} SOLAR ENERGY`}
                 </button>
                 <div className="flex w-full items-center justify-between gap-0 mt-0 mb-6">
                   <button
