@@ -8,16 +8,19 @@ export function useSolarPledge() {
   const { address } = useAccount();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
+  const [isApprovalPending, setIsApprovalPending] = useState(false);
+  const [isApprovalConfirmed, setIsApprovalConfirmed] = useState(false);
   const { data: walletClient } = useWalletClient();
   const [txHash, setTxHash] = useState<`0x${string}` | undefined>(undefined);
   const [debugInfo, setDebugInfo] = useState<string | null>(null);
   const { isInFrame } = useFrameSDK();
+  const { writeContract } = useWriteContract();
 
   // Wait for transaction confirmation
   const { isLoading: isConfirming, isSuccess: isConfirmed, isError: isTxError, error: txError } = useWaitForTransactionReceipt({ hash: txHash });
 
   // Write contract for pledge
-  const { writeContract, isPending: isPledgePending } = useWriteContract();
+  const { isPending: isPledgePending } = useWriteContract();
 
   // Read USDC allowance
   const [allowanceAmount, setAllowanceAmount] = useState<bigint>(BigInt(0));
@@ -40,17 +43,22 @@ export function useSolarPledge() {
 
   // Approve USDC for a given amount
   const approveUSDC = async (amount: bigint) => {
+    if (!walletClient && !isInFrame) {
+      setError(new Error("No wallet client available"));
+      return;
+    }
+
     setError(null);
     setIsLoading(true);
+    setIsApprovalPending(true);
+    setIsApprovalConfirmed(false);
     setDebugInfo(null);
     try {
-      if (!walletClient) throw new Error("No wallet client available");
-      
       setDebugInfo(`Starting USDC approval for amount: ${amount}`);
       // If in Farcaster frame, use writeContract directly to trigger the frame wallet
       if (isInFrame) {
         setDebugInfo('In Farcaster frame, using writeContract directly');
-        await writeContract({
+        const result = await writeContract({
           address: USDC_ADDRESS,
           abi: USDC_ABI,
           functionName: 'approve',
@@ -61,6 +69,12 @@ export function useSolarPledge() {
       } else {
         setDebugInfo('Using wallet client for approval');
         // For regular wallets, use the wallet client
+        if (!walletClient) {
+          setError(new Error("No wallet client available"));
+          setIsLoading(false);
+          setIsApprovalPending(false);
+          return;
+        }
         const hash = await walletClient.writeContract({
           address: USDC_ADDRESS,
           abi: USDC_ABI,
@@ -74,6 +88,7 @@ export function useSolarPledge() {
       setError(err instanceof Error ? err : new Error('Failed to approve USDC'));
       setDebugInfo(`Error in approveUSDC: ${err instanceof Error ? err.message : String(err)}`);
       setIsLoading(false);
+      setIsApprovalPending(false);
     }
   };
 
@@ -84,29 +99,40 @@ export function useSolarPledge() {
       refetchAllowance();
       setAllowanceAmount(BigInt(0)); // Optionally update this based on new allowance
       setIsLoading(false);
+      setIsApprovalPending(false);
+      setIsApprovalConfirmed(true);
       setTxHash(undefined);
     }
     if (isTxError && txError) {
       setError(txError instanceof Error ? txError : new Error('Transaction failed'));
       setDebugInfo(`Transaction error: ${txError instanceof Error ? txError.message : String(txError)}`);
       setIsLoading(false);
+      setIsApprovalPending(false);
       setTxHash(undefined);
     }
   }, [isConfirmed, isTxError, txError, txHash, refetchAllowance]);
 
   // Create pledge (records vow and pledge onchain)
   const createPledge = async (commitment: string, farcasterHandle: string, pledgeAmount: number) => {
+    if (!isApprovalConfirmed) {
+      setError(new Error('Please wait for USDC approval to complete'));
+      return;
+    }
+
+    if (!walletClient && !isInFrame) {
+      setError(new Error("No wallet client available"));
+      return;
+    }
+
     setError(null);
     setIsLoading(true);
     setDebugInfo(null);
     try {
-      if (!walletClient) throw new Error("No wallet client available");
-
       setDebugInfo(`Starting pledge creation for amount: ${pledgeAmount}`);
       // If in Farcaster frame, use writeContract directly to trigger the frame wallet
       if (isInFrame) {
         setDebugInfo('In Farcaster frame, using writeContract for pledge');
-        await writeContract({
+        const result = await writeContract({
           address: SOLAR_PLEDGE_ADDRESS,
           abi: SolarPledgeABI,
           functionName: 'createPledge',
@@ -117,6 +143,11 @@ export function useSolarPledge() {
       } else {
         setDebugInfo('Using wallet client for pledge');
         // For regular wallets, use the wallet client
+        if (!walletClient) {
+          setError(new Error("No wallet client available"));
+          setIsLoading(false);
+          return;
+        }
         const hash = await walletClient.writeContract({
           address: SOLAR_PLEDGE_ADDRESS,
           abi: SolarPledgeABI,
@@ -130,7 +161,6 @@ export function useSolarPledge() {
     } catch (err) {
       setError(err instanceof Error ? err : new Error('Failed to create pledge'));
       setDebugInfo(`Error in createPledge: ${err instanceof Error ? err.message : String(err)}`);
-    } finally {
       setIsLoading(false);
     }
   };
@@ -146,6 +176,13 @@ export function useSolarPledge() {
     return false;
   };
 
+  // Effect: refetch allowance when address changes
+  React.useEffect(() => {
+    if (address) {
+      refetchAllowance();
+    }
+  }, [address, refetchAllowance]);
+
   return {
     approveUSDC,
     createPledge,
@@ -155,5 +192,7 @@ export function useSolarPledge() {
     hasPledged,
     debugInfo,
     allowance,
+    isApprovalPending,
+    isApprovalConfirmed,
   };
 } 
