@@ -190,30 +190,34 @@ export default function ResultsPage() {
       )}
       {/* Floating Dev Toggle Button */}
       <div style={{ position: 'fixed', bottom: 24, right: 24, zIndex: 1100 }}>
-        <button
-          aria-label="Show Dev Toggle"
-          onClick={() => setShowDevPopover((v) => !v)}
-          className="w-12 h-12 rounded-full bg-black text-white flex items-center justify-center shadow-lg focus:outline-none focus:ring-2 focus:ring-yellow-400"
-          style={{ fontSize: 24 }}
-        >
-          <span>⚙️</span>
-        </button>
-        {showDevPopover && (
-          <div className="absolute bottom-14 right-0 bg-white border border-gray-300 rounded shadow-lg p-4 min-w-[220px] flex flex-col items-start" style={{ zIndex: 1200 }}>
-            <label className="font-mono text-xs mb-2">Show Farcaster Commit Button (dev):</label>
-            <input
-              type="checkbox"
-              checked={devShowCommit}
-              onChange={e => setDevShowCommit(e.target.checked)}
-              className="mr-2"
-            />
+        {process.env.NODE_ENV === 'development' && (
+          <>
             <button
-              className="mt-2 text-xs text-gray-500 underline"
-              onClick={() => setShowDevPopover(false)}
+              aria-label="Show Dev Toggle"
+              onClick={() => setShowDevPopover((v) => !v)}
+              className="w-12 h-12 rounded-full bg-black text-white flex items-center justify-center shadow-lg focus:outline-none focus:ring-2 focus:ring-yellow-400"
+              style={{ fontSize: 24 }}
             >
-              Close
+              <span>⚙️</span>
             </button>
-          </div>
+            {showDevPopover && (
+              <div className="absolute bottom-14 right-0 bg-white border border-gray-300 rounded shadow-lg p-4 min-w-[220px] flex flex-col items-start" style={{ zIndex: 1200 }}>
+                <label className="font-mono text-xs mb-2">Show Farcaster Commit Button (dev):</label>
+                <input
+                  type="checkbox"
+                  checked={devShowCommit}
+                  onChange={e => setDevShowCommit(e.target.checked)}
+                  className="mr-2"
+                />
+                <button
+                  className="mt-2 text-xs text-gray-500 underline"
+                  onClick={() => setShowDevPopover(false)}
+                >
+                  Close
+                </button>
+              </div>
+            )}
+          </>
         )}
       </div>
       {/* Local Footer (copied from main page) */}
