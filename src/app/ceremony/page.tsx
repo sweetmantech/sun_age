@@ -18,7 +18,7 @@ export default function CeremonyStepper() {
   const searchParams = useSearchParams();
   const { context, isInFrame } = useFrameSDK();
   const { address } = useAccount();
-  const { approveUSDC, createPledge, isApproved, isLoading, error, hasPledged, debugInfo, allowance } = useSolarPledge();
+  const { approveUSDC, createPledge, isApproved, isLoading, error, hasPledged, debugInfo, allowance, isApprovalPending, isApprovalConfirmed } = useSolarPledge();
   const { connect, connectors, isPending: isConnecting } = useConnect();
   const [uiError, setUiError] = useState<string | null>(null);
 
@@ -432,16 +432,16 @@ export default function CeremonyStepper() {
                   <div className="w-full border border-yellow-300 bg-yellow-50 text-yellow-700 rounded-none p-3 font-mono text-xs text-left mb-4">
                     {debugInfo && <div>{debugInfo}</div>}
                     {allowance != null && <div>Allowance: {allowance.toString()}</div>}
-                    {isApproved(pledge) && !isLoading && <div className="mt-2">✅ USDC approved! Click the button above to seal your vow.</div>}
+                    {isApprovalConfirmed && !isLoading && <div className="mt-2">✅ USDC approved! Click the button above to seal your vow.</div>}
                   </div>
                 )}
                 <button
                   className="w-full py-4 mb-4 bg-[#d4af37] text-black font-mono text-sm tracking-widest uppercase border border-black rounded-none hover:bg-[#e6c75a] transition-colors"
                   onClick={handlePledge}
-                  disabled={isLoading}
+                  disabled={isLoading || isApprovalPending}
                 >
                   {isLoading
-                    ? (!isApproved(pledge) ? "Waiting for wallet..." : "Sealing your vow...")
+                    ? (isApprovalPending ? "Waiting for approval..." : "Sealing your vow...")
                     : !isApproved(pledge)
                       ? "APPROVE USDC"
                       : `CLICK TO SEAL VOW WITH $${pledge} SOLAR ENERGY`}
