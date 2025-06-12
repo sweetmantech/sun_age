@@ -17,16 +17,21 @@ export function useFrameSDK() {
 
   // Initialize SDK and check frame context
   useEffect(() => {
+    let mounted = true;
+
     const initSDK = async () => {
       if (typeof window === "undefined") return;
 
       try {
         // Initialize SDK
         await sdk.actions.ready({ disableNativeGestures: true });
+        if (!mounted) return;
         setIsSDKLoaded(true);
 
         // Check frame context
         const frameContext = await sdk.context;
+        if (!mounted) return;
+        
         if (frameContext) {
           setIsInFrame(true);
           setContext(frameContext);
@@ -36,37 +41,60 @@ export function useFrameSDK() {
         // Set up frameSDK event listeners
         const frameSDK = (window as any).frameSDK;
         if (frameSDK) {
-          frameSDK.on("frameAdded", () => setIsFramePinned(true));
-          frameSDK.on("frameRemoved", () => setIsFramePinned(false));
+          frameSDK.on("frameAdded", () => {
+            if (mounted) setIsFramePinned(true);
+          });
+          frameSDK.on("frameRemoved", () => {
+            if (mounted) setIsFramePinned(false);
+          });
         }
       } catch (err) {
         console.error("Error initializing SDK:", err);
-        setError(err instanceof Error ? err : new Error(String(err)));
+        if (mounted) {
+          setError(err instanceof Error ? err : new Error(String(err)));
+        }
       }
     };
 
     initSDK();
+
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   // Separate effect for wallet connection
   useEffect(() => {
+    let mounted = true;
+
     const connectWallet = async () => {
-      if (!isSDKLoaded || isConnected || connectors.length === 0) return;
+      // Only auto-connect if we're in a frame and have a Farcaster connector
+      const farcasterConnector = connectors.find(
+        (c) => c.id === "farcaster" || c.name.toLowerCase().includes("frame")
+      );
+      
+      if (!isSDKLoaded || isConnected || !isInFrame || !farcasterConnector) return;
 
       try {
-        setLoading(true);
-        setError(null);
-        await connect({ connector: connectors[0] });
+        if (mounted) setLoading(true);
+        if (mounted) setError(null);
+        await connect({ connector: farcasterConnector });
       } catch (err) {
         console.error("Error connecting wallet:", err);
-        setError(err instanceof Error ? err : new Error(String(err)));
+        if (mounted) {
+          setError(err instanceof Error ? err : new Error(String(err)));
+        }
       } finally {
-        setLoading(false);
+        if (mounted) setLoading(false);
       }
     };
 
     connectWallet();
-  }, [isSDKLoaded, isConnected, connect, connectors]);
+
+    return () => {
+      mounted = false;
+    };
+  }, [isSDKLoaded, isConnected, isInFrame, connect, connectors]);
 
   // Pin frame function
   const pinFrame = useCallback(async () => {

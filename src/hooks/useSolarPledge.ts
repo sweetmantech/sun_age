@@ -1,8 +1,18 @@
 import React, { useState } from 'react';
-import { useAccount, useWriteContract, useReadContract, useWalletClient, useWaitForTransactionReceipt } from 'wagmi';
+import { useAccount, useWriteContract, useReadContract, useWalletClient, useWaitForTransactionReceipt, usePublicClient } from 'wagmi';
 import { useFrameSDK } from './useFrameSDK';
+import { stringToBytes, bytesToHex } from 'viem';
 
 import { SOLAR_PLEDGE_ADDRESS, USDC_ADDRESS, SolarPledgeABI, USDC_ABI } from '~/lib/contracts';
+
+// Utility to encode a string as bytes32 (like Solidity's stringToBytes32)
+function encodeBytes32String(str: string): `0x${string}` {
+  const bytes = stringToBytes(str);
+  if (bytes.length > 32) throw new Error('String too long for bytes32');
+  const padded = new Uint8Array(32);
+  padded.set(bytes);
+  return bytesToHex(padded);
+}
 
 export function useSolarPledge() {
   const { address } = useAccount();
@@ -15,6 +25,7 @@ export function useSolarPledge() {
   const [debugInfo, setDebugInfo] = useState<string | null>(null);
   const { isInFrame } = useFrameSDK();
   const { writeContract } = useWriteContract();
+  const publicClient = usePublicClient();
 
   // Wait for transaction confirmation
   const { isLoading: isConfirming, isSuccess: isConfirmed, isError: isTxError, error: txError } = useWaitForTransactionReceipt({ hash: txHash });
@@ -113,36 +124,54 @@ export function useSolarPledge() {
   }, [isConfirmed, isTxError, txError, txHash, refetchAllowance]);
 
   // Create pledge (records vow and pledge onchain)
-  const createPledge = async (commitment: string, farcasterHandle: string, pledgeAmount: number) => {
+  const createPledge = async (commitment: string, farcasterHandle: string, pledgeAmount: number, birthDate?: Date) => {
     if (!isApprovalConfirmed) {
       setError(new Error('Please wait for USDC approval to complete'));
       return;
     }
-
     if (!walletClient && !isInFrame) {
       setError(new Error("No wallet client available"));
       return;
     }
-
     setError(null);
     setIsLoading(true);
     setDebugInfo(null);
     try {
       setDebugInfo(`Starting pledge creation for amount: ${pledgeAmount}`);
-      // If in Farcaster frame, use writeContract directly to trigger the frame wallet
+      // Convert Farcaster handle to bytes32
+      const farcasterHandleBytes32 = encodeBytes32String(farcasterHandle);
+      // Check if birth date is set onchain
+      if (publicClient && address && birthDate) {
+        const userBirthTimestamp = await publicClient.readContract({
+          address: SOLAR_PLEDGE_ADDRESS,
+          abi: SolarPledgeABI,
+          functionName: 'userBirthTimestamp',
+          args: [address],
+        }) as bigint;
+        if (userBirthTimestamp === 0n) {
+          setDebugInfo('Setting birth date onchain...');
+          const birthTimestamp = Math.floor(birthDate.getTime() / 1000);
+          await walletClient!.writeContract({
+            address: SOLAR_PLEDGE_ADDRESS,
+            abi: SolarPledgeABI,
+            functionName: 'setBirthDate',
+            args: [BigInt(birthTimestamp)],
+          });
+          setDebugInfo('Birth date set onchain.');
+        }
+      }
+      // Continue with pledge
       if (isInFrame) {
         setDebugInfo('In Farcaster frame, using writeContract for pledge');
         const result = await writeContract({
           address: SOLAR_PLEDGE_ADDRESS,
           abi: SolarPledgeABI,
           functionName: 'createPledge',
-          args: [commitment, farcasterHandle, BigInt(pledgeAmount * 1_000_000)],
+          args: [commitment, farcasterHandleBytes32, BigInt(pledgeAmount * 1_000_000)],
         });
         setDebugInfo('writeContract for pledge called successfully');
-        // The transaction hash will be handled by the useWaitForTransactionReceipt hook
       } else {
         setDebugInfo('Using wallet client for pledge');
-        // For regular wallets, use the wallet client
         if (!walletClient) {
           setError(new Error("No wallet client available"));
           setIsLoading(false);
@@ -152,7 +181,7 @@ export function useSolarPledge() {
           address: SOLAR_PLEDGE_ADDRESS,
           abi: SolarPledgeABI,
           functionName: 'createPledge',
-          args: [commitment, farcasterHandle, BigInt(pledgeAmount * 1_000_000)],
+          args: [commitment, farcasterHandleBytes32, BigInt(pledgeAmount * 1_000_000)],
         });
         setDebugInfo(hash ? `Pledge Tx Hash: ${hash}` : 'No pledge transaction hash returned');
         setTxHash(hash);
@@ -168,11 +197,8 @@ export function useSolarPledge() {
   // Check if approved for the current pledge amount
   const isApproved = (amount: number) => {
     if (typeof allowance === 'bigint') {
-      const isApproved = allowance >= BigInt(amount * 1_000_000);
-      setDebugInfo(`Checking approval: amount=${amount}, allowance=${allowance}, isApproved=${isApproved}`);
-      return isApproved;
+      return allowance >= BigInt(amount * 1_000_000);
     }
-    setDebugInfo('No allowance data available');
     return false;
   };
 

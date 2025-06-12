@@ -22,30 +22,47 @@ export default function CeremonyStepper() {
   const { connect, connectors, isPending: isConnecting } = useConnect();
   const [uiError, setUiError] = useState<string | null>(null);
 
-  // Try to get solar age and birthDate from URL params
+  // Use params directly for initial values
   const urlDays = searchParams?.get('days');
   const urlBirthDate = searchParams?.get('birthDate');
+  const urlApproxYears = searchParams?.get('approxYears');
 
-  // Try to get from bookmark/localStorage
-  let bookmark: any = null;
-  if (typeof window !== 'undefined') {
-    const saved = localStorage.getItem('sunCycleBookmark');
-    if (saved) {
-      try { bookmark = JSON.parse(saved); } catch {}
-    }
-  }
-
-  // Determine solar age and birthDate
-  const solAge = urlDays ? Number(urlDays) : bookmark?.days;
-  const birthDate = urlBirthDate || bookmark?.birthDate;
-
-  // Fallback: if not available, prompt user to recalculate
   useEffect(() => {
-    if (!solAge || !birthDate) {
+    let bookmark: any = null;
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('sunCycleBookmark');
+      if (saved) {
+        try { bookmark = JSON.parse(saved); } catch {}
+      }
+    }
+    // Always prioritize URL params, fallback to bookmark
+    const days = urlDays ? Number(urlDays) : bookmark?.days;
+    const birth = urlBirthDate || bookmark?.birthDate;
+    const approx = urlApproxYears ? Number(urlApproxYears) : bookmark?.approxYears || (days ? Math.floor(days / 365.25) : undefined);
+  }, [searchParams]);
+
+  // Fallback: if not available, prompt user to recalculate (use params directly)
+  useEffect(() => {
+    if (!urlDays || !urlBirthDate) {
       alert('No calculation data found. Please calculate your Sol Age first.');
       router.push('/');
     }
-  }, [solAge, birthDate, router]);
+  }, [urlDays, urlBirthDate, router]);
+
+  // After a successful pledge, automatically bookmark solAge
+  const autoBookmark = React.useCallback(() => {
+    if (urlDays && urlBirthDate && urlApproxYears) {
+      const now = new Date();
+      const data = {
+        days: urlDays ? Number(urlDays) : undefined,
+        approxYears: urlApproxYears ? Number(urlApproxYears) : undefined,
+        birthDate: urlBirthDate,
+        lastVisitDays: urlDays ? Number(urlDays) : undefined,
+        lastVisitDate: now.toISOString(),
+      };
+      localStorage.setItem('sunCycleBookmark', JSON.stringify(data));
+    }
+  }, [urlDays, urlBirthDate, urlApproxYears]);
 
   // Today's date
   const today = new Date().toLocaleDateString('en-US', { year: 'numeric', month: '2-digit', day: '2-digit' }).replace(/\//g, ".");
@@ -54,7 +71,7 @@ export default function CeremonyStepper() {
   const fid = context?.user?.fid;
 
   // Dynamic signature message
-  const signatureMsg = `I inscribe this Solar Vow into eternity: FID ${fid ?? '...'} has completed ${solAge?.toLocaleString() ?? '...'} rotations around our star, sealed by cosmic signature on ${today}`;
+  const signatureMsg = `I inscribe this Solar Vow into eternity: FID ${fid ?? '...'} has completed ${urlDays ? urlDays.toLocaleString() : '...'} rotations around our star, sealed by cosmic signature on ${today}`;
 
   // Placeholder data (replace with real data/props)
   const [pledge, setPledge] = useState(5);
@@ -71,9 +88,9 @@ export default function CeremonyStepper() {
   const next = () => setStep((s) => Math.min(s + 1, steps.length - 1));
   const prev = () => setStep((s) => Math.max(s - 1, 0));
   const cancel = () => {
-    if (solAge && birthDate) {
-      const approxYears = Math.floor(solAge / 365.25);
-      router.push(`/results?days=${solAge}&birthDate=${birthDate}&approxYears=${approxYears}`);
+    if (urlDays && urlBirthDate) {
+      const approxYears = Math.floor(urlDays ? Number(urlDays) : 0 / 365.25);
+      router.push(`/results?days=${urlDays}&birthDate=${urlBirthDate}&approxYears=${approxYears}`);
     } else {
       router.push('/');
     }
@@ -82,9 +99,9 @@ export default function CeremonyStepper() {
   // Handler for returning to results with fallback logic
   const handleReturnToResults = () => {
     // Try in-memory data first
-    if (solAge && birthDate) {
-      const approxYears = Math.floor(solAge / 365.25);
-      router.push(`/results?days=${solAge}&birthDate=${birthDate}&approxYears=${approxYears}`);
+    if (urlDays && urlBirthDate) {
+      const approxYears = Math.floor(urlDays ? Number(urlDays) : 0 / 365.25);
+      router.push(`/results?days=${urlDays}&birthDate=${urlBirthDate}&approxYears=${approxYears}`);
       return;
     }
     // Fallback to localStorage
@@ -135,7 +152,13 @@ export default function CeremonyStepper() {
         return; // Wait for user to click again to seal
       }
       // Then create the pledge
-      await createPledge(commitment, farcasterHandle, pledge);
+      await createPledge(
+        commitment,
+        farcasterHandle,
+        pledge,
+        urlBirthDate ? new Date(urlBirthDate) : undefined
+      );
+      autoBookmark(); // <-- Automatically bookmark after successful pledge
       next(); // Move to next step on success
     } catch (err) {
       setUiError(err instanceof Error ? err.message : "Failed to process transaction");
@@ -200,15 +223,15 @@ export default function CeremonyStepper() {
                   <div className="text-xs font-mono text-gray-500 mb-2 uppercase tracking-widest">Your Cosmic Journey Thus Far</div>
                   <div className="flex items-center justify-center gap-2 mb-1">
                     <span className="text-2xl">⭐</span>
-                    <span className="text-3xl font-serif font-bold">{solAge ? solAge.toLocaleString() : ""}</span>
+                    <span className="text-3xl font-serif font-bold">{urlDays ? urlDays.toLocaleString() : ""}</span>
                     <span className="text-2xl">⭐</span>
                   </div>
-                  <div className="text-xs font-mono text-gray-500 mb-2">Solar rotations since {birthDate}</div>
+                  <div className="text-xs font-mono text-gray-500 mb-2">Solar rotations since {urlBirthDate}</div>
                 </div>
                 {/* Commitment Callout */}
                 <div className="w-full border border-gray-300 rounded-none p-4 mb-0">
                   <div className="text-xs font-mono text-gray-700 mb-2 uppercase tracking-widest font-bold">The Commitment</div>
-                  <div className="text-sm font-mono text-gray-700">A Solar Vow is a sacred commitment to your cosmic journey, inscribed permanently in the celestial record.<br /><br />At <span className="font-bold">{solAge?.toLocaleString()}</span> rotations around our star, you&apos;re ready to make your mark on the universe.</div>
+                  <div className="text-sm font-mono text-gray-700">A Solar Vow is a sacred commitment to your cosmic journey, inscribed permanently in the celestial record.<br /><br />At <span className="font-bold">{urlDays ? urlDays.toLocaleString() : ""}</span> rotations around our star, you&apos;re ready to make your mark on the universe.</div>
                 </div>
               </div>
             </>
@@ -301,7 +324,7 @@ export default function CeremonyStepper() {
                   <div className="flex flex-col items-center mb-2">
                     <div className="text-3xl font-serif font-bold mb-1 flex items-center gap-2" style={{ color: '#15803D' }}>
                       <span>⭐</span>
-                      <span>{solAge?.toLocaleString()}</span>
+                      <span>{urlDays ? urlDays.toLocaleString() : ""}</span>
                       <span>⭐</span>
                     </div>
                     <div className="text-xs font-mono uppercase mb-2 text-center" style={{ color: '#15803D', letterSpacing: '0.08em' }}>

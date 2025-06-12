@@ -152,25 +152,33 @@ export default function ResultsPage() {
               onClick={() => {
                 setShowCeremonyModal(false);
                 // Try to get from URL params first
-                if (days && birthDate && approxYears) {
-                  router.push(`/ceremony?days=${days}&birthDate=${birthDate}&approxYears=${approxYears}`);
-                  return;
-                }
-                // Fallback to localStorage
-                if (typeof window !== 'undefined') {
+                let targetDays = days;
+                let targetBirthDate = birthDate;
+                let targetApproxYears = approxYears;
+                console.log('[Ceremony Modal] Initial:', { days, birthDate, approxYears });
+                if ((!targetDays || !targetBirthDate || !targetApproxYears) && typeof window !== 'undefined') {
                   const saved = localStorage.getItem('sunCycleBookmark');
                   if (saved) {
                     try {
                       const bookmark = JSON.parse(saved);
                       if (bookmark.days && bookmark.birthDate && bookmark.approxYears) {
-                        router.push(`/ceremony?days=${bookmark.days}&birthDate=${bookmark.birthDate}&approxYears=${bookmark.approxYears}`);
-                        return;
+                        targetDays = bookmark.days;
+                        targetBirthDate = bookmark.birthDate;
+                        targetApproxYears = bookmark.approxYears;
+                        console.log('[Ceremony Modal] Fallback to bookmark:', { days: bookmark.days, birthDate: bookmark.birthDate, approxYears: bookmark.approxYears });
                       }
-                    } catch {}
+                    } catch (e) {
+                      console.error('[Ceremony Modal] Error parsing bookmark:', e);
+                    }
                   }
                 }
-                // Final fallback
-                router.push('/');
+                if (targetDays && targetBirthDate && targetApproxYears) {
+                  console.log('[Ceremony Modal] Navigating to /ceremony with:', { days: targetDays, birthDate: targetBirthDate, approxYears: targetApproxYears });
+                  router.push(`/ceremony?days=${targetDays}&birthDate=${targetBirthDate}&approxYears=${targetApproxYears}`);
+                } else {
+                  alert('No calculation data found. Please calculate your Sol Age first.');
+                  router.push('/');
+                }
               }}
             >
               I WANT TO TAKE A VOW
