@@ -18,7 +18,7 @@ export default function CeremonyStepper() {
   const searchParams = useSearchParams();
   const { context, isInFrame } = useFrameSDK();
   const { address } = useAccount();
-  const { approveUSDC, createPledge, isApproved, isLoading, error, hasPledged, debugInfo, allowance, isApprovalPending, isApprovalConfirmed } = useSolarPledge();
+  const { approveUSDC, createPledge, isApproved, isLoading, error, hasPledged, debugInfo, allowance, isApprovalPending, isApprovalConfirmed, isPledgeConfirmed } = useSolarPledge();
   const { connect, connectors, isPending: isConnecting } = useConnect();
   const [uiError, setUiError] = useState<string | null>(null);
 
@@ -152,7 +152,7 @@ export default function CeremonyStepper() {
     try {
       console.log('Starting pledge process');
       setUiError(null);
-      
+
       // First approve USDC if not already approved
       if (!isApproved(pledge)) {
         console.log('USDC not approved, requesting approval');
@@ -165,13 +165,18 @@ export default function CeremonyStepper() {
       console.log('USDC already approved, creating pledge');
 
       // Create the pledge with the pre-defined signature message and FID
+      const farcasterIdentifier = `fid:${fid}`;
+      console.log('Creating pledge with Farcaster identifier:', farcasterIdentifier);
+      
+      // Create the pledge and wait for it to complete
       await createPledge(
         signatureMsg,
-        `fid:${fid}`, // Use FID from context
+        farcasterIdentifier,
         pledge,
         urlBirthDate ? new Date(urlBirthDate) : undefined
       );
       
+      // If we get here, the pledge was successful
       console.log('Pledge created successfully');
       autoBookmark(); // <-- Automatically bookmark after successful pledge
       next(); // Move to next step on success
@@ -460,10 +465,20 @@ export default function CeremonyStepper() {
             )}
             {step === 2 && (
               <>
-                {/* Error Callout */}
-                {(uiError || error) && (
-                  <div className="w-full border border-red-300 bg-red-50 text-red-700 rounded-none p-3 font-mono text-sm text-left mb-4">
-                    {uiError || (error && error.message)}
+                {/* Error Message */}
+                {uiError && (
+                  <div className="w-full border border-red-200 bg-red-50 rounded-none p-4 mb-4 text-red-700 relative" style={{ fontSize: '0.85rem', minHeight: '48px' }}>
+                    <button
+                      onClick={() => setUiError(null)}
+                      className="absolute top-2 right-2 text-red-500 hover:text-red-700 z-10"
+                      style={{ fontSize: '1.2em', lineHeight: 1 }}
+                      aria-label="Dismiss error"
+                    >
+                      ✕
+                    </button>
+                    <div style={{ maxHeight: '120px', overflowY: 'auto', wordBreak: 'break-word', whiteSpace: 'pre-line', paddingRight: '2em' }}>
+                      {uiError}
+                    </div>
                   </div>
                 )}
                 {/* Debug Info Callout */}

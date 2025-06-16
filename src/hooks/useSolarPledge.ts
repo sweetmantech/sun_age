@@ -122,11 +122,16 @@ export function useSolarPledge() {
 
   // Create pledge (records vow and pledge onchain)
   const createPledge = async (commitment: string, farcasterHandle: string, pledgeAmount: number, birthDate?: Date) => {
+    console.log('createPledge called with:', { commitment, farcasterHandle, pledgeAmount, birthDate });
+    console.log('Current state:', { isApprovalConfirmed, isInFrame, walletClient: !!walletClient });
+    
     if (!isApprovalConfirmed) {
+      console.log('Blocked: isApprovalConfirmed is', isApprovalConfirmed);
       setError(new Error('Please wait for USDC approval to complete'));
       return;
     }
     if (!walletClient && !isInFrame) {
+      console.log('Blocked: No wallet client available');
       setError(new Error("No wallet client available"));
       return;
     }
@@ -135,8 +140,11 @@ export function useSolarPledge() {
     setDebugInfo(null);
     try {
       setDebugInfo(`Starting pledge creation for amount: ${pledgeAmount}`);
+      
       // Convert Farcaster handle to bytes32
       const farcasterHandleBytes32 = encodeBytes32String(farcasterHandle);
+      setDebugInfo(`Converted Farcaster handle to bytes32: ${farcasterHandleBytes32}`);
+
       // Check if birth date is set onchain
       if (publicClient && address && birthDate) {
         const userBirthTimestamp = await publicClient.readContract({
@@ -159,9 +167,11 @@ export function useSolarPledge() {
           await publicClient.waitForTransactionReceipt({ hash: birthDateHash });
         }
       }
+
       // Continue with pledge
       let pledgeHash: `0x${string}`;
       if (isInFrame) {
+        console.log('Using Farcaster frame for pledge');
         setDebugInfo('In Farcaster frame, using writeContract for pledge');
         try {
           const result = await writeContractAsync({
@@ -175,6 +185,15 @@ export function useSolarPledge() {
             pledgeHash = result;
             setTxHash(pledgeHash);
             setDebugInfo(`Pledge Tx Hash: ${pledgeHash}`);
+            // Wait for transaction confirmation
+            if (publicClient) {
+              setDebugInfo('Waiting for transaction confirmation...');
+              const receipt = await publicClient.waitForTransactionReceipt({ hash: pledgeHash });
+              if (receipt.status === 'reverted') {
+                throw new Error('Transaction was reverted');
+              }
+              setDebugInfo('Transaction confirmed!');
+            }
           } else {
             throw new Error('No transaction hash returned from writeContract');
           }
@@ -183,45 +202,52 @@ export function useSolarPledge() {
           throw err;
         }
       } else {
+        console.log('Using wallet client for pledge');
         setDebugInfo('Using wallet client for pledge');
         if (!walletClient) {
+          console.log('No wallet client available');
           setError(new Error("No wallet client available"));
           setIsLoading(false);
           return;
         }
         try {
+          console.log('Calling walletClient.writeContract with:', {
+            address: SOLAR_PLEDGE_ADDRESS,
+            functionName: 'createPledge',
+            args: [commitment, farcasterHandleBytes32, BigInt(pledgeAmount * 1_000_000)]
+          });
           pledgeHash = await walletClient.writeContract({
             address: SOLAR_PLEDGE_ADDRESS,
             abi: SolarPledgeABI,
             functionName: 'createPledge',
             args: [commitment, farcasterHandleBytes32, BigInt(pledgeAmount * 1_000_000)],
           });
+          console.log('Pledge transaction hash:', pledgeHash);
           setDebugInfo(pledgeHash ? `Pledge Tx Hash: ${pledgeHash}` : 'No pledge transaction hash returned');
           setTxHash(pledgeHash);
+          // Wait for transaction confirmation
+          if (publicClient) {
+            setDebugInfo('Waiting for transaction confirmation...');
+            const receipt = await publicClient.waitForTransactionReceipt({ hash: pledgeHash });
+            if (receipt.status === 'reverted') {
+              throw new Error('Transaction was reverted');
+            }
+            setDebugInfo('Transaction confirmed!');
+          }
         } catch (err) {
           console.error('Pledge transaction error:', err);
           throw err;
         }
       }
 
-      // Wait for the pledge transaction to be confirmed
-      if (pledgeHash && publicClient) {
-        setDebugInfo('Waiting for pledge transaction confirmation...');
-        try {
-          await publicClient.waitForTransactionReceipt({ hash: pledgeHash });
-          setDebugInfo('Pledge transaction confirmed!');
-          await refetchPledged();
-        } catch (err) {
-          console.error('Transaction confirmation error:', err);
-          throw err;
-        }
-      } else {
-        throw new Error('No transaction hash available or public client not available');
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err : new Error('Failed to create pledge'));
-      setDebugInfo(`Error in createPledge: ${err instanceof Error ? err.message : String(err)}`);
       setIsLoading(false);
+      setIsApprovalConfirmed(true);
+    } catch (err) {
+      console.error('Pledge error:', err);
+      setError(err instanceof Error ? err : new Error('Failed to create pledge'));
+      setIsLoading(false);
+      setIsApprovalConfirmed(false);
+      throw err; // Re-throw the error to be caught by the ceremony page
     }
   };
 
@@ -232,6 +258,13 @@ export function useSolarPledge() {
     }
     return false;
   };
+
+  // Effect: update approval state when allowance changes
+  React.useEffect(() => {
+    if (typeof allowance === 'bigint' && allowance > 0n) {
+      setIsApprovalConfirmed(true);
+    }
+  }, [allowance]);
 
   // Effect: refetch allowance when address changes
   React.useEffect(() => {
@@ -251,5 +284,6 @@ export function useSolarPledge() {
     allowance,
     isApprovalPending,
     isApprovalConfirmed,
+    isPledgeConfirmed: isConfirmed && !isTxError,
   };
 } 
