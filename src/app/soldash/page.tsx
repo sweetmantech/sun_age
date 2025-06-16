@@ -23,7 +23,7 @@ export default function SolDashPage() {
   const [isSharing, setIsSharing] = useState(false);
   const [isRecalculating, setIsRecalculating] = useState(false);
   const [showConfirmClear, setShowConfirmClear] = useState(false);
-  const { hasPledged: onChainHasPledged } = useSolarPledge();
+  const { hasPledged: onChainHasPledged, onChainVow } = useSolarPledge();
   const [ceremony, setCeremony] = useState({ hasPledged: false, vow: "" });
 
   useEffect(() => {
@@ -67,7 +67,7 @@ export default function SolDashPage() {
   const nextNumericalMilestones = getNextNumericalMilestones(bookmark.days, new Date(bookmark.birthDate), 10);
 
   const hasPledged = ceremony.hasPledged || onChainHasPledged;
-  const vow = ceremony.vow;
+  const vow = onChainVow || ceremony.vow;
 
   // Construct the milestoneCard element for the next milestone
   const milestoneCard = milestone ? (
