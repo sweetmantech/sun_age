@@ -182,11 +182,25 @@ function BookmarkCard({ bookmark, milestone, milestoneDate, daysToMilestone, onR
       )}
 
       {tab === 'sol vows' && (
-        <div className="w-full text-sm font-mono space-y-3 flex flex-col items-center justify-center p-8 text-center">
-          <div className="text-3xl mb-2">🌞</div>
-          <div className="text-lg font-bold mb-1">Nothing here yet</div>
-          <div className="text-gray-600">Your future vows and commitments will appear here.</div>
-        </div>
+        hasPledged && vow ? (
+          <div className="w-full text-sm font-mono space-y-3 flex flex-col items-center justify-center p-8 text-center">
+            <div className="text-3xl mb-2">🌞</div>
+            <div className="text-lg font-bold mb-1">Your Solar Vow</div>
+            <div className="italic text-gray-700 border border-gray-200 rounded p-3 bg-white">{vow}</div>
+          </div>
+        ) : (
+          <div className="w-full text-sm font-mono space-y-3 flex flex-col items-center justify-center p-8 text-center">
+            <div className="text-3xl mb-2">✍️</div>
+            <div className="text-lg font-bold mb-1">No Vow Yet</div>
+            <div className="text-gray-600 mb-4">You haven't made your Solar Vow. Make your pledge to join the convergence.</div>
+            <button
+              className="w-full py-3 bg-[#d4af37] text-black font-mono text-base tracking-widest uppercase border border-black rounded hover:bg-[#e6c75a] transition-colors"
+              onClick={() => window.location.href = '/ceremony'}
+            >
+              Make Your Solar Vow
+            </button>
+          </div>
+        )
       )}
 
       {tab === 'journal' && (
@@ -199,35 +213,9 @@ function BookmarkCard({ bookmark, milestone, milestoneDate, daysToMilestone, onR
 
       {tab === 'sol sign' && (
         <div className="w-full text-sm font-mono space-y-3 flex flex-col items-center justify-center p-8 text-center">
-          {/* Cosmic Convergence Callout */}
-          <div className="w-full border border-yellow-400 bg-yellow-50 rounded p-4 mb-4">
-            <img src="/cosmicConverge_small.svg" alt="Cosmic Convergence" className="mx-auto mb-2" width={60} />
-            <div className="font-mono text-base text-yellow-900 uppercase tracking-widest mb-2">
-              The Cosmic Convergence Awaits
-            </div>
-            <div className="text-xs text-yellow-800">
-              Commit your Solar Vow to unlock $SOLAR rewards and join the cosmic journey.
-            </div>
-          </div>
-          {hasPledged && vow ? (
-            <>
-              <div className="text-3xl mb-2">🌞</div>
-              <div className="text-lg font-bold mb-1">Your Solar Vow</div>
-              <div className="italic text-gray-700 border border-gray-200 rounded p-3 bg-white">{vow}</div>
-            </>
-          ) : (
-            <>
-              <div className="text-3xl mb-2">✍️</div>
-              <div className="text-lg font-bold mb-1">No Vow Yet</div>
-              <div className="text-gray-600 mb-4">You haven&apos;t made your Solar Vow. Make your pledge to join the convergence.</div>
-              <button
-                className="w-full py-3 bg-[#d4af37] text-black font-mono text-base tracking-widest uppercase border border-black rounded hover:bg-[#e6c75a] transition-colors"
-                onClick={() => window.location.href = '/ceremony'}
-              >
-                Make Your Solar Vow
-              </button>
-            </>
-          )}
+          <div className="text-3xl mb-2">🪐</div>
+          <div className="text-lg font-bold mb-1">Coming Soon</div>
+          <div className="text-gray-600">NFT signatures and collectibles will be available here soon. Stay tuned!</div>
         </div>
       )}
     </div>
