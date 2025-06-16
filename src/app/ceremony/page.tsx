@@ -123,11 +123,14 @@ export default function CeremonyStepper() {
 
   // Handle pledge creation
   const handlePledge = async () => {
+    console.log('handlePledge called');
     if (!address) {
+      console.log('No address, attempting to connect wallet');
       if (isInFrame && farcasterConnector) {
         try {
           await connect({ connector: farcasterConnector });
         } catch (err) {
+          console.error('Farcaster connection error:', err);
           setUiError("Failed to connect Farcaster wallet. Please try again.");
           return;
         }
@@ -135,32 +138,45 @@ export default function CeremonyStepper() {
         try {
           await connect({ connector: injectedConnector });
         } catch (err) {
+          console.error('Wallet connection error:', err);
           setUiError("Failed to connect wallet. Please try again.");
           return;
         }
       } else {
+        console.error('No suitable connector found');
         setUiError("No suitable wallet connector found. Please use Farcaster or a browser wallet.");
         return;
       }
     }
 
     try {
+      console.log('Starting pledge process');
       setUiError(null);
+      
       // First approve USDC if not already approved
       if (!isApproved(pledge)) {
+        console.log('USDC not approved, requesting approval');
         await approveUSDC(BigInt(pledge * 1_000_000));
+        console.log('USDC approval requested');
         return; // Wait for user to click again to seal
       }
-      // Then create the pledge
+
+      // If we're here, we're approved and this is the second click
+      console.log('USDC already approved, creating pledge');
+
+      // Create the pledge with the pre-defined signature message and FID
       await createPledge(
-        commitment,
-        farcasterHandle,
+        signatureMsg,
+        `fid:${fid}`, // Use FID from context
         pledge,
         urlBirthDate ? new Date(urlBirthDate) : undefined
       );
+      
+      console.log('Pledge created successfully');
       autoBookmark(); // <-- Automatically bookmark after successful pledge
       next(); // Move to next step on success
     } catch (err) {
+      console.error('Pledge error:', err);
       setUiError(err instanceof Error ? err.message : "Failed to process transaction");
     }
   };

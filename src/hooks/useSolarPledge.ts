@@ -24,14 +24,11 @@ export function useSolarPledge() {
   const [txHash, setTxHash] = useState<`0x${string}` | undefined>(undefined);
   const [debugInfo, setDebugInfo] = useState<string | null>(null);
   const { isInFrame } = useFrameSDK();
-  const { writeContract } = useWriteContract();
+  const { writeContractAsync, isPending: isPledgePending } = useWriteContract();
   const publicClient = usePublicClient();
 
   // Wait for transaction confirmation
   const { isLoading: isConfirming, isSuccess: isConfirmed, isError: isTxError, error: txError } = useWaitForTransactionReceipt({ hash: txHash });
-
-  // Write contract for pledge
-  const { isPending: isPledgePending } = useWriteContract();
 
   // Read USDC allowance
   const [allowanceAmount, setAllowanceAmount] = useState<bigint>(BigInt(0));
@@ -69,7 +66,7 @@ export function useSolarPledge() {
       // If in Farcaster frame, use writeContract directly to trigger the frame wallet
       if (isInFrame) {
         setDebugInfo('In Farcaster frame, using writeContract directly');
-        const result = await writeContract({
+        const result = await writeContractAsync({
           address: USDC_ADDRESS,
           abi: USDC_ABI,
           functionName: 'approve',
@@ -151,25 +148,40 @@ export function useSolarPledge() {
         if (userBirthTimestamp === 0n) {
           setDebugInfo('Setting birth date onchain...');
           const birthTimestamp = Math.floor(birthDate.getTime() / 1000);
-          await walletClient!.writeContract({
+          const birthDateHash = await walletClient!.writeContract({
             address: SOLAR_PLEDGE_ADDRESS,
             abi: SolarPledgeABI,
             functionName: 'setBirthDate',
             args: [BigInt(birthTimestamp)],
           });
           setDebugInfo('Birth date set onchain.');
+          // Wait for birth date transaction to be confirmed
+          await publicClient.waitForTransactionReceipt({ hash: birthDateHash });
         }
       }
       // Continue with pledge
+      let pledgeHash: `0x${string}`;
       if (isInFrame) {
         setDebugInfo('In Farcaster frame, using writeContract for pledge');
-        const result = await writeContract({
-          address: SOLAR_PLEDGE_ADDRESS,
-          abi: SolarPledgeABI,
-          functionName: 'createPledge',
-          args: [commitment, farcasterHandleBytes32, BigInt(pledgeAmount * 1_000_000)],
-        });
-        setDebugInfo('writeContract for pledge called successfully');
+        try {
+          const result = await writeContractAsync({
+            address: SOLAR_PLEDGE_ADDRESS,
+            abi: SolarPledgeABI,
+            functionName: 'createPledge',
+            args: [commitment, farcasterHandleBytes32, BigInt(pledgeAmount * 1_000_000)],
+          });
+          setDebugInfo('writeContract for pledge called successfully');
+          if (result) {
+            pledgeHash = result;
+            setTxHash(pledgeHash);
+            setDebugInfo(`Pledge Tx Hash: ${pledgeHash}`);
+          } else {
+            throw new Error('No transaction hash returned from writeContract');
+          }
+        } catch (err) {
+          console.error('Pledge transaction error:', err);
+          throw err;
+        }
       } else {
         setDebugInfo('Using wallet client for pledge');
         if (!walletClient) {
@@ -177,16 +189,35 @@ export function useSolarPledge() {
           setIsLoading(false);
           return;
         }
-        const hash = await walletClient.writeContract({
-          address: SOLAR_PLEDGE_ADDRESS,
-          abi: SolarPledgeABI,
-          functionName: 'createPledge',
-          args: [commitment, farcasterHandleBytes32, BigInt(pledgeAmount * 1_000_000)],
-        });
-        setDebugInfo(hash ? `Pledge Tx Hash: ${hash}` : 'No pledge transaction hash returned');
-        setTxHash(hash);
+        try {
+          pledgeHash = await walletClient.writeContract({
+            address: SOLAR_PLEDGE_ADDRESS,
+            abi: SolarPledgeABI,
+            functionName: 'createPledge',
+            args: [commitment, farcasterHandleBytes32, BigInt(pledgeAmount * 1_000_000)],
+          });
+          setDebugInfo(pledgeHash ? `Pledge Tx Hash: ${pledgeHash}` : 'No pledge transaction hash returned');
+          setTxHash(pledgeHash);
+        } catch (err) {
+          console.error('Pledge transaction error:', err);
+          throw err;
+        }
       }
-      await refetchPledged();
+
+      // Wait for the pledge transaction to be confirmed
+      if (pledgeHash && publicClient) {
+        setDebugInfo('Waiting for pledge transaction confirmation...');
+        try {
+          await publicClient.waitForTransactionReceipt({ hash: pledgeHash });
+          setDebugInfo('Pledge transaction confirmed!');
+          await refetchPledged();
+        } catch (err) {
+          console.error('Transaction confirmation error:', err);
+          throw err;
+        }
+      } else {
+        throw new Error('No transaction hash available or public client not available');
+      }
     } catch (err) {
       setError(err instanceof Error ? err : new Error('Failed to create pledge'));
       setDebugInfo(`Error in createPledge: ${err instanceof Error ? err.message : String(err)}`);
