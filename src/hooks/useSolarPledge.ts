@@ -14,7 +14,39 @@ function encodeBytes32String(str: string): `0x${string}` {
   return bytesToHex(padded);
 }
 
-export function useSolarPledge() {
+// Define the Pledge type for getPledge return value
+export type Pledge = {
+  pledger: string;
+  pledgeNumber: bigint;
+  pledgeTimestamp: bigint;
+  usdcPaid: bigint;
+  surplusAmount: bigint;
+  solarAge: bigint;
+  commitmentHash: string;
+  farcasterHandle: string;
+  commitmentText: string;
+  isActive: boolean;
+};
+
+// Define the return type for useSolarPledge
+export interface UseSolarPledgeResult {
+  approveUSDC: (amount: bigint) => Promise<void>;
+  createPledge: (commitment: string, farcasterHandle: string, pledgeAmount: number, birthDate?: Date) => Promise<void>;
+  isApproved: (amount: number) => boolean;
+  isLoading: boolean;
+  error: Error | null;
+  hasPledged: boolean | undefined;
+  debugInfo: string | null;
+  allowance: bigint | undefined;
+  isApprovalPending: boolean;
+  isApprovalConfirmed: boolean;
+  isPledgeConfirmed: boolean;
+  refetchPledged: (...args: any[]) => Promise<any>;
+  onChainVow?: string;
+  refetchOnChainPledge: (...args: any[]) => Promise<any>;
+}
+
+export function useSolarPledge(): UseSolarPledgeResult {
   const { address } = useAccount();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
@@ -48,6 +80,16 @@ export function useSolarPledge() {
     args: [address],
     query: { enabled: !!address },
   });
+
+  // Fetch on-chain pledge details
+  const { data: onChainPledge, refetch: refetchOnChainPledge } = useReadContract({
+    address: SOLAR_PLEDGE_ADDRESS,
+    abi: SolarPledgeABI,
+    functionName: 'getPledge',
+    args: [address],
+    query: { enabled: !!address },
+  });
+  const onChainVow = (onChainPledge as Pledge | undefined)?.commitmentText;
 
   // Approve USDC for a given amount
   const approveUSDC = async (amount: bigint) => {
@@ -283,12 +325,14 @@ export function useSolarPledge() {
     isApproved,
     isLoading: isLoading || isPledgePending || isConfirming,
     error,
-    hasPledged,
+    hasPledged: hasPledged as boolean | undefined,
     debugInfo,
-    allowance,
+    allowance: allowance as bigint | undefined,
     isApprovalPending,
     isApprovalConfirmed,
     isPledgeConfirmed: isConfirmed && !isTxError,
     refetchPledged,
+    onChainVow,
+    refetchOnChainPledge,
   };
 } 
