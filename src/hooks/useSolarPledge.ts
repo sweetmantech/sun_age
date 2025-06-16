@@ -242,6 +242,10 @@ export function useSolarPledge() {
 
       setIsLoading(false);
       setIsApprovalConfirmed(true);
+      // Refetch on-chain pledge status after successful pledge
+      if (typeof refetchPledged === 'function') {
+        refetchPledged();
+      }
     } catch (err) {
       console.error('Pledge error:', err);
       setError(err instanceof Error ? err : new Error('Failed to create pledge'));
@@ -285,5 +289,6 @@ export function useSolarPledge() {
     isApprovalPending,
     isApprovalConfirmed,
     isPledgeConfirmed: isConfirmed && !isTxError,
+    refetchPledged,
   };
 } 
