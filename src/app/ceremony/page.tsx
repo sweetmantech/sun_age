@@ -39,7 +39,7 @@ export default function CeremonyStepper() {
     const days = urlDays ? Number(urlDays) : bookmark?.days;
     const birth = urlBirthDate || bookmark?.birthDate;
     const approx = urlApproxYears ? Number(urlApproxYears) : bookmark?.approxYears || (days ? Math.floor(days / 365.25) : undefined);
-  }, [searchParams]);
+  }, [urlDays, urlBirthDate, router, urlApproxYears]);
 
   // Fallback: if not available, prompt user to recalculate (use params directly)
   useEffect(() => {

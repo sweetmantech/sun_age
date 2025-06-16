@@ -192,7 +192,7 @@ function BookmarkCard({ bookmark, milestone, milestoneDate, daysToMilestone, onR
           <div className="w-full text-sm font-mono space-y-3 flex flex-col items-center justify-center p-8 text-center">
             <div className="text-3xl mb-2">✍️</div>
             <div className="text-lg font-bold mb-1">No Vow Yet</div>
-            <div className="text-gray-600 mb-4">You haven't made your Solar Vow. Make your pledge to join the convergence.</div>
+            <div className="text-gray-600 mb-4">You haven&apos;t made your Solar Vow. Make your pledge to join the convergence.</div>
             <button
               className="w-full py-3 bg-[#d4af37] text-black font-mono text-base tracking-widest uppercase border border-black rounded hover:bg-[#e6c75a] transition-colors"
               onClick={() => window.location.href = '/ceremony'}
