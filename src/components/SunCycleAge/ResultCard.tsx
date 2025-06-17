@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useFrameSDK } from "~/hooks/useFrameSDK";
 import Header from "./Header";
 import { motion, AnimatePresence } from "framer-motion";
+import { SpinnerButton } from "~/components/ui/SpinnerButton";
 
 interface ResultCardProps {
   days: number;
@@ -196,7 +197,7 @@ const ResultCard: React.FC<ResultCardProps> = (props) => {
       <div className="w-full max-w-md flex flex-col gap-3 mt-6">
         {/* Primary CTA: Farcaster/dev or web */}
         {(context?.user?.fid || props.onCommit) ? (
-          <button
+          <SpinnerButton
             onClick={() => {
               if (typeof props.onCommit === 'function') {
                 props.onCommit();
@@ -210,10 +211,10 @@ const ResultCard: React.FC<ResultCardProps> = (props) => {
             className="font-mono font-medium text-sm uppercase tracking-widest py-3 px-2 w-full rounded-none border border-yellow-500 dark:border-yellow-400 bg-yellow-400 dark:bg-yellow-500 text-black transition-colors hover:bg-yellow-300 dark:hover:bg-yellow-600"
           >
             COMMIT TO COSMIC CONVERGENCE
-          </button>
+          </SpinnerButton>
         ) : (
           <>
-            <button
+            <SpinnerButton
               onClick={() => {
                 if (typeof props.onCommit === 'function') {
                   props.onCommit();
@@ -227,33 +228,33 @@ const ResultCard: React.FC<ResultCardProps> = (props) => {
               className="font-mono font-medium text-sm uppercase tracking-widest py-3 px-2 w-full rounded-none border border-yellow-500 dark:border-yellow-400 bg-yellow-400 dark:bg-yellow-500 text-black transition-colors hover:bg-yellow-300 dark:hover:bg-yellow-600"
             >
               CONNECT FOR COSMIC CONVERGENCE
-            </button>
-            <button
+            </SpinnerButton>
+            <SpinnerButton
               onClick={handleBookmark}
               className="font-mono font-medium text-sm uppercase tracking-widest py-3 px-2 w-full rounded-none border border-black dark:border-white bg-black dark:bg-white text-white dark:text-black transition-colors hover:bg-gray-900 dark:hover:bg-gray-100"
             >
               BOOKMARK MY SOL AGE
-            </button>
+            </SpinnerButton>
           </>
         )}
         {/* Secondary CTAs - smaller, link-like, with thin divider */}
         <div className="flex w-full items-center justify-center gap-0 mt-2">
-          <button
+          <SpinnerButton
             onClick={onShare}
             disabled={isSharing}
             className="flex-1 font-mono font-medium text-gray-700 dark:text-gray-300 text-sm py-1 px-1 rounded-none underline underline-offset-4 decoration-2 flex items-center justify-center gap-1 bg-transparent hover:text-yellow-700"
             style={{ background: 'none', border: 'none', textTransform: 'none' }}
           >
             {isSharing ? "SHARING..." : "SHARE SOL AGE"}
-          </button>
+          </SpinnerButton>
           <div className="w-px h-5 bg-black mx-2 opacity-40" />
-          <button
+          <SpinnerButton
             onClick={onRecalculate}
             className="flex-1 font-mono font-medium text-gray-700 dark:text-gray-300 text-sm py-1 px-1 rounded-none underline underline-offset-4 decoration-2 flex items-center justify-center gap-1 bg-transparent hover:text-yellow-700"
             style={{ background: 'none', border: 'none', textTransform: 'none' }}
           >
             CALCULATE AGAIN
-          </button>
+          </SpinnerButton>
         </div>
       </div>
     </motion.div>

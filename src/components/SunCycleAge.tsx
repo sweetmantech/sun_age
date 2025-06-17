@@ -13,6 +13,7 @@ import { getNextMilestone, getProgressToNextMilestone, getNextNumericalMilestone
 import MilestoneCard from "./SunCycleAge/MilestoneCard";
 import sdk from "@farcaster/frame-sdk";
 import { useRouter } from "next/navigation";
+import { SpinnerButton } from "~/components/ui/SpinnerButton";
 // import { revokeUserConsent } from "~/lib/consent";
 
 function WarpcastEmbed({ url }: { url: string }) {
@@ -231,7 +232,8 @@ export default function SunCycleAge({ initialConsentData }: SunCycleAgeProps) {
     isInFrame,
     loading,
     isConnected,
-    address
+    address,
+    sdk
   } = useFrameSDK();
   const router = useRouter();
   const [birthDate, setBirthDate] = useState<string>("");
@@ -348,9 +350,16 @@ export default function SunCycleAge({ initialConsentData }: SunCycleAgeProps) {
     const url = process.env.NEXT_PUBLIC_URL || window.location.origin;
     const userName = context?.user?.displayName || 'TRAVELLER';
     const ogImageUrl = `${url}/api/og/solage?userName=${encodeURIComponent(userName)}&solAge=${days}&birthDate=${encodeURIComponent(birthDate)}&age=${approxYears}`;
-    const message = `Forget birthdays—I've completed ${days} rotations around the sun ☀️🌎 What's your Sol Age? ${url}\n\n[My Sol Age Card](${ogImageUrl})`;
+    const message = `Forget birthdays—I've completed ${days} rotations around the sun ☀️🌎 What's your Sol Age? ${url}`;
     try {
-      window.location.href = `https://warpcast.com/~/compose?text=${encodeURIComponent(message)}`;
+      if (isInFrame && sdk) {
+        await sdk.actions.composeCast({
+          text: message,
+          embeds: [ogImageUrl],
+        });
+      } else {
+        window.location.href = `https://warpcast.com/~/compose?text=${encodeURIComponent(message + '\n\n[My Sol Age Card](' + ogImageUrl + ')')}`;
+      }
     } catch (err) {
       console.error(err);
     } finally {

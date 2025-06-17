@@ -6,6 +6,8 @@ import { BookmarkCard } from "../../components/SunCycleAge";
 import { getNextMilestone, getNextNumericalMilestones, getNextMilestoneByType } from "../../lib/milestones";
 import MilestoneCard from "../../components/SunCycleAge/MilestoneCard";
 import { useSolarPledge } from "../../hooks/useSolarPledge";
+import { useFrameSDK } from "~/hooks/useFrameSDK";
+import { SpinnerButton } from "~/components/ui/SpinnerButton";
 
 // Bookmark type
 interface Bookmark {
@@ -17,8 +19,22 @@ interface Bookmark {
   userName?: string;
 }
 
+// Pulsing Star Spinner Component
+function PulsingStarSpinner() {
+  const frames = ["⋅", "˖", "+", "⟡", "✧", "⟡", "+", "˖"];
+  const [frame, setFrame] = useState(0);
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setFrame(f => (f + 1) % frames.length);
+    }, 120);
+    return () => clearInterval(interval);
+  }, []);
+  return <span style={{ fontSize: '1.2em', marginRight: 6 }}>{frames[frame]}</span>;
+}
+
 export default function SolDashPage() {
   const router = useRouter();
+  const { isInFrame, sdk } = useFrameSDK();
   const [bookmark, setBookmark] = useState<Bookmark | null>(null);
   const [showMilestoneModal, setShowMilestoneModal] = useState(false);
   const [isSharing, setIsSharing] = useState(false);
@@ -26,6 +42,21 @@ export default function SolDashPage() {
   const [showConfirmClear, setShowConfirmClear] = useState(false);
   const { hasPledged: onChainHasPledged, onChainVow } = useSolarPledge();
   const [ceremony, setCeremony] = useState({ hasPledged: false, vow: "" });
+
+  // Add function to refresh pledge data
+  const refreshPledgeData = async () => {
+    try {
+      // Refresh on-chain pledge data
+      const saved = localStorage.getItem("sunCycleCeremony");
+      if (saved) {
+        try {
+          setCeremony(JSON.parse(saved));
+        } catch {}
+      }
+    } catch (error) {
+      console.error("Error refreshing pledge data:", error);
+    }
+  };
 
   useEffect(() => {
     const saved = localStorage.getItem("sunCycleBookmark");
@@ -37,12 +68,7 @@ export default function SolDashPage() {
   }, []);
 
   useEffect(() => {
-    const saved = localStorage.getItem("sunCycleCeremony");
-    if (saved) {
-      try {
-        setCeremony(JSON.parse(saved));
-      } catch {}
-    }
+    refreshPledgeData();
   }, []);
 
   if (!bookmark) {
@@ -103,13 +129,20 @@ export default function SolDashPage() {
             showMilestoneModal={showMilestoneModal}
             setShowMilestoneModal={setShowMilestoneModal}
             nextNumericalMilestones={nextNumericalMilestones}
-            onShare={() => {
+            onShare={async () => {
               setIsSharing(true);
               const url = process.env.NEXT_PUBLIC_URL || window.location.origin;
               const userName = bookmark.userName || 'TRAVELLER';
               const ogImageUrl = `${url}/api/og/solage?userName=${encodeURIComponent(userName)}&solAge=${bookmark.days}&birthDate=${encodeURIComponent(bookmark.birthDate)}&age=${bookmark.approxYears}`;
-              const message = `Forget birthdays—I've completed ${bookmark.days} rotations around the sun ☀️🌎 What's your Sol Age? ${url}\n\n[My Sol Age Card](${ogImageUrl})`;
-              window.location.href = `https://warpcast.com/~/compose?text=${encodeURIComponent(message)}`;
+              const message = `Forget birthdays—I've completed ${bookmark.days} rotations around the sun ☀️🌎 What's your Sol Age? ${url}`;
+              if (isInFrame && sdk) {
+                await sdk.actions.composeCast({
+                  text: message,
+                  embeds: [ogImageUrl]
+                });
+              } else {
+                window.location.href = `https://warpcast.com/~/compose?text=${encodeURIComponent(message + '\n\n[My Sol Age Card](' + ogImageUrl + ')')}`;
+              }
               setTimeout(() => setIsSharing(false), 1000);
             }}
             isSharing={isSharing}
@@ -123,35 +156,85 @@ export default function SolDashPage() {
       <div className="w-full flex flex-col items-center mt-6 mb-2 px-0">
         <div className="max-w-md w-full px-6">
           <div className="flex w-full gap-2">
-            <button
+            <SpinnerButton
               onClick={() => {
                 setIsSharing(true);
                 const url = process.env.NEXT_PUBLIC_URL || window.location.origin;
                 const userName = bookmark.userName || 'TRAVELLER';
                 const ogImageUrl = `${url}/api/og/solage?userName=${encodeURIComponent(userName)}&solAge=${bookmark.days}&birthDate=${encodeURIComponent(bookmark.birthDate)}&age=${bookmark.approxYears}`;
                 const message = `Forget birthdays—I've completed ${bookmark.days} rotations around the sun ☀️🌎 What's your Sol Age? ${url}\n\n[My Sol Age Card](${ogImageUrl})`;
-                window.location.href = `https://warpcast.com/~/compose?text=${encodeURIComponent(message)}`;
+                if (isInFrame) {
+                  window.open(`https://warpcast.com/~/compose?text=${encodeURIComponent(message)}`, '_blank');
+                } else {
+                  window.location.href = `https://warpcast.com/~/compose?text=${encodeURIComponent(message)}`;
+                }
                 setTimeout(() => setIsSharing(false), 1000);
               }}
               disabled={isSharing}
               className="flex-1 border border-black bg-transparent text-black uppercase tracking-widest font-mono py-3 px-2 text-sm transition-all duration-200 hover:bg-gray-100 rounded-none disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isSharing ? "SHARING..." : "SHARE SOL AGE"}
-            </button>
-            <button
-              onClick={() => router.push("/")}
+            </SpinnerButton>
+            <SpinnerButton
+              onClick={async () => {
+                console.log('Recalculate button clicked');
+                setIsRecalculating(true);
+                console.log('isRecalculating (after set to true):', true);
+                try {
+                  // Get the stored bookmark
+                  const saved = localStorage.getItem("sunCycleBookmark");
+                  if (saved) {
+                    const bookmarkData = JSON.parse(saved);
+                    const birth = new Date(bookmarkData.birthDate);
+                    const now = new Date();
+                    const diffMs = now.getTime() - birth.getTime();
+                    const totalDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+                    const years = Math.floor(totalDays / 365.25);
+                    
+                    // Update the bookmark with new calculations
+                    const updatedBookmark = {
+                      ...bookmarkData,
+                      days: totalDays,
+                      approxYears: years,
+                      lastVisitDays: bookmarkData.days,
+                      lastVisitDate: now.toISOString()
+                    };
+                    
+                    // Save the updated bookmark
+                    localStorage.setItem("sunCycleBookmark", JSON.stringify(updatedBookmark));
+                    
+                    // Refresh the page data
+                    setBookmark(updatedBookmark);
+                    console.log('Updated bookmark:', updatedBookmark);
+                    
+                    // Refresh pledge data
+                    await refreshPledgeData();
+                  }
+                } catch (error) {
+                  console.error("Error recalculating:", error);
+                } finally {
+                  setTimeout(() => {
+                    setIsRecalculating(false);
+                    console.log('isRecalculating (after set to false):', false);
+                  }, 500);
+                }
+              }}
               disabled={isRecalculating}
-              className="flex-1 border border-black bg-transparent text-black uppercase tracking-widest font-mono py-3 px-2 text-sm transition-all duration-200 hover:bg-gray-100 rounded-none disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 border border-black bg-transparent text-black uppercase tracking-widest font-mono py-3 px-2 text-sm transition-all duration-200 hover:bg-gray-100 rounded-none disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
             >
-              {isRecalculating ? "RECALCULATING..." : "RECALCULATE"}
-            </button>
+              {isRecalculating ? (
+                (() => { console.log('Rendering spinner:', isRecalculating); return null; })() || <><PulsingStarSpinner />RECALCULATING...</>
+              ) : (
+                "RECALCULATE"
+              )}
+            </SpinnerButton>
           </div>
-          <button
+          <SpinnerButton
             onClick={() => setShowConfirmClear(true)}
             className="w-full border border-red-800 bg-red-600 text-white uppercase tracking-widest font-mono py-3 px-2 text-sm transition-all duration-200 hover:bg-red-700 rounded-none mt-4 mb-6"
           >
             CLEAR BOOKMARK
-          </button>
+          </SpinnerButton>
         </div>
       </div>
       {/* Footer - same as main page */}

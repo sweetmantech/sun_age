@@ -1,4 +1,5 @@
 import React from "react";
+import { SpinnerButton } from "~/components/ui/SpinnerButton";
 
 interface FormSectionProps {
   birthDate: string;
@@ -23,14 +24,14 @@ const FormSection: React.FC<FormSectionProps> = ({ birthDate, setBirthDate, calc
         style={{ fontSize: '1.25rem', fontWeight: 400, letterSpacing: '0.06em', textTransform: 'uppercase', color: '#000' }}
       />
       <span id="birth-desc" className="sr-only">Enter your birth date in MM/DD/YYYY format</span>
-      <button
+      <SpinnerButton
         type="button"
         onClick={calculateAge}
         className="w-full max-w-[390px] mx-auto bg-[#D6AD30] border border-[#AE8C25] text-black font-mono py-3 px-8 text-lg rounded-none mt-1 mb-2 tracking-[0.11em] uppercase transition-colors hover:bg-[#B08E29] active:bg-[#B08E29] focus:bg-[#B08E29]"
         style={{ fontWeight: 400, letterSpacing: '0.11em' }}
       >
         CALCULATE
-      </button>
+      </SpinnerButton>
     </form>
   </div>
 );

@@ -6,12 +6,13 @@ import { useRouter } from 'next/navigation';
 import { useFrameSDK } from '~/hooks/useFrameSDK';
 import Image from 'next/image';
 import { useConvergenceStats } from '~/hooks/useConvergenceStats';
+import { SpinnerButton } from "~/components/ui/SpinnerButton";
 
 export default function ResultsPage() {
   console.log("DEBUG: ResultsPage rendered");
   const searchParams = useSearchParams();
   const router = useRouter();
-  const { context } = useFrameSDK();
+  const { context, isInFrame, sdk } = useFrameSDK();
 
   // Dev toggle for showing commit button
   const [devShowCommit, setDevShowCommit] = useState(false);
@@ -42,8 +43,15 @@ export default function ResultsPage() {
     const url = process.env.NEXT_PUBLIC_URL || window.location.origin;
     const userName = context?.user?.displayName || 'TRAVELLER';
     const ogImageUrl = `${url}/api/og/solage?userName=${encodeURIComponent(userName)}&solAge=${days}&birthDate=${encodeURIComponent(birthDate)}&age=${approxYears}`;
-    const message = `Forget birthdays—I've completed ${days} rotations around the sun ☀️🌎 What's your Sol Age? ${url}\n\n[My Sol Age Card](${ogImageUrl})`;
-    window.location.href = `https://warpcast.com/~/compose?text=${encodeURIComponent(message)}`;
+    const message = `Forget birthdays—I've completed ${days} rotations around the sun ☀️🌎 What's your Sol Age? ${url}`;
+    if (isInFrame && sdk) {
+      await sdk.actions.composeCast({
+        text: message,
+        embeds: [ogImageUrl]
+      });
+    } else {
+      window.location.href = `https://warpcast.com/~/compose?text=${encodeURIComponent(message + '\n\n[My Sol Age Card](' + ogImageUrl + ')')}`;
+    }
   };
   const handleRecalculate = () => router.push('/');
   const handleBookmark = () => {
@@ -69,12 +77,12 @@ export default function ResultsPage() {
           <div className="text-base font-mono text-gray-600 mb-8">
             We couldn&apos;t find your Sol Age calculation. Please calculate your age to continue.
           </div>
-          <button
+          <SpinnerButton
             onClick={() => router.push('/')}
             className="w-full py-4 bg-[#d4af37] text-black font-mono text-base tracking-widest uppercase border border-black rounded-none hover:bg-[#e6c75a] transition-colors"
           >
             Calculate Age
-          </button>
+          </SpinnerButton>
         </div>
       </div>
     );

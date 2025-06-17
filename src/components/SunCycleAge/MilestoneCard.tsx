@@ -1,5 +1,6 @@
 import React from "react";
 import { motion } from "framer-motion";
+import { SpinnerButton } from "~/components/ui/SpinnerButton";
 
 interface MilestoneCardProps {
   number?: string | number; // e.g., 12345 or "Winter Solstice"

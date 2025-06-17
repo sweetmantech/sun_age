@@ -3,7 +3,7 @@
 import { useSearchParams } from "next/navigation";
 import { useMemo, useEffect, Suspense } from "react";
 import { useFrameSDK } from "~/hooks/useFrameSDK";
-import { Button } from "~/components/ui/button";
+import { SpinnerButton } from "~/components/ui/SpinnerButton";
 
 function ForwardContent() {
   const searchParams = useSearchParams();
@@ -43,13 +43,13 @@ function ForwardContent() {
   return (
     <div className="container flex flex-col mx-auto p-6 max-w-lg gap-4">
       <p className="text-center">Redirecting to {url}</p>
-      <Button
+      <SpinnerButton
         className="text-2xl font-bold"
         size="lg"
         onClick={() => window.location.replace(url)}
       >
         Continue
-      </Button>
+      </SpinnerButton>
     </div>
   );
 }

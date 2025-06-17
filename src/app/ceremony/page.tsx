@@ -8,6 +8,7 @@ import { useAccount, useConnect, useReadContract } from "wagmi";
 import { useFrameSDK } from '~/hooks/useFrameSDK';
 import { SOLAR_PLEDGE_ADDRESS, SolarPledgeABI } from '../../lib/contracts';
 import { useConvergenceStats } from '~/hooks/useConvergenceStats';
+import { SpinnerButton } from "~/components/ui/SpinnerButton";
 
 const steps = ["prepare", "inscribe", "empower", "sealed"];
 
@@ -17,7 +18,7 @@ export default function CeremonyStepper() {
   const [step, setStep] = useState(0);
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { context, isInFrame } = useFrameSDK();
+  const { context, isInFrame, sdk } = useFrameSDK();
   const { address } = useAccount();
   const { approveUSDC, createPledge, isApproved, isLoading, error, hasPledged, debugInfo, allowance, isApprovalPending, isApprovalConfirmed, isPledgeConfirmed } = useSolarPledge();
   const { connect, connectors, isPending: isConnecting } = useConnect();
@@ -394,7 +395,7 @@ export default function CeremonyStepper() {
           <div className="max-w-md w-full px-6">
             {step === 0 && (
               <>
-        <button
+                <SpinnerButton
                   className="w-full py-4 mb-2 bg-[#d4af37] text-black font-mono text-sm tracking-widest uppercase border border-black rounded-none hover:bg-[#e6c75a] transition-colors"
                   onClick={async () => {
                     setUiError(null);
@@ -418,7 +419,7 @@ export default function CeremonyStepper() {
                     : !address
                       ? "CONNECT WALLET"
                       : "BEGIN SOLAR VOW CEREMONY"}
-                </button>
+                </SpinnerButton>
                 {uiError && (
                   <div className="text-xs font-mono text-red-600 mb-2 text-center">{uiError}</div>
                 )}
@@ -444,12 +445,12 @@ export default function CeremonyStepper() {
             )}
             {step === 1 && (
               <>
-                <button
+                <SpinnerButton
                   className="w-full py-4 mb-4 bg-[#d4af37] text-black font-mono text-sm tracking-widest uppercase border border-black rounded-none hover:bg-[#e6c75a] transition-colors"
                   onClick={next}
                 >
                   EMPOWER YOUR VOW
-                </button>
+                </SpinnerButton>
                 <div className="flex w-full items-center justify-center gap-0 mt-0 mb-6">
                   <button
                     className="flex-1 font-mono text-base text-sm uppercase underline underline-offset-2 border-none rounded-none bg-transparent text-black py-2 px-0 hover:text-[#d4af37] transition-colors"
@@ -493,7 +494,7 @@ export default function CeremonyStepper() {
                     {isApprovalConfirmed && !isLoading && <div className="mt-2">✅ USDC approved! Click the button above to seal your vow.</div>}
                   </div>
                 )}
-                <button
+                <SpinnerButton
                   className="w-full py-4 mb-4 bg-[#d4af37] text-black font-mono text-sm tracking-widest uppercase border border-black rounded-none hover:bg-[#e6c75a] transition-colors"
                   onClick={handlePledge}
                   disabled={isLoading || isApprovalPending}
@@ -503,7 +504,7 @@ export default function CeremonyStepper() {
                     : !isApproved(pledge)
                       ? "APPROVE USDC"
                       : `CLICK TO SEAL VOW WITH $${pledge} SOLAR ENERGY`}
-                </button>
+                </SpinnerButton>
                 <div className="flex w-full items-center justify-between gap-0 mt-0 mb-6">
                   <button
                     className="flex-1 font-mono text-base text-sm uppercase underline underline-offset-2 border-none rounded-none bg-transparent text-black py-2 px-0 hover:text-[#d4af37] transition-colors text-left"
@@ -517,14 +518,36 @@ export default function CeremonyStepper() {
                     onClick={handleReturnToResults}
                   >
                     CANCEL COMMITMENT
-        </button>
-      </div>
+                  </button>
+                </div>
               </>
             )}
             {step === 3 && (
               <>
                 <button className="w-full py-4 mb-4 bg-[#d4af37] text-black font-mono text-base tracking-widest uppercase border border-black rounded-none hover:bg-[#e6c75a] transition-colors" onClick={() => router.push('/soldash?tab=sol%20vows')}>VIEW MY SOL DASHBOARD</button>
-                <button className="w-full py-4 mb-8 bg-white text-black font-mono text-base tracking-widest uppercase border border-gray-400 rounded-none hover:bg-gray-50 transition-colors" onClick={() => alert('TODO: Share to Farcaster')}>SHARE MY VOW</button>
+                <button
+                  className="w-full py-4 mb-8 bg-white text-black font-mono text-base tracking-widest uppercase border border-gray-400 rounded-none hover:bg-gray-50 transition-colors"
+                  onClick={async () => {
+                    const url = process.env.NEXT_PUBLIC_URL || window.location.origin;
+                    const userName = context?.user?.displayName || 'TRAVELLER';
+                    const fid = context?.user?.fid || '...';
+                    const profilePicUrl = context?.user?.pfpUrl || '';
+                    const solAge = urlDays || '';
+                    const currentDate = today;
+                    const ogImageUrl = `${url}/api/og/vow?userName=${encodeURIComponent(userName)}&fid=${fid}&solAge=${solAge}&currentDate=${encodeURIComponent(currentDate)}${profilePicUrl ? `&profilePicUrl=${encodeURIComponent(profilePicUrl)}` : ''}`;
+                    const shareText = `I've inscribed my Solar Vow into eternity:\n"${signatureMsg}"\n\nMake a vow and join the convergence: ${url}`;
+                    if (isInFrame && sdk) {
+                      await sdk.actions.composeCast({
+                        text: shareText,
+                        embeds: [ogImageUrl],
+                      });
+                    } else {
+                      window.location.href = `https://warpcast.com/~/compose?text=${encodeURIComponent(shareText + '\n\n[My Solar Vow Card](' + ogImageUrl + ')')}`;
+                    }
+                  }}
+                >
+                  SHARE MY VOW
+                </button>
                 <div className="flex w-full items-center justify-center gap-0 mt-0 mb-6">
                   <button className="flex-1 font-mono text-base uppercase underline underline-offset-2 border-none rounded-none bg-transparent text-black py-2 px-0 hover:text-[#d4af37] transition-colors text-left" onClick={() => router.push('/')}>CALCULATE AGAIN</button>
                   <span className="w-px h-8 bg-gray-400 mx-6" style={{ minWidth: '1px' }} />
