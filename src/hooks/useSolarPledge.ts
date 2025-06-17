@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { useAccount, useWriteContract, useReadContract, useWalletClient, useWaitForTransactionReceipt, usePublicClient } from 'wagmi';
 import { useFrameSDK } from './useFrameSDK';
 import { stringToBytes, bytesToHex } from 'viem';
@@ -59,11 +59,12 @@ export function useSolarPledge(): UseSolarPledgeResult {
   const { writeContractAsync, isPending: isPledgePending } = useWriteContract();
   const publicClient = usePublicClient();
 
+  console.log('[useSolarPledge] Hook initialized with address:', address);
+
   // Wait for transaction confirmation
   const { isLoading: isConfirming, isSuccess: isConfirmed, isError: isTxError, error: txError } = useWaitForTransactionReceipt({ hash: txHash });
 
   // Read USDC allowance
-  const [allowanceAmount, setAllowanceAmount] = useState<bigint>(BigInt(0));
   const { data: allowance, refetch: refetchAllowance } = useReadContract({
     address: USDC_ADDRESS,
     abi: USDC_ABI,
@@ -89,7 +90,14 @@ export function useSolarPledge(): UseSolarPledgeResult {
     args: [address],
     query: { enabled: !!address },
   });
+
   const onChainVow = (onChainPledge as Pledge | undefined)?.commitmentText;
+
+  console.log('[useSolarPledge] Contract read results:', {
+    hasPledged,
+    onChainPledge,
+    onChainVow
+  });
 
   // Approve USDC for a given amount
   const approveUSDC = async (amount: bigint) => {
@@ -147,7 +155,6 @@ export function useSolarPledge(): UseSolarPledgeResult {
     if (isConfirmed && txHash) {
       setDebugInfo(`Transaction confirmed: ${txHash}`);
       refetchAllowance();
-      setAllowanceAmount(BigInt(0)); // Optionally update this based on new allowance
       setIsLoading(false);
       setIsApprovalPending(false);
       setIsApprovalConfirmed(true);
@@ -285,8 +292,8 @@ export function useSolarPledge(): UseSolarPledgeResult {
       setIsLoading(false);
       setIsApprovalConfirmed(true);
       // Refetch on-chain pledge status after successful pledge
-      if (typeof refetchPledged === 'function') {
-        refetchPledged();
+      if (typeof refetchOnChainPledge === 'function') {
+        refetchOnChainPledge();
       }
     } catch (err) {
       console.error('Pledge error:', err);
