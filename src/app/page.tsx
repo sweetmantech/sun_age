@@ -4,6 +4,7 @@ import { PROJECT_TITLE, PROJECT_DESCRIPTION } from "~/lib/constants";
 import { createClient } from '~/utils/supabase/server'
 import { cookies } from 'next/headers'
 import SunCycleAge from '~/components/SunCycleAge'
+import HomeRedirector from './HomeRedirector'
 
 const appUrl =
   process.env.NEXT_PUBLIC_URL ||
@@ -60,6 +61,9 @@ export default async function Page() {
   }
 
   return (
-    <SunCycleAge initialConsentData={userConsent} />
+    <>
+      <HomeRedirector />
+      <SunCycleAge initialConsentData={userConsent} />
+    </>
   );
 }
