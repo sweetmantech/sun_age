@@ -13,9 +13,9 @@ export async function GET() {
     frame: {
       version: "1",
       name: PROJECT_TITLE,
-      subtitle: "Track your journey in sun cycles",
+      subtitle: "Track yourself in sun cycles",
       description: PROJECT_DESCRIPTION,
-      tagline: "Discover your Sol Age and make a Vow.",
+      tagline: "Discover your inner Sol",
       primaryCategory: "productivity",
       tags: ["milestones", "vow", "pledge", "solar", "calendar"],
       iconUrl: `${appUrl}/icon.png`,
