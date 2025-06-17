@@ -33,6 +33,9 @@ export default function ResultsPage() {
   const approxYears = approxYearsParam ? Number(approxYearsParam) : null;
   const birthDate = birthDateParam || null;
 
+  // Get convergence stats
+  const { daysRemaining } = useConvergenceStats();
+
   // Handlers
   const handleShare = async () => {
     if (!days || !birthDate || !approxYears) return;
@@ -84,9 +87,6 @@ export default function ResultsPage() {
     month: "2-digit",
     day: "2-digit",
   }).replace(/\//g, ".");
-
-  // Get convergence stats
-  const { daysRemaining } = useConvergenceStats();
 
   return (
     <div className="w-full min-h-screen flex flex-col items-center bg-white relative z-20">
