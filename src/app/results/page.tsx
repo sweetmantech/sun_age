@@ -5,6 +5,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useFrameSDK } from '~/hooks/useFrameSDK';
 import Image from 'next/image';
+import { useConvergenceStats } from '~/hooks/useConvergenceStats';
 
 export default function ResultsPage() {
   console.log("DEBUG: ResultsPage rendered");
@@ -82,6 +83,9 @@ export default function ResultsPage() {
     day: "2-digit",
   }).replace(/\//g, ".");
 
+  // Get convergence stats
+  const { daysRemaining } = useConvergenceStats();
+
   return (
     <div className="w-full min-h-screen flex flex-col items-center bg-white relative z-20">
       {/* Main content section with background, border, and margin */}
@@ -101,7 +105,7 @@ export default function ResultsPage() {
             <div className="font-mono font-base text-sm text-gray-900 uppercase tracking-base text-center mb-3">THE COSMIC CONVERGENCE APPROACHES IN</div>
             <div className="flex items-center justify-center gap-2 text-2xl font-serif font-light text-black mb-2">
               <span role="img" aria-label="star">⭐</span>
-              30 days
+              {daysRemaining !== undefined ? `${daysRemaining} days` : '...'}
               <span role="img" aria-label="star">⭐</span>
             </div>
             <div className="text-yellow-700 font-mono text-sm font-semibold mt-2 text-center">Your {days.toLocaleString()} rotations qualify <br /> for $SOLAR tokens</div>

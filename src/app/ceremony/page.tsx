@@ -7,6 +7,7 @@ import { useSolarPledge } from "../../hooks/useSolarPledge";
 import { useAccount, useConnect, useReadContract } from "wagmi";
 import { useFrameSDK } from '~/hooks/useFrameSDK';
 import { SOLAR_PLEDGE_ADDRESS, SolarPledgeABI } from '../../lib/contracts';
+import { useConvergenceStats } from '~/hooks/useConvergenceStats';
 
 const steps = ["prepare", "inscribe", "empower", "sealed"];
 
@@ -21,6 +22,7 @@ export default function CeremonyStepper() {
   const { approveUSDC, createPledge, isApproved, isLoading, error, hasPledged, debugInfo, allowance, isApprovalPending, isApprovalConfirmed, isPledgeConfirmed } = useSolarPledge();
   const { connect, connectors, isPending: isConnecting } = useConnect();
   const [uiError, setUiError] = useState<string | null>(null);
+  const { numVows, totalPooled, daysRemaining } = useConvergenceStats();
 
   // Use params directly for initial values
   const urlDays = searchParams?.get('days');
@@ -288,7 +290,9 @@ export default function CeremonyStepper() {
                 {/* Cosmic Convergence Callout */}
                 <div className="w-full border border-blue-200 bg-[#F2F7FF] rounded-none p-3 font-mono text-sm text-left mb-4" style={{ color: '#2563eb', fontFamily: 'Geist Mono, monospace' }}>
                   <span className="font-bold uppercase tracking-widest">COSMIC CONVERGENCE | EPOCH 0</span><br />
-                  <span className="text-xs font-mono" style={{ color: '#2563eb' }}>{`{vows} vows committed • $${pledge} pooled • {days} remaining`}</span>
+                  <span className="text-xs font-mono" style={{ color: '#2563eb' }}>
+                    {numVows !== undefined ? numVows : '...'} vows committed • ${totalPooled !== undefined ? totalPooled.toLocaleString(undefined, { maximumFractionDigits: 2 }) : '...'} pooled • {daysRemaining !== undefined ? daysRemaining : '...'} days remaining
+                  </span>
                 </div>
                 {/* Solar Energy Level Card */}
                 <div className="w-full border border-gray-300 rounded-none p-4 mb-4 bg-white/90 text-left">
