@@ -16,18 +16,18 @@ export async function GET() {
       subtitle: "Track your journey in sun cycles",
       description: PROJECT_DESCRIPTION,
       tagline: "Discover your Sol Age and make a Vow.",
-      category: "lifestyle",
-      tags: ["sol-age", "solar-cycles", "milestones", "vow", "pledge", "farcaster", "miniapp", "cosmic", "calendar"],
+      primaryCategory: "productivity",
+      tags: ["milestones", "vow", "pledge", "solar", "calendar"],
       iconUrl: `${appUrl}/icon.png`,
       homeUrl: appUrl,
       imageUrl: `${appUrl}/suncycles_og.png`,
       ogImageUrl: `${appUrl}/suncycles_og.png`,
       heroImageUrl: `${appUrl}/suncycles_og.png`,
+      noindex: true,
       screenshotUrls: [
         `${appUrl}/results_page.png`,
         `${appUrl}/pledge_page.png`,
-        `${appUrl}/suncycles_og.png`,
-        `${appUrl}/splash.png`
+        `${appUrl}/splash_page.png`
       ],
       buttonTitle: "Check your Sun Age!",
       splashImageUrl: `${appUrl}/splash.png`,
