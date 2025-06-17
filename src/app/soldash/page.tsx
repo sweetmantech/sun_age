@@ -133,7 +133,37 @@ export default function SolDashPage() {
             milestone={milestone?.cycles}
             milestoneDate={milestoneDate}
             daysToMilestone={daysToMilestone}
-            onRecalculate={() => router.push("/")}
+            onRecalculate={async () => {
+              setIsRecalculating(true);
+              try {
+                const saved = localStorage.getItem("sunCycleBookmark");
+                if (saved) {
+                  const bookmarkData = JSON.parse(saved);
+                  const birth = new Date(bookmarkData.birthDate);
+                  const now = new Date();
+                  const diffMs = now.getTime() - birth.getTime();
+                  const totalDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+                  const years = Math.floor(totalDays / 365.25);
+                  const updatedBookmark = {
+                    ...bookmarkData,
+                    days: totalDays,
+                    approxYears: years,
+                    lastVisitDays: bookmarkData.days,
+                    lastVisitDate: now.toISOString()
+                  };
+                  localStorage.setItem("sunCycleBookmark", JSON.stringify(updatedBookmark));
+                  setBookmark(updatedBookmark);
+                  await refreshPledgeData();
+                  if (typeof refetchOnChainPledge === 'function') {
+                    await refetchOnChainPledge();
+                  }
+                }
+              } catch (error) {
+                console.error("Error recalculating:", error);
+              } finally {
+                setTimeout(() => setIsRecalculating(false), 500);
+              }
+            }}
             onClear={() => {
               localStorage.removeItem("sunCycleBookmark");
               setBookmark(null);
@@ -164,6 +194,11 @@ export default function SolDashPage() {
             initialTab={"sol age"}
             hasPledged={hasPledged}
             vow={vow}
+            onSolVowsTab={() => {
+              if (typeof refetchOnChainPledge === 'function') {
+                refetchOnChainPledge();
+              }
+            }}
           />
         </div>
       </div>

@@ -33,7 +33,7 @@ interface SunCycleAgeProps {
   initialConsentData?: any[] | null;
 }
 
-function BookmarkCard({ bookmark, milestone, milestoneDate, daysToMilestone, onRecalculate, onClear, isRecalculating, sinceLastVisit, milestoneCard, showMilestoneModal, setShowMilestoneModal, nextNumericalMilestones, onShare, isSharing, initialTab, hasPledged, vow }) {
+function BookmarkCard({ bookmark, milestone, milestoneDate, daysToMilestone, onRecalculate, onClear, isRecalculating, sinceLastVisit, milestoneCard, showMilestoneModal, setShowMilestoneModal, nextNumericalMilestones, onShare, isSharing, initialTab, hasPledged, vow, onSolVowsTab }) {
   const [tab, setTab] = useState<'sol age' | 'sol vows' | 'journal' | 'sol sign'>(initialTab || 'sol age');
   const { context } = useFrameSDK();
   const [isSigning, setIsSigning] = useState(false);
@@ -62,6 +62,12 @@ function BookmarkCard({ bookmark, milestone, milestoneDate, daysToMilestone, onR
     setSignError(null);
     setSignSuccess(false);
   };
+
+  useEffect(() => {
+    if (tab === 'sol vows' && typeof onSolVowsTab === 'function') {
+      onSolVowsTab();
+    }
+  }, [tab, onSolVowsTab]);
 
   return (
     <div className="max-w-md w-full flex flex-col items-center space-y-4 sm:space-y-6 relative mt-24 px-0 sm:px-0">
