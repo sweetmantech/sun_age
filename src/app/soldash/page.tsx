@@ -14,6 +14,7 @@ interface Bookmark {
   birthDate: string;
   lastVisitDays?: number;
   lastVisitDate?: string;
+  userName?: string;
 }
 
 export default function SolDashPage() {
@@ -105,7 +106,9 @@ export default function SolDashPage() {
             onShare={() => {
               setIsSharing(true);
               const url = process.env.NEXT_PUBLIC_URL || window.location.origin;
-              const message = `Forget birthdays—I've completed ${bookmark.days} rotations around the sun ☀️🌎 What's your Sol Age? ${url}`;
+              const userName = bookmark.userName || 'TRAVELLER';
+              const ogImageUrl = `${url}/api/og/solage?userName=${encodeURIComponent(userName)}&solAge=${bookmark.days}&birthDate=${encodeURIComponent(bookmark.birthDate)}&age=${bookmark.approxYears}`;
+              const message = `Forget birthdays—I've completed ${bookmark.days} rotations around the sun ☀️🌎 What's your Sol Age? ${url}\n\n[My Sol Age Card](${ogImageUrl})`;
               window.location.href = `https://warpcast.com/~/compose?text=${encodeURIComponent(message)}`;
               setTimeout(() => setIsSharing(false), 1000);
             }}
@@ -124,7 +127,9 @@ export default function SolDashPage() {
               onClick={() => {
                 setIsSharing(true);
                 const url = process.env.NEXT_PUBLIC_URL || window.location.origin;
-                const message = `Forget birthdays—I've completed ${bookmark.days} rotations around the sun ☀️🌎 What's your Sol Age? ${url}`;
+                const userName = bookmark.userName || 'TRAVELLER';
+                const ogImageUrl = `${url}/api/og/solage?userName=${encodeURIComponent(userName)}&solAge=${bookmark.days}&birthDate=${encodeURIComponent(bookmark.birthDate)}&age=${bookmark.approxYears}`;
+                const message = `Forget birthdays—I've completed ${bookmark.days} rotations around the sun ☀️🌎 What's your Sol Age? ${url}\n\n[My Sol Age Card](${ogImageUrl})`;
                 window.location.href = `https://warpcast.com/~/compose?text=${encodeURIComponent(message)}`;
                 setTimeout(() => setIsSharing(false), 1000);
               }}

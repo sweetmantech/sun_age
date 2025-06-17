@@ -35,9 +35,11 @@ export default function ResultsPage() {
 
   // Handlers
   const handleShare = async () => {
-    if (!days) return;
+    if (!days || !birthDate || !approxYears) return;
     const url = process.env.NEXT_PUBLIC_URL || window.location.origin;
-    const message = `Forget birthdays—I&apos;ve completed ${days} rotations around the sun ☀️🌎 What&apos;s your Sol Age? ${url}`;
+    const userName = context?.user?.displayName || 'TRAVELLER';
+    const ogImageUrl = `${url}/api/og/solage?userName=${encodeURIComponent(userName)}&solAge=${days}&birthDate=${encodeURIComponent(birthDate)}&age=${approxYears}`;
+    const message = `Forget birthdays—I've completed ${days} rotations around the sun ☀️🌎 What's your Sol Age? ${url}\n\n[My Sol Age Card](${ogImageUrl})`;
     window.location.href = `https://warpcast.com/~/compose?text=${encodeURIComponent(message)}`;
   };
   const handleRecalculate = () => router.push('/');
