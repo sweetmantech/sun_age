@@ -8,6 +8,8 @@ import MilestoneCard from "../../components/SunCycleAge/MilestoneCard";
 import { useSolarPledge } from "../../hooks/useSolarPledge";
 import { useFrameSDK } from "~/hooks/useFrameSDK";
 import { SpinnerButton } from "~/components/ui/SpinnerButton";
+import { useAccount } from 'wagmi';
+import Image from "next/image";
 
 // Bookmark type
 interface Bookmark {
@@ -40,8 +42,9 @@ export default function SolDashPage() {
   const [isSharing, setIsSharing] = useState(false);
   const [isRecalculating, setIsRecalculating] = useState(false);
   const [showConfirmClear, setShowConfirmClear] = useState(false);
-  const { hasPledged: onChainHasPledged, onChainVow } = useSolarPledge();
+  const { hasPledged: onChainHasPledged, onChainVow, refetchOnChainPledge, isLoading } = useSolarPledge();
   const [ceremony, setCeremony] = useState({ hasPledged: false, vow: "" });
+  const { address } = useAccount();
 
   // Add function to refresh pledge data
   const refreshPledgeData = async () => {
@@ -71,6 +74,12 @@ export default function SolDashPage() {
     refreshPledgeData();
   }, []);
 
+  useEffect(() => {
+    if (address && typeof refetchOnChainPledge === 'function') {
+      refetchOnChainPledge();
+    }
+  }, [address, refetchOnChainPledge]);
+
   if (!bookmark) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen">
@@ -94,7 +103,13 @@ export default function SolDashPage() {
   const nextNumericalMilestones = getNextNumericalMilestones(bookmark.days, new Date(bookmark.birthDate), 10);
 
   const hasPledged = ceremony.hasPledged || onChainHasPledged;
-  const vow = onChainVow || ceremony.vow;
+  const vow = isLoading ? (
+    <div className="flex flex-col items-center justify-center py-8">
+      {/* Spinning SunSun image if available, otherwise fallback to ASCII spinner */}
+      <Image src="/sunsun.png" alt="Loading..." width={48} height={48} className="animate-spin mb-2" />
+      <span className="font-mono text-xs text-gray-500">Fetching your Solar Vow...</span>
+    </div>
+  ) : (onChainVow || ceremony.vow);
 
   // Construct the milestoneCard element for the next milestone
   const milestoneCard = milestone ? (
