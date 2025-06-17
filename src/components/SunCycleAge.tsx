@@ -33,7 +33,7 @@ interface SunCycleAgeProps {
   initialConsentData?: any[] | null;
 }
 
-function BookmarkCard({ bookmark, milestone, milestoneDate, daysToMilestone, onRecalculate, onClear, isRecalculating, sinceLastVisit, milestoneCard, showMilestoneModal, setShowMilestoneModal, nextNumericalMilestones, onShare, isSharing, initialTab, hasPledged, vow, onSolVowsTab }) {
+function BookmarkCard({ bookmark, milestone, milestoneDate, daysToMilestone, onRecalculate, onClear, isRecalculating, sinceLastVisit, milestoneCard, showMilestoneModal, setShowMilestoneModal, nextNumericalMilestones, onShare, isSharing, initialTab, hasPledged, vow, onSolVowsTab, isLoading }) {
   const [tab, setTab] = useState<'sol age' | 'sol vows' | 'journal' | 'sol sign'>(initialTab || 'sol age');
   const { context } = useFrameSDK();
   const [isSigning, setIsSigning] = useState(false);
@@ -42,6 +42,13 @@ function BookmarkCard({ bookmark, milestone, milestoneDate, daysToMilestone, onR
 
   // Add touch feedback state
   const [touchFeedback, setTouchFeedback] = useState<string | null>(null);
+
+  console.log('[BookmarkCard] Render with:', {
+    tab,
+    hasPledged,
+    vow,
+    isLoading
+  });
 
   const handleSign = async () => {
     setSignError(null);
@@ -64,7 +71,9 @@ function BookmarkCard({ bookmark, milestone, milestoneDate, daysToMilestone, onR
   };
 
   useEffect(() => {
+    console.log('[BookmarkCard] Tab changed to:', tab);
     if (tab === 'sol vows' && typeof onSolVowsTab === 'function') {
+      console.log('[BookmarkCard] Triggering Sol Vows tab callback');
       onSolVowsTab();
     }
   }, [tab, onSolVowsTab]);
@@ -189,7 +198,12 @@ function BookmarkCard({ bookmark, milestone, milestoneDate, daysToMilestone, onR
       )}
 
       {tab === 'sol vows' && (
-        hasPledged && vow ? (
+        isLoading ? (
+          <div className="w-full text-sm font-mono space-y-3 flex flex-col items-center justify-center p-8 text-center">
+            <Image src="/sunsun.png" alt="Loading..." width={48} height={48} className="animate-spin mb-2" />
+            <span className="font-mono text-xs text-gray-500">Fetching your Solar Vow...</span>
+          </div>
+        ) : hasPledged && vow ? (
           <div className="w-full text-sm font-mono space-y-3 flex flex-col items-center justify-center p-8 text-center">
             <div className="text-3xl mb-2">🌞</div>
             <div className="text-lg font-bold mb-1">Your Solar Vow</div>
@@ -228,6 +242,11 @@ function BookmarkCard({ bookmark, milestone, milestoneDate, daysToMilestone, onR
     </div>
   );
 }
+
+BookmarkCard.defaultProps = {
+  onSolVowsTab: undefined,
+  isLoading: false,
+};
 
 export default function SunCycleAge({ initialConsentData }: SunCycleAgeProps) {
   const { 

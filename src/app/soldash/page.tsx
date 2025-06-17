@@ -46,6 +46,13 @@ export default function SolDashPage() {
   const [ceremony, setCeremony] = useState({ hasPledged: false, vow: "" });
   const { address } = useAccount();
 
+  console.log('[SolDashPage] Render with:', {
+    address,
+    onChainHasPledged,
+    onChainVow,
+    isLoading
+  });
+
   // Add function to refresh pledge data
   const refreshPledgeData = async () => {
     try {
@@ -124,46 +131,64 @@ export default function SolDashPage() {
     />
   ) : null;
 
+  const handleRecalculate = async () => {
+    console.log('[SolDashPage] Recalculate triggered');
+    setIsRecalculating(true);
+    try {
+      const saved = localStorage.getItem("sunCycleBookmark");
+      if (saved) {
+        console.log('[SolDashPage] Updating bookmark data');
+        const bookmarkData = JSON.parse(saved);
+        const birth = new Date(bookmarkData.birthDate);
+        const now = new Date();
+        const diffMs = now.getTime() - birth.getTime();
+        const totalDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+        const years = Math.floor(totalDays / 365.25);
+        
+        // Update the bookmark with new calculations
+        const updatedBookmark = {
+          ...bookmarkData,
+          days: totalDays,
+          approxYears: years,
+          lastVisitDays: bookmarkData.days,
+          lastVisitDate: now.toISOString()
+        };
+        
+        // Save the updated bookmark
+        localStorage.setItem("sunCycleBookmark", JSON.stringify(updatedBookmark));
+        
+        // Refresh the page data
+        setBookmark(updatedBookmark);
+        console.log('Updated bookmark:', updatedBookmark);
+        
+        // Refresh pledge data
+        await refreshPledgeData();
+        
+        console.log('[SolDashPage] Bookmark updated, triggering refetch');
+        await refetchOnChainPledge();
+      }
+    } catch (error) {
+      console.error('[SolDashPage] Recalculation error:', error);
+    } finally {
+      setIsRecalculating(false);
+    }
+  };
+
+  const handleSolVowsTab = () => {
+    console.log('[SolDashPage] Sol Vows tab activated');
+    refetchOnChainPledge();
+  };
+
   return (
     <div className="w-full min-h-screen flex flex-col items-center bg-white relative">
       <div className="w-full flex flex-col items-center justify-center" style={{ background: 'rgba(255,252,242,0.5)', borderTop: '1px solid #9CA3AF', borderBottom: '1px solid #9CA3AF' }}>
         <div className="max-w-md mx-auto w-full px-6 pt-8 pb-8 min-h-[60vh]">
           <BookmarkCard
             bookmark={bookmark}
-            milestone={milestone?.cycles}
+            milestone={milestone}
             milestoneDate={milestoneDate}
             daysToMilestone={daysToMilestone}
-            onRecalculate={async () => {
-              setIsRecalculating(true);
-              try {
-                const saved = localStorage.getItem("sunCycleBookmark");
-                if (saved) {
-                  const bookmarkData = JSON.parse(saved);
-                  const birth = new Date(bookmarkData.birthDate);
-                  const now = new Date();
-                  const diffMs = now.getTime() - birth.getTime();
-                  const totalDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-                  const years = Math.floor(totalDays / 365.25);
-                  const updatedBookmark = {
-                    ...bookmarkData,
-                    days: totalDays,
-                    approxYears: years,
-                    lastVisitDays: bookmarkData.days,
-                    lastVisitDate: now.toISOString()
-                  };
-                  localStorage.setItem("sunCycleBookmark", JSON.stringify(updatedBookmark));
-                  setBookmark(updatedBookmark);
-                  await refreshPledgeData();
-                  if (typeof refetchOnChainPledge === 'function') {
-                    await refetchOnChainPledge();
-                  }
-                }
-              } catch (error) {
-                console.error("Error recalculating:", error);
-              } finally {
-                setTimeout(() => setIsRecalculating(false), 500);
-              }
-            }}
+            onRecalculate={handleRecalculate}
             onClear={() => {
               localStorage.removeItem("sunCycleBookmark");
               setBookmark(null);
@@ -191,14 +216,11 @@ export default function SolDashPage() {
               setTimeout(() => setIsSharing(false), 1000);
             }}
             isSharing={isSharing}
-            initialTab={"sol age"}
+            initialTab="sol vows"
             hasPledged={hasPledged}
             vow={vow}
-            onSolVowsTab={() => {
-              if (typeof refetchOnChainPledge === 'function') {
-                refetchOnChainPledge();
-              }
-            }}
+            onSolVowsTab={handleSolVowsTab}
+            isLoading={isLoading}
           />
         </div>
       </div>
@@ -226,49 +248,7 @@ export default function SolDashPage() {
               {isSharing ? "SHARING..." : "SHARE SOL AGE"}
             </SpinnerButton>
             <SpinnerButton
-              onClick={async () => {
-                console.log('Recalculate button clicked');
-                setIsRecalculating(true);
-                console.log('isRecalculating (after set to true):', true);
-                try {
-                  // Get the stored bookmark
-                  const saved = localStorage.getItem("sunCycleBookmark");
-                  if (saved) {
-                    const bookmarkData = JSON.parse(saved);
-                    const birth = new Date(bookmarkData.birthDate);
-                    const now = new Date();
-                    const diffMs = now.getTime() - birth.getTime();
-                    const totalDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-                    const years = Math.floor(totalDays / 365.25);
-                    
-                    // Update the bookmark with new calculations
-                    const updatedBookmark = {
-                      ...bookmarkData,
-                      days: totalDays,
-                      approxYears: years,
-                      lastVisitDays: bookmarkData.days,
-                      lastVisitDate: now.toISOString()
-                    };
-                    
-                    // Save the updated bookmark
-                    localStorage.setItem("sunCycleBookmark", JSON.stringify(updatedBookmark));
-                    
-                    // Refresh the page data
-                    setBookmark(updatedBookmark);
-                    console.log('Updated bookmark:', updatedBookmark);
-                    
-                    // Refresh pledge data
-                    await refreshPledgeData();
-                  }
-                } catch (error) {
-                  console.error("Error recalculating:", error);
-                } finally {
-                  setTimeout(() => {
-                    setIsRecalculating(false);
-                    console.log('isRecalculating (after set to false):', false);
-                  }, 500);
-                }
-              }}
+              onClick={handleRecalculate}
               disabled={isRecalculating}
               className="flex-1 border border-black bg-transparent text-black uppercase tracking-widest font-mono py-3 px-2 text-sm transition-all duration-200 hover:bg-gray-100 rounded-none disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
             >
