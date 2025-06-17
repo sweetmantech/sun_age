@@ -13,17 +13,17 @@ export async function GET() {
     frame: {
       version: "1",
       name: PROJECT_TITLE,
-      subtitle: "Track your cosmic journey in sun cycles",
+      subtitle: "Track your journey in sun cycles",
       description: PROJECT_DESCRIPTION,
-      tagline: "Measure your Sol Age and inscribe your Solar Vow.",
+      tagline: "Discover your Sol Age and make a Vow.",
       category: "lifestyle",
-      tags: ["sol age", "solar cycles", "milestones", "vow", "pledge", "farcaster", "miniapp", "cosmic", "calendar"],
+      tags: ["sol-age", "solar-cycles", "milestones", "vow", "pledge", "farcaster", "miniapp", "cosmic", "calendar"],
       iconUrl: `${appUrl}/icon.png`,
       homeUrl: appUrl,
       imageUrl: `${appUrl}/suncycles_og.png`,
       ogImageUrl: `${appUrl}/suncycles_og.png`,
       heroImageUrl: `${appUrl}/suncycles_og.png`,
-      screenshots: [
+      screenshotUrls: [
         `${appUrl}/results_page.png`,
         `${appUrl}/pledge_page.png`,
         `${appUrl}/suncycles_og.png`,
@@ -34,8 +34,9 @@ export async function GET() {
       splashBackgroundColor: "#f7f7f7",
       ogTitle: "Solara — Measure your Sol Age",
       ogDescription: "Calculate your age in sun cycles, discover cosmic milestones, and inscribe your Solar Vow.",
-      requiredChains: ["base"],
+      requiredChains: ["eip155:8453"],
       webhookUrl: "https://api.neynar.com/f/app/846d59ed-e2ad-4464-ae2e-35237dfa7b07/event",
+      castShareUrl: `${appUrl}/share`,
     },
   };
 
