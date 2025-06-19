@@ -233,7 +233,7 @@ function BookmarkCard({ bookmark, milestone, milestoneDate, daysToMilestone, onR
             <div className="text-lg font-bold mb-1">Your Solar Vow</div>
             <div className="italic text-gray-700 border border-gray-200 rounded p-3 bg-white mb-4">{vow}</div>
             {/* Green callout card below the vow text */}
-            <PledgeDetailsCard days={bookmark?.days} pledge={onChainPledge ? Number(onChainPledge.usdcPaid) / 1_000_000 : undefined} daysRemaining={daysRemaining} totalPooled={totalPooled} />
+            <PledgeDetailsCard days={onChainPledge ? Number(onChainPledge.solarAge) : bookmark?.days} pledge={onChainPledge ? Number(onChainPledge.usdcPaid) / 1_000_000 : undefined} daysRemaining={daysRemaining} totalPooled={totalPooled} />
           </div>
         ) : (
           <div className="w-full text-sm font-mono space-y-3 flex flex-col items-center justify-center p-8 text-center">
