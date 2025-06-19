@@ -44,6 +44,7 @@ export interface UseSolarPledgeResult {
   refetchPledged: (...args: any[]) => Promise<any>;
   onChainVow?: string;
   refetchOnChainPledge: (...args: any[]) => Promise<any>;
+  onChainPledge: Pledge | undefined;
 }
 
 export function useSolarPledge(): UseSolarPledgeResult {
@@ -341,5 +342,6 @@ export function useSolarPledge(): UseSolarPledgeResult {
     refetchPledged,
     onChainVow,
     refetchOnChainPledge,
+    onChainPledge: onChainPledge as Pledge | undefined,
   };
 } 

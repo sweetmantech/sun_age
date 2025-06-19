@@ -42,7 +42,7 @@ export default function SolDashPage() {
   const [isSharing, setIsSharing] = useState(false);
   const [isRecalculating, setIsRecalculating] = useState(false);
   const [showConfirmClear, setShowConfirmClear] = useState(false);
-  const { hasPledged: onChainHasPledged, onChainVow, refetchOnChainPledge, isLoading } = useSolarPledge();
+  const { hasPledged: onChainHasPledged, onChainVow, refetchOnChainPledge, isLoading, onChainPledge } = useSolarPledge();
   const [ceremony, setCeremony] = useState({ hasPledged: false, vow: "" });
   const { address } = useAccount();
 
@@ -221,6 +221,7 @@ export default function SolDashPage() {
             vow={vow}
             onSolVowsTab={handleSolVowsTab}
             isLoading={isLoading}
+            onChainPledge={onChainPledge}
           />
         </div>
       </div>
