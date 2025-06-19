@@ -14,6 +14,8 @@ import MilestoneCard from "./SunCycleAge/MilestoneCard";
 import sdk from "@farcaster/frame-sdk";
 import { useRouter } from "next/navigation";
 import { SpinnerButton } from "~/components/ui/SpinnerButton";
+import { useConvergenceStats } from '~/hooks/useConvergenceStats';
+import type { Pledge } from '~/hooks/useSolarPledge';
 // import { revokeUserConsent } from "~/lib/consent";
 
 function WarpcastEmbed({ url }: { url: string }) {
@@ -33,9 +35,31 @@ interface SunCycleAgeProps {
   initialConsentData?: any[] | null;
 }
 
-function BookmarkCard({ bookmark, milestone, milestoneDate, daysToMilestone, onRecalculate, onClear, isRecalculating, sinceLastVisit, milestoneCard, showMilestoneModal, setShowMilestoneModal, nextNumericalMilestones, onShare, isSharing, initialTab, hasPledged, vow, onSolVowsTab, isLoading }) {
+function BookmarkCard({ bookmark, milestone, milestoneDate, daysToMilestone, onRecalculate, onClear, isRecalculating, sinceLastVisit, milestoneCard, showMilestoneModal, setShowMilestoneModal, nextNumericalMilestones, onShare, isSharing, initialTab, hasPledged, vow, onSolVowsTab, isLoading, onChainPledge }: {
+  bookmark: any;
+  milestone: any;
+  milestoneDate: any;
+  daysToMilestone: any;
+  onRecalculate: any;
+  onClear: any;
+  isRecalculating: any;
+  sinceLastVisit: any;
+  milestoneCard: any;
+  showMilestoneModal: any;
+  setShowMilestoneModal: any;
+  nextNumericalMilestones: any;
+  onShare: any;
+  isSharing: any;
+  initialTab: any;
+  hasPledged: any;
+  vow: any;
+  onSolVowsTab?: any;
+  isLoading?: boolean;
+  onChainPledge?: Pledge;
+}) {
   const [tab, setTab] = useState<'sol age' | 'sol vows' | 'journal' | 'sol sign'>(initialTab || 'sol age');
   const { context } = useFrameSDK();
+  const { daysRemaining, totalPooled } = useConvergenceStats();
   const [isSigning, setIsSigning] = useState(false);
   const [signError, setSignError] = useState<Error | null>(null);
   const [signSuccess, setSignSuccess] = useState(false);
@@ -123,7 +147,7 @@ function BookmarkCard({ bookmark, milestone, milestoneDate, daysToMilestone, onR
           </div>
           <div className="flex justify-between items-center p-2 hover:bg-gray-50 rounded transition-colors">
             <span className="text-gray-600">NEXT MILESTONE</span>
-            <span className="font-bold text-right">{milestone} <span className="font-normal">(in {daysToMilestone} days)</span></span>
+            <span className="font-bold text-right">{milestone.emoji} {milestone.label} <span className="font-normal">(in {daysToMilestone} days)</span></span>
           </div>
           
           {/* Enhanced Milestone Card Section */}
@@ -203,11 +227,13 @@ function BookmarkCard({ bookmark, milestone, milestoneDate, daysToMilestone, onR
             <Image src="/sunsun.png" alt="Loading..." width={48} height={48} className="animate-spin mb-2" />
             <span className="font-mono text-xs text-gray-500">Fetching your Solar Vow...</span>
           </div>
-        ) : hasPledged && vow ? (
+        ) : (typeof vow === 'string' && vow.trim().length > 0) ? (
           <div className="w-full text-sm font-mono space-y-3 flex flex-col items-center justify-center p-8 text-center">
             <div className="text-3xl mb-2">🌞</div>
             <div className="text-lg font-bold mb-1">Your Solar Vow</div>
-            <div className="italic text-gray-700 border border-gray-200 rounded p-3 bg-white">{vow}</div>
+            <div className="italic text-gray-700 border border-gray-200 rounded p-3 bg-white mb-4">{vow}</div>
+            {/* Green callout card below the vow text */}
+            <PledgeDetailsCard days={bookmark?.days} pledge={onChainPledge ? Number(onChainPledge.usdcPaid) / 1_000_000 : undefined} daysRemaining={daysRemaining} totalPooled={totalPooled} />
           </div>
         ) : (
           <div className="w-full text-sm font-mono space-y-3 flex flex-col items-center justify-center p-8 text-center">
@@ -247,6 +273,38 @@ BookmarkCard.defaultProps = {
   onSolVowsTab: undefined,
   isLoading: false,
 };
+
+// PledgeDetailsCard component
+function PledgeDetailsCard({ days, pledge, daysRemaining, totalPooled }) {
+  return (
+    <div className="w-full border border-green-200 rounded-none p-4 mb-4" style={{ background: '#EFFDF4', color: '#15803D' }}>
+      <div className="text-xs font-mono font-bold uppercase mb-2 w-full text-center" style={{ color: '#15803D' }}>
+        SOLAR VOW INSCRIBED
+      </div>
+      <div className="flex flex-col items-center mb-2">
+        <div className="text-3xl font-serif font-bold mb-1 flex items-center gap-2" style={{ color: '#15803D' }}>
+          <span>⭐</span>
+          <span>{days?.toLocaleString?.() ?? ''}</span>
+          <span>⭐</span>
+        </div>
+        <div className="text-xs font-mono uppercase mb-2 text-center" style={{ color: '#15803D', letterSpacing: '0.08em' }}>
+          ROTATIONS SEALED IN THE COSMIC LEDGER
+        </div>
+      </div>
+      <div className="w-full h-px bg-green-300 my-2" />
+      <div className="grid grid-cols-2 gap-y-1 text-xs font-mono" style={{ color: '#15803D' }}>
+        <div className="text-left">VOW ENERGY:</div>
+        <div className="text-right font-bold">{pledge !== undefined ? `$${pledge}` : '—'}</div>
+        <div className="text-left">SPONSORED CEREMONIES:</div>
+        <div className="text-right font-bold">2</div>
+        <div className="text-left">COMMUNITY CONSTELLATION:</div>
+        <div className="text-right font-bold">{totalPooled !== undefined ? `$${totalPooled.toLocaleString(undefined, { maximumFractionDigits: 2 })} POOLED` : '—'}</div>
+        <div className="text-left">COSMIC CONVERGENCE:</div>
+        <div className="text-right font-bold">{daysRemaining !== undefined ? `${daysRemaining} DAYS LEFT` : '...'}</div>
+      </div>
+    </div>
+  );
+}
 
 export default function SunCycleAge({ initialConsentData }: SunCycleAgeProps) {
   const { 
