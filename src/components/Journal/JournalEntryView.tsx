@@ -107,18 +107,6 @@ export default function JournalEntryView({
             </>
           )}
           
-          {entry.preservation_status === 'local' && (
-            <button
-              onClick={() => {
-                // TODO: Implement wisdom extraction
-                alert('Wisdom extraction coming soon!');
-              }}
-              className="px-3 py-1.5 text-xs font-mono uppercase tracking-widest bg-black text-white hover:bg-gray-800 transition-colors duration-200"
-            >
-              Extract Wisdom
-            </button>
-          )}
-          
           {entry.preservation_status === 'preserved' && (
             <button
               onClick={() => {
@@ -132,18 +120,6 @@ export default function JournalEntryView({
           )}
         </div>
       </div>
-
-      {/* Wisdom Section (placeholder for future feature) */}
-      {entry.preservation_status === 'preserved' && (
-        <div className="p-4 bg-yellow-50 border border-yellow-200 rounded">
-          <div className="text-sm text-yellow-800">
-            <div className="font-semibold mb-2">✨ Wisdom Extracted</div>
-            <div className="text-gray-600">
-              Wisdom extraction feature coming soon! You'll be able to extract profound insights from your preserved entries.
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 } 

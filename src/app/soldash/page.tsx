@@ -30,7 +30,7 @@ function PulsingStarSpinner() {
       setFrame(f => (f + 1) % frames.length);
     }, 120);
     return () => clearInterval(interval);
-  }, []);
+  }, [frames.length]);
   return <span style={{ fontSize: '1.2em', marginRight: 6 }}>{frames[frame]}</span>;
 }
 
