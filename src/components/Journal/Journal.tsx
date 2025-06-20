@@ -45,10 +45,10 @@ export default function Journal({ solDay, onClose }: JournalProps) {
     }
   };
 
-  const handleDeleteEntry = async (id: string) => {
+  const handleDeleteEntry = async (entry: JournalEntry) => {
     try {
-      await deleteEntry(id);
-      if (selectedEntry?.id === id) {
+      await deleteEntry(entry.id);
+      if (selectedEntry?.id === entry.id) {
         setSelectedEntry(null);
         setCurrentState('timeline');
       }
@@ -149,7 +149,7 @@ export default function Journal({ solDay, onClose }: JournalProps) {
         <JournalEntryView
           entry={selectedEntry}
           onEdit={() => handleEditEntry(selectedEntry)}
-          onDelete={() => handleDeleteEntry(selectedEntry.id)}
+          onDelete={() => handleDeleteEntry(selectedEntry)}
           onBack={handleBackToTimeline}
         />
       )}

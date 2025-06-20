@@ -4,10 +4,10 @@ import type { UpdateJournalEntryRequest } from '~/types/journal';
 
 export async function PUT(
   request: NextRequest,
-  params: Promise<{ params: { id: string } }>
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { params: resolvedParams } = await params;
+    const { id } = await params;
     const supabase = await createClient();
     
     // Get user from session
@@ -33,7 +33,7 @@ export async function PUT(
     const { data: existingEntry, error: fetchError } = await supabase
       .from('journal_entries')
       .select('*')
-      .eq('id', resolvedParams.id)
+      .eq('id', id)
       .eq('user_fid', user.id)
       .single();
 
@@ -56,7 +56,7 @@ export async function PUT(
         content: content.trim(),
         word_count
       })
-      .eq('id', resolvedParams.id)
+      .eq('id', id)
       .eq('user_fid', user.id)
       .select()
       .single();
@@ -75,10 +75,10 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  params: Promise<{ params: { id: string } }>
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { params: resolvedParams } = await params;
+    const { id } = await params;
     const supabase = await createClient();
     
     // Get user from session
@@ -91,7 +91,7 @@ export async function DELETE(
     const { data: existingEntry, error: fetchError } = await supabase
       .from('journal_entries')
       .select('*')
-      .eq('id', resolvedParams.id)
+      .eq('id', id)
       .eq('user_fid', user.id)
       .single();
 
@@ -108,7 +108,7 @@ export async function DELETE(
     const { error } = await supabase
       .from('journal_entries')
       .delete()
-      .eq('id', resolvedParams.id)
+      .eq('id', id)
       .eq('user_fid', user.id);
 
     if (error) {
