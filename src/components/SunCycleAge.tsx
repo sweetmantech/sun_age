@@ -16,6 +16,7 @@ import { useRouter } from "next/navigation";
 import { SpinnerButton } from "~/components/ui/SpinnerButton";
 import { useConvergenceStats } from '~/hooks/useConvergenceStats';
 import type { Pledge } from '~/hooks/useSolarPledge';
+import Journal from './Journal/Journal';
 // import { revokeUserConsent } from "~/lib/consent";
 
 function WarpcastEmbed({ url }: { url: string }) {
@@ -251,11 +252,7 @@ function BookmarkCard({ bookmark, milestone, milestoneDate, daysToMilestone, onR
       )}
 
       {tab === 'journal' && (
-        <div className="w-full text-sm font-mono space-y-3 flex flex-col items-center justify-center p-8 text-center">
-          <div className="text-3xl mb-2">📓</div>
-          <div className="text-lg font-bold mb-1">Nothing here yet</div>
-          <div className="text-gray-600">Your journal entries and reflections will appear here.</div>
-        </div>
+        <Journal solDay={bookmark.days} />
       )}
 
       {tab === 'sol sign' && (
