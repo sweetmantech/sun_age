@@ -6,7 +6,17 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "type-check": "tsc --noEmit --project .",
+    "type-check:watch": "tsc --noEmit --project . --watch",
+    "lint:fix": "next lint --fix",
+    "clean": "rm -rf .next && rm -rf node_modules && rm -rf .turbo",
+    "setup": "./scripts/dev-setup.sh",
+    "test:build": "npm run type-check && npm run lint && npm run build",
+    "ci": "npm run type-check && npm run lint && npm run build",
+    "health": "curl -f http://localhost:3000/api/health || echo 'Health check failed'",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
   },
   "dependencies": {
     "@daimo/pay": "^1.7.4",
@@ -48,7 +58,9 @@
     "eslint-config-next": "^15.3.3",
     "hardhat": "^2.19.5",
     "patch-package": "^8.0.0",
+    "prettier": "^3.5.3",
     "tailwindcss": "3.4.3",
-    "typescript": "^5.8.2"
+    "typescript": "^5.8.2",
+    "vitest": "^3.2.4"
   }
 }
