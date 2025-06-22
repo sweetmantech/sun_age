@@ -1,103 +1,66 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '~/utils/supabase/server';
-import { cookies } from 'next/headers';
-import type { CreateJournalEntryRequest } from '~/types/journal';
 
-export async function GET(request: NextRequest) {
-  try {
-    const supabase = await createClient();
-    
-    // Get user from session
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+export async function GET(req: NextRequest) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
 
-    // Get query parameters
-    const { searchParams } = new URL(request.url);
-    const preservation_status = searchParams.get('preservation_status');
-    const search = searchParams.get('search');
-    const limit = parseInt(searchParams.get('limit') || '50');
-    const offset = parseInt(searchParams.get('offset') || '0');
-
-    // Build query
-    let query = supabase
-      .from('journal_entries')
-      .select('*')
-      .eq('user_fid', user.id)
-      .order('created_at', { ascending: false })
-      .range(offset, offset + limit - 1);
-
-    // Apply filters
-    if (preservation_status && preservation_status !== 'all') {
-      query = query.eq('preservation_status', preservation_status);
-    }
-
-    if (search) {
-      query = query.ilike('content', `%${search}%`);
-    }
-
-    const { data: entries, error } = await query;
-
-    if (error) {
-      console.error('Error fetching journal entries:', error);
-      return NextResponse.json({ error: 'Failed to fetch entries' }, { status: 500 });
-    }
-
-    return NextResponse.json({ entries });
-  } catch (error) {
-    console.error('Unexpected error in GET /api/journal/entries:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  if (!user) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
+
+  const { data: entries, error } = await supabase
+    .from('journal_entries')
+    .select('*')
+    .eq('user_fid', user.id)
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    console.error('Error fetching journal entries:', error);
+    return NextResponse.json({ error: 'Failed to fetch journal entries' }, { status: 500 });
+  }
+
+  return NextResponse.json({ entries });
 }
 
-export async function POST(request: NextRequest) {
-  try {
+export async function POST(req: NextRequest) {
     const supabase = await createClient();
-    
-    // Get user from session
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Parse request body
-    const body: CreateJournalEntryRequest = await request.json();
-    const { content, sol_day } = body;
+    try {
+        const { content, sol_day } = await req.json();
 
-    // Validate input
-    if (!content || !sol_day) {
-      return NextResponse.json({ error: 'Content and sol_day are required' }, { status: 400 });
+        if (!content || typeof sol_day === 'undefined') {
+            return NextResponse.json({ error: 'Missing required fields: content and sol_day' }, { status: 400 });
+        }
+
+        const newEntry = {
+            user_fid: user.id,
+            content,
+            sol_day,
+            word_count: content.trim().split(/\s+/).length,
+            preservation_status: 'private',
+        };
+
+        const { data: entry, error } = await supabase
+            .from('journal_entries')
+            .insert(newEntry)
+            .select()
+            .single();
+
+        if (error) {
+            console.error('Error creating journal entry:', error);
+            return NextResponse.json({ error: 'Failed to create journal entry' }, { status: 500 });
+        }
+
+        return NextResponse.json({ entry });
+
+    } catch (error) {
+        console.error('Error parsing request body:', error);
+        return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
     }
-
-    if (content.trim().length === 0) {
-      return NextResponse.json({ error: 'Content cannot be empty' }, { status: 400 });
-    }
-
-    // Calculate word count
-    const word_count = content.trim().split(/\s+/).length;
-
-    // Create journal entry
-    const { data: entry, error } = await supabase
-      .from('journal_entries')
-      .insert({
-        user_fid: user.id,
-        sol_day,
-        content: content.trim(),
-        word_count,
-        preservation_status: 'local'
-      })
-      .select()
-      .single();
-
-    if (error) {
-      console.error('Error creating journal entry:', error);
-      return NextResponse.json({ error: 'Failed to create entry' }, { status: 500 });
-    }
-
-    return NextResponse.json({ entry }, { status: 201 });
-  } catch (error) {
-    console.error('Unexpected error in POST /api/journal/entries:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
-  }
 } 

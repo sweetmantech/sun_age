@@ -16,61 +16,43 @@ interface LocalJournalEntry {
 
 export function useJournal() {
   const [entries, setEntries] = useState<JournalEntry[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   // Load entries from local storage on mount
   useEffect(() => {
-    const loadLocalEntries = () => {
-      try {
-        const stored = localStorage.getItem(LOCAL_STORAGE_KEY);
-        if (stored) {
-          const localEntries: LocalJournalEntry[] = JSON.parse(stored);
-          // Convert local entries to JournalEntry format
-          const convertedEntries: JournalEntry[] = localEntries.map(entry => ({
-            ...entry,
-            user_fid: 0, // Placeholder for local entries
-            preservation_status: 'local' as const
-          }));
-          setEntries(convertedEntries);
-        }
-      } catch (err) {
-        console.error('Error loading local journal entries:', err);
+    setLoading(true);
+    try {
+      const stored = localStorage.getItem(LOCAL_STORAGE_KEY);
+      if (stored) {
+        setEntries(JSON.parse(stored));
       }
-    };
-
-    loadLocalEntries();
+    } catch (err) {
+      console.error('Error loading local journal entries:', err);
+      setError('Failed to load journal entries from local storage.');
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
   // Save entries to local storage
   const saveToLocalStorage = useCallback((newEntries: JournalEntry[]) => {
     try {
-      const localEntries = newEntries
-        .filter(entry => entry.preservation_status === 'local')
-        .map(entry => ({
-          id: entry.id,
-          content: entry.content,
-          sol_day: entry.sol_day,
-          word_count: entry.word_count,
-          created_at: entry.created_at,
-          preservation_status: 'local' as const
-        }));
-      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(localEntries));
+      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(newEntries));
     } catch (err) {
       console.error('Error saving to local storage:', err);
+      setError('Failed to save journal entry.');
     }
   }, []);
 
-  // Create a new journal entry
+  // Create a new journal entry locally
   const createEntry = useCallback(async (data: CreateJournalEntryRequest): Promise<JournalEntry> => {
     setLoading(true);
     setError(null);
-
     try {
-      // Create local entry first
       const newEntry: JournalEntry = {
         id: `local_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-        user_fid: 0,
+        user_fid: 0, // Not yet associated with a user
         sol_day: data.sol_day,
         content: data.content,
         word_count: data.content.trim().split(/\s+/).length,
@@ -78,34 +60,11 @@ export function useJournal() {
         created_at: new Date().toISOString()
       };
 
-      // Add to state
       setEntries(prev => {
         const newEntries = [newEntry, ...prev];
         saveToLocalStorage(newEntries);
         return newEntries;
       });
-
-      // Try to save to API if user is authenticated
-      try {
-        const response = await fetch('/api/journal/entries', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(data)
-        });
-
-        if (response.ok) {
-          const { entry } = await response.json();
-          // Replace local entry with server entry
-          setEntries(prev => {
-            const newEntries = prev.map(e => e.id === newEntry.id ? entry : e);
-            saveToLocalStorage(newEntries);
-            return newEntries;
-          });
-          return entry;
-        }
-      } catch (apiError) {
-        console.warn('Failed to save to API, keeping local only:', apiError);
-      }
 
       return newEntry;
     } catch (err) {
@@ -117,46 +76,29 @@ export function useJournal() {
     }
   }, [saveToLocalStorage]);
 
-  // Update a journal entry
+  // Update a journal entry locally
   const updateEntry = useCallback(async (id: string, data: UpdateJournalEntryRequest): Promise<JournalEntry> => {
     setLoading(true);
     setError(null);
-
+    
     try {
+      const entryToUpdate = entries.find(e => e.id === id);
+
+      if (!entryToUpdate) {
+        throw new Error('Entry not found');
+      }
+
       const updatedEntry: JournalEntry = {
-        ...entries.find(e => e.id === id)!,
+        ...entryToUpdate,
         content: data.content,
-        word_count: data.content.trim().split(/\s+/).length
+        word_count: data.content.trim().split(/\s+/).length,
       };
 
-      // Update local state
       setEntries(prev => {
-        const newEntries = prev.map(e => e.id === id ? updatedEntry : e);
+        const newEntries = prev.map(e => (e.id === id ? updatedEntry : e));
         saveToLocalStorage(newEntries);
         return newEntries;
       });
-
-      // Try to update on API if user is authenticated
-      try {
-        const response = await fetch(`/api/journal/entries/${id}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(data)
-        });
-
-        if (response.ok) {
-          const { entry } = await response.json();
-          // Update with server response
-          setEntries(prev => {
-            const newEntries = prev.map(e => e.id === id ? entry : e);
-            saveToLocalStorage(newEntries);
-            return newEntries;
-          });
-          return entry;
-        }
-      } catch (apiError) {
-        console.warn('Failed to update on API, keeping local only:', apiError);
-      }
 
       return updatedEntry;
     } catch (err) {
@@ -168,31 +110,16 @@ export function useJournal() {
     }
   }, [entries, saveToLocalStorage]);
 
-  // Delete a journal entry
+  // Delete a journal entry locally
   const deleteEntry = useCallback(async (id: string): Promise<void> => {
     setLoading(true);
     setError(null);
-
     try {
-      // Remove from local state
       setEntries(prev => {
         const newEntries = prev.filter(e => e.id !== id);
         saveToLocalStorage(newEntries);
         return newEntries;
       });
-
-      // Try to delete from API if user is authenticated
-      try {
-        const response = await fetch(`/api/journal/entries/${id}`, {
-          method: 'DELETE'
-        });
-
-        if (!response.ok) {
-          console.warn('Failed to delete from API, but removed locally');
-        }
-      } catch (apiError) {
-        console.warn('Failed to delete from API, but removed locally:', apiError);
-      }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to delete entry';
       setError(errorMessage);

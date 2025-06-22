@@ -13,10 +13,11 @@
     "clean": "rm -rf .next && rm -rf node_modules && rm -rf .turbo",
     "setup": "./scripts/dev-setup.sh",
     "test:build": "npm run type-check && npm run lint && npm run build",
-    "ci": "npm run type-check && npm run lint && npm run build",
+    "ci": "npm run format:check && npm run lint && npm run type-check && npm run test:build",
     "health": "curl -f http://localhost:3000/api/health || echo 'Health check failed'",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "db:import-prompts": "npx ts-node --project tsconfig.node.json scripts/import-prompts.ts"
   },
   "dependencies": {
     "@daimo/pay": "^1.7.4",
@@ -51,6 +52,7 @@
     "@openzeppelin/contracts": "^5.3.0",
     "@solana/web3.js": "^1.98.2",
     "@types/node": "^22.15.29",
+    "@types/papaparse": "^5.3.16",
     "@types/react": "^18.3.22",
     "@types/react-dom": "^18.3.7",
     "autoprefixer": "^10.4.21",
@@ -58,6 +60,7 @@
     "eslint": "^9.28.0",
     "eslint-config-next": "^15.3.3",
     "hardhat": "^2.19.5",
+    "papaparse": "^5.5.3",
     "patch-package": "^8.0.0",
     "prettier": "^3.5.3",
     "tailwindcss": "3.4.3",

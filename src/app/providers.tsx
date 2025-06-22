@@ -9,7 +9,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 // import { getUUID } from "~/lib/utils";
 
 const WagmiProvider = dynamic(
-  () => import("../components/providers/WagmiProvider"),
+  () => import("~/components/providers/WagmiProvider"),
   { ssr: false }
 );
 
@@ -39,10 +39,12 @@ const WagmiProvider = dynamic(
 
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
-    <WagmiProvider>
-      {/* <PostHogProvider> */}
-        {children}
-      {/* </PostHogProvider> */}
-    </WagmiProvider>
+    <Suspense fallback={null}>
+        <WagmiProvider>
+            {/* <PostHogProvider> */}
+                {children}
+            {/* </PostHogProvider> */}
+        </WagmiProvider>
+    </Suspense>
   );
 }
