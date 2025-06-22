@@ -24,7 +24,7 @@ importers:
         specifier: ^0.0.32
         version: 0.0.32(bufferutil@4.0.9)(encoding@0.1.13)(typescript@5.8.3)(utf-8-validate@5.0.10)
       '@farcaster/frame-sdk':
-        specifier: ^0.0.53
+        specifier: 0.0.53
         version: 0.0.53(bufferutil@4.0.9)(encoding@0.1.13)(typescript@5.8.3)(utf-8-validate@5.0.10)(zod@3.25.62)
       '@farcaster/frame-wagmi-connector':
         specifier: ^0.0.42
@@ -7200,7 +7200,6 @@ snapshots:
 
   '@farcaster/frame-core@file:packages/frame-core(bufferutil@4.0.9)(encoding@0.1.13)(typescript@5.8.3)(utf-8-validate@5.0.10)':
     dependencies:
-      '@farcaster/frame-sdk': 0.0.53(bufferutil@4.0.9)(encoding@0.1.13)(typescript@5.8.3)(utf-8-validate@5.0.10)(zod@3.25.62)
       '@solana/web3.js': 1.98.2(bufferutil@4.0.9)(encoding@0.1.13)(typescript@5.8.3)(utf-8-validate@5.0.10)
       ox: 0.4.4(typescript@5.8.3)(zod@3.25.62)
       zod: 3.25.62

@@ -130,7 +130,7 @@ export function JournalEntryEditor({ entry, onSave, onFinish }: JournalEntryEdit
                                         What patterns am I noticing in my cosmic journey?
                                     </button>
                                     <button onClick={(e) => handlePromptClick(e.currentTarget.textContent)} className="w-full text-left p-3 border border-gray-200 font-serif text-black hover:bg-gray-50" style={{ backgroundColor: '#FEFDF8' }}>
-                                        What wisdom emerged from today's orbit?
+                                        What wisdom emerged from today&apos;s orbit?
                                     </button>
                                 </div>
                             </div>
