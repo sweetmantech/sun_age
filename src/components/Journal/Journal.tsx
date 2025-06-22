@@ -6,9 +6,31 @@ import { JournalEntryEditor } from '~/components/Journal/JournalEntryEditor';
 import { useJournal } from '~/hooks/useJournal';
 import type { JournalEntry } from '~/types/journal';
 import { ConfirmationModal } from '~/components/ui/ConfirmationModal';
+import { useDailyContent } from '~/hooks/useDailyContent';
+import Image from 'next/image';
 
 interface JournalProps {
   solAge: number;
+}
+
+function JournalEmptyState() {
+  return (
+    <div className="border border-gray-300 p-8 text-center bg-white/50">
+      <h2 className="text-sm font-mono tracking-widest text-gray-700 mb-6">🌞 NO ENTRIES YET 🌞</h2>
+      <div className="max-w-prose mx-auto text-left">
+        <p className="font-serif text-gray-800 mb-6 text-[17px] leading-[20px] tracking-[-0.02em]">Welcome to the journal.</p>
+        <p className="font-serif text-gray-800 text-[17px] leading-[20px] tracking-[-0.02em]">
+          Every day you visit Solara, you'll find a daily prompt, an affirmation, or a reflection from our Sol Guide, Abri Mathos. Some days you might be inspired to share something you've learned, you felt, you questioned—all are valid here. And sometimes if you feel inclined, you can preserve these reflections so that others may find the wisdom in your journey.
+        </p>
+        <p className="font-serif text-gray-800 mt-6 text-[17px] leading-[20px] tracking-[-0.02em]">
+          Together we may seek the knowledge of the sun.
+        </p>
+        <p className="font-serif text-gray-800 mt-8 text-[17px] leading-[20px] tracking-[-0.02em]">
+          Sol Seeker 🌞<br />- Su
+        </p>
+      </div>
+    </div>
+  );
 }
 
 export function Journal({ solAge }: JournalProps) {
@@ -74,39 +96,40 @@ export function Journal({ solAge }: JournalProps) {
     return <div className="text-red-500">Error loading journal: {error}</div>;
   }
 
+  if (editingEntry) {
+    return (
+      <JournalEntryEditor
+        entry={editingEntry}
+        onSave={handleSave}
+        onFinish={handleCancel}
+      />
+    );
+  }
+
   return (
-    <div className="w-full max-w-md mx-auto">
-      {editingEntry ? (
-        <JournalEntryEditor 
-          entry={editingEntry}
-          onSave={handleSave}
-          onFinish={handleCancel}
+    <div className="w-full max-w-2xl mx-auto px-4 sm:px-6">
+      <div className="flex justify-between items-center py-4 gap-2">
+        <input
+          type="text"
+          placeholder="SEARCH ENTRIES..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="w-full h-11 bg-white/90 border border-gray-300 text-black placeholder-gray-500 px-4 py-2 text-xs font-mono tracking-widest focus:outline-none focus:ring-1 focus:ring-black"
         />
+        <button
+          onClick={handleStartWriting}
+          className="h-11 flex-shrink-0 bg-[#d4af37] text-black font-mono text-xs tracking-widest py-3 px-4 border border-black hover:bg-[#e6c75a] transition-colors"
+        >
+          + NEW
+        </button>
+      </div>
+      
+      {entries.length > 0 ? (
+        <JournalTimeline entries={filteredEntries} onEdit={handleEdit} onDelete={handleDeleteRequest} onStartWriting={handleStartWriting} />
       ) : (
-        <>
-          <div className="flex justify-between items-center mb-4 gap-2">
-            <input
-              type="text"
-              placeholder="SEARCH ENTRIES..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="flex-1 bg-white/90 border border-gray-300 text-black placeholder-gray-500 px-4 py-2 text-xs font-mono tracking-widest focus:outline-none focus:ring-1 focus:ring-black"
-            />
-            <button
-              onClick={handleStartWriting}
-              className="bg-[#d4af37] text-black font-mono text-xs tracking-widest py-2 px-4 border border-black hover:bg-[#e6c75a] transition-colors"
-            >
-              + NEW
-            </button>
-          </div>
-          <JournalTimeline 
-            entries={filteredEntries} 
-            onStartWriting={handleStartWriting}
-            onEdit={handleEdit}
-            onDelete={handleDeleteRequest} 
-          />
-        </>
+        <JournalEmptyState />
       )}
+
       <ConfirmationModal
         isOpen={!!entryToDelete}
         onClose={() => setEntryToDelete(null)}

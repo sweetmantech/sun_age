@@ -55,11 +55,22 @@ export function JournalEntryEditor({ entry, onSave, onFinish }: JournalEntryEdit
 
   const handlePromptClick = (promptText: string | null) => {
     if (!promptText) return;
+    
+    const generateResponseStarter = (prompt: string): string => {
+        const starters: { [key: string]: string } = {
+            "How did this Sol day shape me?": "This Sol day shaped me by ",
+            "What patterns am I noticing in my cosmic journey?": "In my cosmic journey, I'm noticing a pattern of ",
+            "What wisdom emerged from today's orbit?": "From today's orbit, the wisdom that emerged was ",
+        };
+        return starters[prompt] || prompt;
+    }
+
     setContent(prevContent => {
+        const starter = generateResponseStarter(promptText);
         if (prevContent.trim() === '') {
-            return promptText;
+            return starter;
         }
-        return prevContent + '\\n\\n' + promptText;
+        return prevContent + '\\n\\n' + starter;
     });
     setShowPrompts(false);
   };
@@ -74,12 +85,14 @@ export function JournalEntryEditor({ entry, onSave, onFinish }: JournalEntryEdit
             
             {/* Scrollable Content Area */}
             <div className="flex-1 flex flex-col p-6 overflow-y-auto">
-                <div className="flex-shrink-0 flex justify-between items-start mb-6">
-                    <div>
-                        <h3 className="text-4xl font-mono">SOL {entry.sol_day}</h3>
-                        <p className="text-md text-gray-500 font-mono">{new Date(entry.created_at).toLocaleDateString()}</p>
+                <div className="relative flex justify-center items-center mb-6">
+                    <div className="text-center">
+                        <h3 className="text-xl font-mono">SOL {entry.sol_day}</h3>
+                        <p className="text-sm text-gray-500 font-mono">
+                            {new Date(entry.created_at).toLocaleDateString('en-US', { year: 'numeric', month: '2-digit', day: '2-digit' }).replace(/\//g, ".")}
+                        </p>
                     </div>
-                    <button onClick={onFinish} className="p-2 text-gray-400 hover:text-black">
+                    <button onClick={onFinish} className="absolute right-0 top-1/2 -translate-y-1/2 p-2 text-gray-400 hover:text-black">
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                         </svg>

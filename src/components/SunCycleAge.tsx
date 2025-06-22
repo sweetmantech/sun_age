@@ -68,13 +68,6 @@ function BookmarkCard({ bookmark, milestone, milestoneDate, daysToMilestone, onR
   // Add touch feedback state
   const [touchFeedback, setTouchFeedback] = useState<string | null>(null);
 
-  console.log('[BookmarkCard] Render with:', {
-    tab,
-    hasPledged,
-    vow,
-    isLoading
-  });
-
   const handleSign = async () => {
     setSignError(null);
     setIsSigning(true);
@@ -96,9 +89,7 @@ function BookmarkCard({ bookmark, milestone, milestoneDate, daysToMilestone, onR
   };
 
   useEffect(() => {
-    console.log('[BookmarkCard] Tab changed to:', tab);
     if (tab === 'sol vows' && typeof onSolVowsTab === 'function') {
-      console.log('[BookmarkCard] Triggering Sol Vows tab callback');
       onSolVowsTab();
     }
   }, [tab, onSolVowsTab]);
