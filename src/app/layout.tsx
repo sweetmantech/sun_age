@@ -8,10 +8,10 @@ import { Providers } from "./providers";
 import { Info } from "lucide-react";
 // import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "~/components/ui/tooltip";
 import HeaderClient from "../components/SunCycleAge/HeaderClient";
-import { Inter } from "next/font/google";
+// import { Inter } from "next/font/google";
 // import { PostHogIdentify } from "~/components/posthog-identify";
 
-const inter = Inter({ subsets: ["latin"] });
+// const inter = Inter({ subsets: ["latin"] });
 
 const appUrl =
   process.env.NEXT_PUBLIC_URL ||
@@ -88,7 +88,7 @@ export default function RootLayout({
   }).replace(/\//g, ".");
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={inter.className}>
+      <body>
         <Providers>
           {/* <PostHogIdentify /> */}
           {/* Skip to content link */}

@@ -34,6 +34,11 @@ declare module '@farcaster/frame-core' {
     [key: string]: any
   }
 
+  // Context types
+  export type FrameContext = {
+    [key: string]: any
+  }
+
   // Ready types
   export type ReadyOptions = {
     [key: string]: any
@@ -53,4 +58,10 @@ declare module '@farcaster/frame-core' {
   // Override problematic exports
   export type { DEFAULT_READY_OPTIONS as DEFAULT_READY_OPTIONS_TYPE, ReadyOptions as ReadyOptionsType } from './actions/Ready'
   export type { SignInOptions as SignInOptionsType } from './actions/SignIn'
+}
+
+declare module '@farcaster/frame-core/context' {
+  export type FrameContext = {
+    [key: string]: any
+  }
 } 
