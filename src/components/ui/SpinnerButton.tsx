@@ -14,13 +14,23 @@ function PulsingStarSpinner() {
 }
 
 // SpinnerButton component
-export function SpinnerButton({ onClick, children, delay = 500, className = "", ...props }) {
+export function SpinnerButton({ onClick, children, isSubmitting, delay = 500, className = "", ...props }) {
   const [isLoading, setIsLoading] = useState(false);
 
+  React.useEffect(() => {
+    if (isSubmitting !== undefined) {
+      setIsLoading(isSubmitting);
+    }
+  }, [isSubmitting]);
+
   const handleClick = async (e) => {
-    setIsLoading(true);
+    if (isSubmitting === undefined) {
+      setIsLoading(true);
+    }
     await onClick?.(e);
-    setTimeout(() => setIsLoading(false), delay);
+    if (isSubmitting === undefined) {
+      setTimeout(() => setIsLoading(false), delay);
+    }
   };
 
   return (
