@@ -14,7 +14,14 @@ function PulsingStarSpinner() {
 }
 
 // SpinnerButton component
-export function SpinnerButton({ onClick, children, isSubmitting, delay = 500, className = "", ...props }) {
+export function SpinnerButton({ onClick, children, isSubmitting, delay = 500, className = "", ...props }: {
+  onClick?: (e: React.MouseEvent<HTMLButtonElement>) => void | Promise<void>;
+  children: React.ReactNode;
+  isSubmitting?: boolean;
+  delay?: number;
+  className?: string;
+  [x: string]: any;
+}) {
   const [isLoading, setIsLoading] = useState(false);
 
   React.useEffect(() => {
