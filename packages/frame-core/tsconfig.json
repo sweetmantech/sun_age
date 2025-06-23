@@ -1,5 +1,4 @@
 {
-  "extends": "@farcaster/tsconfig/browser.json",
   "include": ["src"],
   "exclude": ["esm", "dist", "build", "node_modules", "test-import.ts", "**/*.test.ts", "**/*.spec.ts"],
   "compilerOptions": {

@@ -60,14 +60,14 @@ export function JournalTimeline({ entries, onStartWriting, onEdit, onDelete }: J
           <div className="flex justify-between items-center text-xs font-mono uppercase tracking-widest">
             {entry.preservation_status === 'local' ? (
                 <div className="flex gap-4">
-                    <button className="text-yellow-600 hover:text-yellow-700 underline underline-offset-2">PRESERVE</button>
+                    {/* <button className="text-yellow-600 hover:text-yellow-700 underline underline-offset-2">PRESERVE</button> */}
                     <button onClick={() => onEdit(entry)} className="text-gray-500 hover:text-black underline underline-offset-2">EDIT</button>
                     <button onClick={() => onDelete(entry.id)} className="text-red-500 hover:text-red-700 underline underline-offset-2">DELETE</button>
                 </div>
             ) : (
                 <div className="flex gap-4">
-                    <button className="text-gray-500 hover:text-black underline underline-offset-2">SHARE</button>
-                    <button className="text-gray-500 hover:text-black underline underline-offset-2">READ</button>
+                    {/* <button className="text-gray-500 hover:text-black underline underline-offset-2">SHARE</button> */}
+                    {/* <button className="text-gray-500 hover:text-black underline underline-offset-2">READ</button> */}
                 </div>
             )}
             <span className="text-gray-500">{entry.word_count} words</span>

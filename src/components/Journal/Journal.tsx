@@ -20,7 +20,7 @@ function JournalEmptyState() {
       <div className="max-w-prose mx-auto text-left">
         <p className="font-serif text-gray-800 mb-6 text-[17px] leading-[20px] tracking-[-0.02em]">Welcome to the journal.</p>
         <p className="font-serif text-gray-800 text-[17px] leading-[20px] tracking-[-0.02em]">
-          Every day you visit Solara, you'll find a daily prompt, an affirmation, or a reflection from our Sol Guide, Abri Mathos. Some days you might be inspired to share something you've learned, you felt, you questioned—all are valid here. And sometimes if you feel inclined, you can preserve these reflections so that others may find the wisdom in your journey.
+          Every day you visit Solara, you&apos;ll find a daily prompt, an affirmation, or a reflection from our Sol Guide, Abri Mathos. Some days you might be inspired to share something you&apos;ve learned, you felt, you questioned—all are valid here. And sometimes if you feel inclined, you can preserve these reflections so that others may find the wisdom in your journey.
         </p>
         <p className="font-serif text-gray-800 mt-6 text-[17px] leading-[20px] tracking-[-0.02em]">
           Together we may seek the knowledge of the sun.
@@ -107,7 +107,7 @@ export function Journal({ solAge }: JournalProps) {
   }
 
   return (
-    <div className="w-full max-w-2xl mx-auto px-4 sm:px-6">
+    <div className="w-full max-w-2xl mx-auto">
       <div className="flex justify-between items-center py-4 gap-2">
         <input
           type="text"

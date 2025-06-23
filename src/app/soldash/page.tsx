@@ -180,19 +180,16 @@ export default function SolDashPage() {
   };
 
   return (
-    <div className="w-full min-h-screen flex flex-col items-center bg-white relative">
-      <div className="w-full flex flex-col items-center justify-center" style={{ background: 'rgba(255,252,242,0.5)', borderTop: '1px solid #9CA3AF', borderBottom: '1px solid #9CA3AF' }}>
-        <div className="max-w-md mx-auto w-full px-6 pt-8 pb-8 min-h-[60vh]">
+    <div className="w-full min-h-screen flex flex-col bg-white relative">
+      <div className="w-full flex flex-col items-center flex-grow" style={{ background: 'rgba(255,252,242,0.5)', borderTop: '1px solid #9CA3AF', borderBottom: '1px solid #9CA3AF' }}>
+        <div className="max-w-md mx-auto w-full px-2 pt-8 pb-8 min-h-[60vh]">
           <BookmarkCard
             bookmark={bookmark}
             milestone={milestone}
             milestoneDate={milestoneDate}
             daysToMilestone={daysToMilestone}
             onRecalculate={handleRecalculate}
-            onClear={() => {
-              localStorage.removeItem("sunCycleBookmark");
-              setBookmark(null);
-            }}
+            onClear={() => setShowConfirmClear(true)}
             isRecalculating={isRecalculating}
             sinceLastVisit={bookmark.lastVisitDays ? bookmark.days - bookmark.lastVisitDays : 0}
             milestoneCard={milestoneCard}
@@ -225,49 +222,8 @@ export default function SolDashPage() {
           />
         </div>
       </div>
-      {/* Actions Section - outside main container, full width */}
-      <div className="w-full flex flex-col items-center mt-6 mb-2 px-0">
-        <div className="max-w-md w-full px-6">
-          <div className="flex w-full gap-2">
-            <SpinnerButton
-              onClick={() => {
-                setIsSharing(true);
-                const url = process.env.NEXT_PUBLIC_URL || window.location.origin;
-                const userName = bookmark.userName || 'TRAVELLER';
-                const ogImageUrl = `${url}/api/og/solage?userName=${encodeURIComponent(userName)}&solAge=${bookmark.days}&birthDate=${encodeURIComponent(bookmark.birthDate)}&age=${bookmark.approxYears}`;
-                const message = `Forget birthdays—I've completed ${bookmark.days} rotations around the sun ☀️🌎 What's your Sol Age? ${url}\n\n[My Sol Age Card](${ogImageUrl})`;
-                if (isInFrame) {
-                  window.open(`https://warpcast.com/~/compose?text=${encodeURIComponent(message)}`, '_blank');
-                } else {
-                  window.location.href = `https://warpcast.com/~/compose?text=${encodeURIComponent(message)}`;
-                }
-                setTimeout(() => setIsSharing(false), 1000);
-              }}
-              disabled={isSharing}
-              className="flex-1 border border-black bg-transparent text-black uppercase tracking-widest font-mono py-3 px-2 text-sm transition-all duration-200 hover:bg-gray-100 rounded-none disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isSharing ? "SHARING..." : "SHARE SOL AGE"}
-            </SpinnerButton>
-            <SpinnerButton
-              onClick={handleRecalculate}
-              disabled={isRecalculating}
-              className="flex-1 border border-black bg-transparent text-black uppercase tracking-widest font-mono py-3 px-2 text-sm transition-all duration-200 hover:bg-gray-100 rounded-none disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
-            >
-              {isRecalculating ? (
-                (() => { console.log('Rendering spinner:', isRecalculating); return null; })() || <><PulsingStarSpinner />RECALCULATING...</>
-              ) : (
-                "RECALCULATE"
-              )}
-            </SpinnerButton>
-          </div>
-          <SpinnerButton
-            onClick={() => setShowConfirmClear(true)}
-            className="w-full border border-red-800 bg-red-600 text-white uppercase tracking-widest font-mono py-3 px-2 text-sm transition-all duration-200 hover:bg-red-700 rounded-none mt-4 mb-6"
-          >
-            CLEAR BOOKMARK
-          </SpinnerButton>
-        </div>
-      </div>
+      {/* The buttons below are being moved into the BookmarkCard component */}
+
       {/* Footer - same as main page */}
       <footer className="w-full border-t border-gray-200 bg-white pt-2 pb-12">
         <div className="flex flex-col items-center justify-center">
