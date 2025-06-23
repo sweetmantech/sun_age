@@ -17,9 +17,13 @@ const Header: React.FC<HeaderProps> = ({ formattedDate, onAboutClick, onSolarCli
 
     // Base network SOLARA token
     const solarTokenAddress = 'eip155:8453/erc20:0x746042147240304098C837563aAEc0F671881B07';
+    // Base network USDC token
+    const usdcTokenAddress = 'eip155:8453/erc20:0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913';
 
     await sdk.actions.swapToken({
       buyToken: solarTokenAddress,
+      sellToken: usdcTokenAddress,
+      sellAmount: '1000000', // 1 USDC with 6 decimals
     });
   };
 
