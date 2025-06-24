@@ -1,12 +1,18 @@
 import { ImageResponse } from '@vercel/og';
 import React from 'react';
-import { NextRequest } from 'next/server';
 import { createServiceRoleClient } from '~/utils/supabase/server';
 
 export const runtime = 'edge';
 
-export async function GET(req: NextRequest, context: { params: { shareId: string } }) {
-  const shareId = context.params.shareId;
+export async function GET(req: Request) {
+  // Extract shareId from the URL path
+  const { pathname } = new URL(req.url);
+  const match = pathname.match(/\/api\/og\/journal\/([^/]+)/);
+  const shareId = match ? match[1] : null;
+  if (!shareId) {
+    return new Response('Missing shareId', { status: 400 });
+  }
+
   const supabase = createServiceRoleClient();
 
   // Fetch share, entry, and author info
