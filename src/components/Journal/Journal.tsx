@@ -94,7 +94,9 @@ export function Journal({ solAge }: JournalProps) {
     if (editingEntry && editingEntry.id) {
       await updateEntry(editingEntry.id, { content: entryToSave.content });
     } else {
-      await createEntry({ content: entryToSave.content, sol_day: solAge });
+      // Create a new entry and update the editor state with the new entry (so future autosaves update, not create)
+      const newEntry = await createEntry({ content: entryToSave.content, sol_day: solAge });
+      setEditingEntry(newEntry);
     }
     // Don't close the editor for autosave
   };
