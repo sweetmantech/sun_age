@@ -45,6 +45,61 @@ export function useJournal() {
     }
   }, []);
 
+  // Migrate local entries to database
+  const migrateLocalEntries = useCallback(async (userFid: number) => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const localEntries = entries.filter(e => e.preservation_status === 'local');
+      
+      if (localEntries.length === 0) {
+        return { migrated: 0, errors: [] };
+      }
+
+      const results = await Promise.allSettled(
+        localEntries.map(async (entry) => {
+          const response = await fetch('/api/journal/entries', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              content: entry.content,
+              sol_day: entry.sol_day,
+              userFid: userFid
+            })
+          });
+
+          if (!response.ok) {
+            throw new Error(`Failed to migrate entry: ${response.statusText}`);
+          }
+
+          const { entry: newEntry } = await response.json();
+          return { oldId: entry.id, newEntry };
+        })
+      );
+
+      const migrated = results.filter(r => r.status === 'fulfilled').length;
+      const errors = results.filter(r => r.status === 'rejected').map(r => 
+        (r as PromiseRejectedResult).reason
+      );
+
+      // Remove migrated entries from local storage
+      if (migrated > 0) {
+        const remainingEntries = entries.filter(e => e.preservation_status !== 'local');
+        setEntries(remainingEntries);
+        saveToLocalStorage(remainingEntries);
+      }
+
+      return { migrated, errors };
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to migrate entries';
+      setError(errorMessage);
+      throw new Error(errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  }, [entries, saveToLocalStorage]);
+
   // Create a new journal entry locally
   const createEntry = useCallback(async (data: CreateJournalEntryRequest): Promise<JournalEntry> => {
     setLoading(true);
@@ -192,6 +247,7 @@ export function useJournal() {
     updateEntry,
     deleteEntry,
     loadEntries,
-    getFilteredEntries
+    getFilteredEntries,
+    migrateLocalEntries
   };
 } 

@@ -10,6 +10,7 @@ import { useFrameSDK } from "~/hooks/useFrameSDK";
 import { SpinnerButton } from "~/components/ui/SpinnerButton";
 import { useAccount } from 'wagmi';
 import Image from "next/image";
+import { PulsingStarSpinner } from "~/components/ui/PulsingStarSpinner";
 
 // Bookmark type
 interface Bookmark {
@@ -19,19 +20,6 @@ interface Bookmark {
   lastVisitDays?: number;
   lastVisitDate?: string;
   userName?: string;
-}
-
-// Pulsing Star Spinner Component
-function PulsingStarSpinner() {
-  const frames = ["⋅", "˖", "+", "⟡", "✧", "⟡", "+", "˖"];
-  const [frame, setFrame] = useState(0);
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setFrame(f => (f + 1) % frames.length);
-    }, 120);
-    return () => clearInterval(interval);
-  }, [frames.length]);
-  return <span style={{ fontSize: '1.2em', marginRight: 6 }}>{frames[frame]}</span>;
 }
 
 export default function SolDashPage() {
@@ -112,8 +100,7 @@ export default function SolDashPage() {
   const hasPledged = ceremony.hasPledged || onChainHasPledged;
   const vow = isLoading ? (
     <div className="flex flex-col items-center justify-center py-8">
-      {/* Spinning SunSun image if available, otherwise fallback to ASCII spinner */}
-      <Image src="/sunsun.png" alt="Loading..." width={48} height={48} className="animate-spin mb-2" />
+      <PulsingStarSpinner />
       <span className="font-mono text-xs text-gray-500">Fetching your Solar Vow...</span>
     </div>
   ) : (onChainVow || ceremony.vow);

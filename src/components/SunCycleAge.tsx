@@ -17,6 +17,7 @@ import { SpinnerButton } from "~/components/ui/SpinnerButton";
 import { useConvergenceStats } from '~/hooks/useConvergenceStats';
 import type { Pledge } from '~/hooks/useSolarPledge';
 import { Journal } from './Journal/Journal';
+import { PulsingStarSpinner } from "~/components/ui/PulsingStarSpinner";
 // import { revokeUserConsent } from "~/lib/consent";
 
 function WarpcastEmbed({ url }: { url: string }) {
@@ -263,7 +264,7 @@ function BookmarkCard({ bookmark, milestone, milestoneDate, daysToMilestone, onR
         {tab === 'sol vows' && (
           isLoading ? (
             <div className="w-full text-sm font-mono space-y-3 flex flex-col items-center text-center">
-              <Image src="/sunsun.png" alt="Loading..." width={48} height={48} className="animate-spin mb-2" />
+              <PulsingStarSpinner />
               <span className="font-mono text-xs text-gray-500">Fetching your Solar Vow...</span>
             </div>
           ) : (typeof vow === 'string' && vow.trim().length > 0) ? (
@@ -744,7 +745,7 @@ export default function SunCycleAge({ initialConsentData }: SunCycleAgeProps) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+          <PulsingStarSpinner />
           <p className="text-gray-600 dark:text-gray-400">Loading Sun Cycle Age...</p>
         </div>
       </div>

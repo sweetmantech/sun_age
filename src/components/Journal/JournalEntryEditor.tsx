@@ -1,12 +1,16 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useDailyContent } from '~/hooks/useDailyContent';
 import type { JournalEntry } from '~/types/journal';
+import { useFrameSDK } from '~/hooks/useFrameSDK';
+import React from 'react';
+import { PulsingStarSpinner } from "~/components/ui/PulsingStarSpinner";
 
 interface JournalEntryEditorProps {
   entry: JournalEntry;
   onSave: (entryToSave: { id?: string, content: string }) => Promise<void>;
+  onAutoSave: (entryToSave: { id?: string, content: string }) => Promise<void>;
   onFinish: () => void;
 }
 
@@ -34,23 +38,99 @@ function DailyPromptDisplay({ onDismiss }: DailyPromptDisplayProps) {
     );
 }
 
-export function JournalEntryEditor({ entry, onSave, onFinish }: JournalEntryEditorProps) {
+// Helper for sharing API call
+async function shareJournalEntry(entryId: string, userFid: number) {
+  const res = await fetch("/api/journal/share", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ entryId, userFid }),
+  });
+  if (!res.ok) {
+    const data = await res.json();
+    throw new Error(data.error || "Failed to share entry");
+  }
+  return await res.json(); // { shareId, shareUrl }
+}
+
+export function JournalEntryEditor({ entry, onSave, onAutoSave, onFinish }: JournalEntryEditorProps) {
   const [content, setContent] = useState(entry.content);
   const [showPrompts, setShowPrompts] = useState(false);
   const [showDailyPrompt, setShowDailyPrompt] = useState(true);
+  const [isSharing, setIsSharing] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [shareUrl, setShareUrl] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [isAutoSaving, setIsAutoSaving] = useState(false);
+  const [lastSaved, setLastSaved] = useState<Date | null>(null);
+  const { sdk, isInFrame } = useFrameSDK();
 
   useEffect(() => {
     setContent(entry.content);
   }, [entry]);
 
+  // Auto-save functionality with debounce
+  const autoSave = useCallback(
+    debounce(async (contentToSave: string) => {
+      if (contentToSave.trim() === '') return;
+      
+      setIsAutoSaving(true);
+      try {
+        await onAutoSave({ id: entry.id, content: contentToSave });
+        setLastSaved(new Date());
+      } catch (err) {
+        console.error('Auto-save failed:', err);
+      } finally {
+        setIsAutoSaving(false);
+      }
+    }, 2000), // 2 second debounce
+    [entry.id, onAutoSave]
+  );
+
+  // Trigger auto-save when content changes
+  useEffect(() => {
+    if (content !== entry.content) {
+      autoSave(content);
+    }
+  }, [content, entry.content, autoSave]);
+
   const handleSave = async () => {
-    await onSave({ id: entry.id, content });
+    setIsSaving(true);
+    try {
+      // Add a small delay to show the spinner animation
+      await new Promise(resolve => setTimeout(resolve, 800));
+      await onSave({ id: entry.id, content });
+      setLastSaved(new Date());
+    } catch (e: any) {
+      setError(e.message || "Failed to save entry");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
-  const handlePreserve = () => {
-    // TODO: Implement preserve logic (on-chain)
-    console.log('Preserving entry:', content);
-    onFinish();
+  const handleShare = async () => {
+    setIsSharing(true);
+    setError(null);
+    try {
+      const userFid = entry.user_fid;
+      const result = await shareJournalEntry(entry.id, userFid);
+      setShareUrl(result.shareUrl);
+      // Compose the cast using Farcaster Mini App SDK
+      if (isInFrame && sdk) {
+        await sdk.actions.composeCast({
+          text: `🌞 My Solara reflection:\n\n${content.slice(0, 200)}...`,
+          embeds: [window.location.origin + result.shareUrl],
+        });
+      } else {
+        window.open(
+          `https://warpcast.com/~/compose?text=Check out my Solara reflection!&embeds=${window.location.origin + result.shareUrl}`,
+          "_blank"
+        );
+      }
+    } catch (e: any) {
+      setError(e.message || "Failed to share entry");
+    } finally {
+      setIsSharing(false);
+    }
   };
 
   const handlePromptClick = (promptText: string | null) => {
@@ -117,6 +197,8 @@ export function JournalEntryEditor({ entry, onSave, onFinish }: JournalEntryEdit
                             <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
                         </svg>
                         <span>PRIVATE UNTIL YOU CHOOSE TO SHARE IT</span>
+                        {isAutoSaving && <span className="text-blue-600">• AUTO-SAVING</span>}
+                        {lastSaved && <span className="text-green-600">• SAVED {lastSaved.toLocaleTimeString()}</span>}
                     </div>
                 </div>
                 <div className="bg-white p-4 pb-12 sm:pb-4 border-t border-gray-200">
@@ -149,17 +231,50 @@ export function JournalEntryEditor({ entry, onSave, onFinish }: JournalEntryEdit
                             </div>
                         )}
                         <div className="flex gap-2">
-                            <button onClick={handleSave} className="flex-1 border border-black bg-white text-black font-mono py-3 rounded-none hover:bg-gray-100 transition-colors text-sm">
-                            SAVE REFLECTION
+                            <button onClick={handleSave} className="flex-1 border border-black bg-white text-black font-mono py-3 rounded-none hover:bg-gray-100 transition-colors text-sm" disabled={isSaving}>
+                            {isSaving ? (
+                                <div className="flex items-center justify-center">
+                                    <PulsingStarSpinner />
+                                    SAVING...
+                                </div>
+                            ) : "SAVE REFLECTION"}
                             </button>
-                            <button onClick={handlePreserve} className="flex-1 border border-black bg-[#d4af37] text-black font-mono py-3 rounded-none hover:bg-[#e6c75a] transition-colors text-sm">
-                            PRESERVE FOREVER
+                            <button
+                              onClick={handleShare}
+                              className="flex-1 border border-black bg-[#d4af37] text-black font-mono py-3 rounded-none hover:bg-[#e6c75a] transition-colors text-sm"
+                              disabled={isSharing}
+                            >
+                              {isSharing ? (
+                                <div className="flex items-center justify-center">
+                                  <PulsingStarSpinner />
+                                  SHARING...
+                                </div>
+                              ) : "SHARE ENTRY"}
                             </button>
                         </div>
                     </div>
                 </div>
+                {shareUrl && (
+                  <div className="mt-2 text-center">
+                    <span>Shared! </span>
+                    <a href={shareUrl} target="_blank" rel="noopener noreferrer" className="underline">View Shared Entry</a>
+                  </div>
+                )}
+                {error && <div className="text-red-500 mt-2 text-center">{error}</div>}
             </div>
         </div>
     </div>
   );
+}
+
+// Debounce utility function
+function debounce<T extends (...args: any[]) => any>(
+  func: T,
+  wait: number
+): (...args: Parameters<T>) => void {
+  let timeout: NodeJS.Timeout;
+  return (...args: Parameters<T>) => {
+    clearTimeout(timeout);
+    timeout = setTimeout(() => func(...args), wait);
+  };
 }

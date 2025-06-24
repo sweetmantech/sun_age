@@ -1,17 +1,5 @@
 import React, { useState } from "react";
-
-// Pulsing Star Spinner
-function PulsingStarSpinner() {
-  const frames = ["⋅", "˖", "+", "⟡", "✧", "⟡", "+", "˖"];
-  const [frame, setFrame] = React.useState(0);
-  React.useEffect(() => {
-    const interval = setInterval(() => {
-      setFrame(f => (f + 1) % frames.length);
-    }, 120);
-    return () => clearInterval(interval);
-  }, [frames.length]);
-  return <span style={{ fontSize: '1.2em', marginRight: 6 }}>{frames[frame]}</span>;
-}
+import { PulsingStarSpinner } from "./PulsingStarSpinner";
 
 // SpinnerButton component
 export function SpinnerButton({ onClick, children, isSubmitting, delay = 500, className = "", ...props }: {

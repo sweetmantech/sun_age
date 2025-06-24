@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '~/utils/supabase/server';
+import { createClient, createServiceRoleClient } from '~/utils/supabase/server';
 
 export async function GET(req: NextRequest) {
   const supabase = await createClient();
@@ -24,26 +24,38 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-
-    if (!user) {
-        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
     try {
-        const { content, sol_day } = await req.json();
+        const { content, sol_day, userFid } = await req.json();
 
         if (!content || typeof sol_day === 'undefined') {
             return NextResponse.json({ error: 'Missing required fields: content and sol_day' }, { status: 400 });
         }
 
+        // If userFid is provided, use service role to bypass RLS (for migration)
+        // Otherwise, use regular client with auth
+        let supabase;
+        let finalUserFid: number;
+        
+        if (userFid) {
+            // Use service role for migration
+            supabase = createServiceRoleClient();
+            finalUserFid = userFid;
+        } else {
+            // Use regular client with auth
+            supabase = await createClient();
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) {
+                return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+            }
+            finalUserFid = parseInt(user.id);
+        }
+
         const newEntry = {
-            user_fid: user.id,
+            user_fid: finalUserFid,
             content,
             sol_day,
             word_count: content.trim().split(/\s+/).length,
-            preservation_status: 'private',
+            preservation_status: 'local',
         };
 
         const { data: entry, error } = await supabase

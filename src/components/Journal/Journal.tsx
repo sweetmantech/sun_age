@@ -8,26 +8,36 @@ import type { JournalEntry } from '~/types/journal';
 import { ConfirmationModal } from '~/components/ui/ConfirmationModal';
 import { useDailyContent } from '~/hooks/useDailyContent';
 import Image from 'next/image';
+import React from 'react';
+import { PulsingStarSpinner } from "~/components/ui/PulsingStarSpinner";
+import { useFrameSDK } from '~/hooks/useFrameSDK';
 
 interface JournalProps {
   solAge: number;
 }
 
 function JournalEmptyState() {
+  const { content } = useDailyContent();
+  
   return (
-    <div className="border border-gray-300 p-8 text-center bg-white/50">
-      <h2 className="text-sm font-mono tracking-widest text-gray-700 mb-6">🌞 NO ENTRIES YET 🌞</h2>
-      <div className="max-w-prose mx-auto text-left">
-        <p className="font-serif text-gray-800 mb-6 text-[17px] leading-[20px] tracking-[-0.02em]">Welcome to the journal.</p>
-        <p className="font-serif text-gray-800 text-[17px] leading-[20px] tracking-[-0.02em]">
-          Every day you visit Solara, you&apos;ll find a daily prompt, an affirmation, or a reflection from our Sol Guide, Abri Mathos. Some days you might be inspired to share something you&apos;ve learned, you felt, you questioned—all are valid here. And sometimes if you feel inclined, you can preserve these reflections so that others may find the wisdom in your journey.
-        </p>
-        <p className="font-serif text-gray-800 mt-6 text-[17px] leading-[20px] tracking-[-0.02em]">
-          Together we may seek the knowledge of the sun.
-        </p>
-        <p className="font-serif text-gray-800 mt-8 text-[17px] leading-[20px] tracking-[-0.02em]">
-          Sol Seeker 🌞<br />- Su
-        </p>
+    <div className="text-center py-12">
+      <div className="mb-6">
+        <Image
+          src="/logo.svg"
+          alt="Solara"
+          width={80}
+          height={80}
+          className="mx-auto opacity-50"
+        />
+      </div>
+      <h3 className="text-xl font-serif text-gray-800 mb-4">
+        Begin Your Cosmic Journey
+      </h3>
+      <p className="text-gray-600 font-serif mb-6 max-w-md mx-auto">
+        {content?.primary?.text || "What has your sol revealed to you today?"}
+      </p>
+      <div className="text-xs text-gray-500 font-mono tracking-widest">
+        YOUR REFLECTIONS ARE PRIVATE UNTIL YOU CHOOSE TO SHARE
       </div>
     </div>
   );
@@ -37,7 +47,14 @@ export function Journal({ solAge }: JournalProps) {
   const [editingEntry, setEditingEntry] = useState<JournalEntry | null>(null);
   const [entryToDelete, setEntryToDelete] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const { entries, createEntry, updateEntry, deleteEntry, loading, error } = useJournal();
+  const [isMigrating, setIsMigrating] = useState(false);
+  const { entries, createEntry, updateEntry, deleteEntry, migrateLocalEntries, loading, error } = useJournal();
+  const { context } = useFrameSDK();
+
+  const localEntries = useMemo(() => 
+    entries.filter(entry => entry.preservation_status === 'local'), 
+    [entries]
+  );
 
   const filteredEntries = useMemo(() => {
     if (!searchQuery) {
@@ -73,6 +90,15 @@ export function Journal({ solAge }: JournalProps) {
     setEditingEntry(null);
   };
 
+  const handleAutoSave = async (entryToSave: { id?: string, content: string }) => {
+    if (editingEntry && editingEntry.id) {
+      await updateEntry(editingEntry.id, { content: entryToSave.content });
+    } else {
+      await createEntry({ content: entryToSave.content, sol_day: solAge });
+    }
+    // Don't close the editor for autosave
+  };
+
   const handleCancel = () => {
     setEditingEntry(null);
   };
@@ -85,6 +111,29 @@ export function Journal({ solAge }: JournalProps) {
     if (entryToDelete) {
       deleteEntry(entryToDelete);
       setEntryToDelete(null);
+    }
+  };
+
+  const handleMigrateLocalEntries = async () => {
+    setIsMigrating(true);
+    try {
+      // Get the actual user's FID from Farcaster context
+      const userFid = context?.user?.fid;
+      
+      if (!userFid) {
+        console.error('No user FID available for migration');
+        throw new Error('You must be connected via Farcaster to migrate entries');
+      }
+      
+      const result = await migrateLocalEntries(userFid);
+      console.log(`Migrated ${result.migrated} entries to database`);
+      if (result.errors.length > 0) {
+        console.error('Migration errors:', result.errors);
+      }
+    } catch (err) {
+      console.error('Migration failed:', err);
+    } finally {
+      setIsMigrating(false);
     }
   };
 
@@ -101,6 +150,7 @@ export function Journal({ solAge }: JournalProps) {
       <JournalEntryEditor
         entry={editingEntry}
         onSave={handleSave}
+        onAutoSave={handleAutoSave}
         onFinish={handleCancel}
       />
     );
@@ -123,6 +173,50 @@ export function Journal({ solAge }: JournalProps) {
           + NEW
         </button>
       </div>
+
+      {/* Migration notice for local entries */}
+      {localEntries.length > 0 && context?.user?.fid && (
+        <div className="mb-4 p-4 bg-yellow-50 border border-yellow-200">
+          <div className="flex justify-between items-center">
+            <div>
+              <h4 className="font-mono text-sm text-yellow-800 mb-1">
+                LOCAL ENTRIES DETECTED
+              </h4>
+              <p className="text-xs text-yellow-700">
+                You have {localEntries.length} {localEntries.length === 1 ? 'entry' : 'entries'} stored locally. 
+                Migrate them to the database to enable sharing.
+              </p>
+            </div>
+            <button
+              onClick={handleMigrateLocalEntries}
+              disabled={isMigrating}
+              className="bg-yellow-600 hover:bg-yellow-700 disabled:bg-yellow-400 text-white font-mono text-xs tracking-widest py-2 px-3 border border-yellow-700"
+            >
+              {isMigrating ? (
+                <div className="flex items-center justify-center">
+                  <PulsingStarSpinner />
+                  MIGRATING...
+                </div>
+              ) : 'MIGRATE'}
+            </button>
+          </div>
+        </div>
+      )}
+      
+      {/* Notice for local entries when not connected */}
+      {localEntries.length > 0 && !context?.user?.fid && (
+        <div className="mb-4 p-4 bg-blue-50 border border-blue-200">
+          <div className="text-center">
+            <h4 className="font-mono text-sm text-blue-800 mb-1">
+              LOCAL ENTRIES DETECTED
+            </h4>
+            <p className="text-xs text-blue-700">
+              You have {localEntries.length} {localEntries.length === 1 ? 'entry' : 'entries'} stored locally. 
+              Connect via Farcaster to migrate them to the database and enable sharing.
+            </p>
+          </div>
+        </div>
+      )}
       
       {entries.length > 0 ? (
         <JournalTimeline entries={filteredEntries} onEdit={handleEdit} onDelete={handleDeleteRequest} onStartWriting={handleStartWriting} />
