@@ -17,27 +17,21 @@ interface JournalProps {
 }
 
 function JournalEmptyState() {
-  const { content } = useDailyContent();
-  
   return (
-    <div className="text-center py-12">
+    <div className="text-center py-8 border border-gray-300 bg-white/80 px-6 pt-8 pb-6">
       <div className="mb-6">
-        <Image
-          src="/logo.svg"
-          alt="Solara"
-          width={80}
-          height={80}
-          className="mx-auto opacity-50"
-        />
+        <span className="text-base font-mono">🌞 NO ENTRIES YET 🌞</span>
       </div>
-      <h3 className="text-xl font-serif text-gray-800 mb-4">
-        Begin Your Cosmic Journey
-      </h3>
-      <p className="text-gray-600 font-serif mb-6 max-w-md mx-auto">
-        {content?.primary?.text || "What has your sol revealed to you today?"}
-      </p>
-      <div className="text-xs text-gray-500 font-mono tracking-widest">
-        YOUR REFLECTIONS ARE PRIVATE UNTIL YOU CHOOSE TO SHARE
+      <div className="text-left max-w-xl mx-auto">
+        <p style={{ fontSize: '17px', lineHeight: '20px', letterSpacing: '-0.02em', color: '#505050' }} className="font-serif mb-4">Welcome to the journal.</p>
+        <p style={{ fontSize: '17px', lineHeight: '20px', letterSpacing: '-0.02em', color: '#505050' }} className="font-serif mb-4">
+          Every day you visit Solara, you&#39;ll find a daily prompt, an affirmation, or a reflection from our Sol Guide, Abri Mathos. Some days you might be inspired to share something you&#39;ve learned, you felt, you questioned—all are valid here. And sometimes if you feel inclined, you can preserve these reflections so that others may find the wisdom in your journey.
+        </p>
+        <p style={{ fontSize: '17px', lineHeight: '20px', letterSpacing: '-0.02em', color: '#505050' }} className="font-serif mb-4">
+          Together we may seek the knowledge of the sun.
+        </p>
+        <p style={{ fontSize: '17px', lineHeight: '20px', letterSpacing: '-0.02em', color: '#505050' }} className="font-serif mb-0">Sol Seeker 🌞</p>
+        <p style={{ fontSize: '17px', lineHeight: '20px', letterSpacing: '-0.02em', color: '#505050' }} className="font-serif">- Su</p>
       </div>
     </div>
   );
@@ -48,6 +42,7 @@ export function Journal({ solAge }: JournalProps) {
   const [entryToDelete, setEntryToDelete] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [isMigrating, setIsMigrating] = useState(false);
+  const [migrationError, setMigrationError] = useState<string | null>(null);
   const { entries, createEntry, updateEntry, deleteEntry, migrateLocalEntries, loading, error } = useJournal();
   const { context } = useFrameSDK();
 
@@ -118,21 +113,24 @@ export function Journal({ solAge }: JournalProps) {
 
   const handleMigrateLocalEntries = async () => {
     setIsMigrating(true);
+    setMigrationError(null);
     try {
       // Get the actual user's FID from Farcaster context
       const userFid = context?.user?.fid;
-      
       if (!userFid) {
-        console.error('No user FID available for migration');
         throw new Error('You must be connected via Farcaster to migrate entries');
       }
-      
       const result = await migrateLocalEntries(userFid);
-      console.log(`Migrated ${result.migrated} entries to database`);
       if (result.errors.length > 0) {
+        setMigrationError('Some entries failed to migrate. Please try again.');
         console.error('Migration errors:', result.errors);
+      } else if (result.migrated === 0) {
+        setMigrationError('No entries were migrated.');
+      } else {
+        setMigrationError(null);
       }
-    } catch (err) {
+    } catch (err: any) {
+      setMigrationError(err.message || 'Migration failed.');
       console.error('Migration failed:', err);
     } finally {
       setIsMigrating(false);
@@ -179,6 +177,11 @@ export function Journal({ solAge }: JournalProps) {
       {/* Migration notice for local entries */}
       {localEntries.length > 0 && context?.user?.fid && (
         <div className="mb-4 p-4 bg-yellow-50 border border-yellow-200">
+          {migrationError && (
+            <div className="mb-2 p-2 bg-red-100 border border-red-300 text-red-700 font-mono text-xs">
+              {migrationError}
+            </div>
+          )}
           <div className="flex justify-between items-center">
             <div>
               <h4 className="font-mono text-sm text-yellow-800 mb-1">
