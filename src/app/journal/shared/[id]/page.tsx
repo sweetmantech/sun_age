@@ -1,7 +1,6 @@
 // This file is now a dynamic route for shared journal entries
 import { Card, CardContent, CardHeader, CardTitle } from '~/components/ui/card';
 import { Button } from '~/components/ui/button';
-import { Skeleton } from '~/components/ui/skeleton';
 import { notFound } from 'next/navigation';
 
 interface SharedEntry {
@@ -18,14 +17,13 @@ interface ShareData {
 }
 
 // Dynamic metadata for OG tags
-export async function generateMetadata({ params }: { params: { id: string } }) {
-  // Fetch share data from API
+export async function generateMetadata(props: any) {
+  const { params } = props;
+  if (!params?.id) return {};
   const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || ''}/api/journal/shared?id=${params.id}`);
   if (!res.ok) return {};
   const data = await res.json();
   const entry = data.entry;
-  const authorFid = data.authorFid;
-  const date = entry?.created_at ? new Date(entry.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : '';
   const preview = entry?.content?.length > 120 ? entry.content.slice(0, 117) + '...' : entry?.content;
   return {
     title: `Solara Reflection • Sol ${entry?.sol_day ?? ''}`,
@@ -45,8 +43,9 @@ export async function generateMetadata({ params }: { params: { id: string } }) {
   };
 }
 
-export default async function SharedJournalPage({ params }: { params: { id: string } }) {
-  // Fetch share data from API
+export default async function SharedJournalPage(props: any) {
+  const { params } = props;
+  if (!params?.id) return notFound();
   const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || ''}/api/journal/shared?id=${params.id}`, { cache: 'no-store' });
   if (!res.ok) return notFound();
   const data = await res.json();
