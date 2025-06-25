@@ -122,7 +122,8 @@ export function Journal({ solAge }: JournalProps) {
       }
       const result = await migrateLocalEntries(userFid);
       if (result.errors.length > 0) {
-        setMigrationError('Some entries failed to migrate. Please try again.');
+        // Show all error messages, not just a generic one
+        setMigrationError(result.errors.map(e => (typeof e === 'string' ? e : e.message || JSON.stringify(e))).join('\n'));
         console.error('Migration errors:', result.errors);
       } else if (result.migrated === 0) {
         setMigrationError('No entries were migrated.');
@@ -178,7 +179,7 @@ export function Journal({ solAge }: JournalProps) {
       {localEntries.length > 0 && context?.user?.fid && (
         <div className="mb-4 p-4 bg-yellow-50 border border-yellow-200">
           {migrationError && (
-            <div className="mb-2 p-2 bg-red-100 border border-red-300 text-red-700 font-mono text-xs">
+            <div className="mb-2 p-2 bg-red-100 border border-red-300 text-red-700 font-mono text-xs whitespace-pre-line">
               {migrationError}
             </div>
           )}
