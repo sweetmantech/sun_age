@@ -7,6 +7,7 @@ import { useFrameSDK } from '~/hooks/useFrameSDK';
 import Image from 'next/image';
 import { useConvergenceStats } from '~/hooks/useConvergenceStats';
 import { SpinnerButton } from "~/components/ui/SpinnerButton";
+import Link from 'next/link';
 
 export default function ResultsPage() {
   console.log("DEBUG: ResultsPage rendered");
@@ -25,6 +26,9 @@ export default function ResultsPage() {
   // Add state for ceremony flow
   const [showCeremonyFlow, setShowCeremonyFlow] = useState(false);
 
+  // Add state to track if user has shared/bookmarked
+  const [shared, setShared] = useState(false);
+
   // Get data from URL parameters with null checks
   const daysParam = searchParams?.get('days');
   const approxYearsParam = searchParams?.get('approxYears');
@@ -42,7 +46,9 @@ export default function ResultsPage() {
     if (!days || !birthDate || !approxYears) return;
     const url = process.env.NEXT_PUBLIC_URL || window.location.origin;
     const userName = context?.user?.displayName || 'TRAVELLER';
-    const ogImageUrl = `${url}/api/og/solage?userName=${encodeURIComponent(userName)}&solAge=${days}&birthDate=${encodeURIComponent(birthDate)}&age=${approxYears}`;
+    const profilePicUrl = context?.user?.pfp?.url;
+    const ogImageUrl = `${url}/api/og/solage?userName=${encodeURIComponent(userName)}&solAge=${days}&birthDate=${encodeURIComponent(birthDate)}&age=${approxYears}` +
+      (profilePicUrl ? `&profilePicUrl=${encodeURIComponent(profilePicUrl)}` : '');
     const message = `Forget birthdays—I've completed ${days} rotations around the sun ☀️🌎 What's your Sol Age? ${url}`;
     if (isInFrame && sdk) {
       await sdk.actions.composeCast({
@@ -67,6 +73,13 @@ export default function ResultsPage() {
       localStorage.setItem("sunCycleBookmark", JSON.stringify(data));
       // Show success message or handle UI feedback
     }
+  };
+
+  // New combined handler for save and share
+  const handleSaveAndShare = async () => {
+    handleBookmark();
+    await handleShare();
+    setShared(true);
   };
 
   if (!days || !birthDate) {
@@ -127,15 +140,31 @@ export default function ResultsPage() {
         <div className="max-w-md mx-auto w-full px-6 flex flex-col items-center">
           {shouldShowCommit && (
             <button
-              className="w-full py-4 mb-4 bg-[#d4af37] text-black font-mono text-medium tracking-base uppercase border border-black rounded-none hover:bg-[#e6c75a] transition-colors"
+              className="w-full py-4 mb-4 bg-white text-black font-mono text-medium tracking-base uppercase border border-black rounded-none hover:bg-[#f5e7b2] transition-colors"
+              style={{ borderWidth: 2, borderColor: '#d4af37' }}
               onClick={() => setShowCeremonyModal(true)}
             >
               COMMIT TO COSMIC CONVERGENCE
             </button>
           )}
+          {/* Main CTA: Save and Share or View Dashboard */}
+          {!shared ? (
+            <button
+              onClick={handleSaveAndShare}
+              className="w-full py-4 mb-4 bg-[#d4af37] text-black font-mono text-base tracking-widest uppercase border border-black rounded-none hover:bg-[#e6c75a] transition-colors"
+            >
+              SAVE AND SHARE SOL AGE
+            </button>
+          ) : (
+            <Link
+              href="/soldash?tab=sol%20age"
+              className="w-full py-4 mb-4 bg-[#d4af37] text-black font-mono text-base tracking-widest uppercase border border-black rounded-none flex items-center justify-center hover:bg-[#e6c75a] transition-colors text-center"
+            >
+              VIEW SOL DASHBOARD
+            </Link>
+          )}
           <div className="flex w-full justify-between items-center mt-2 mb-6">
-            <button onClick={handleShare} className="font-mono text-sm text-base underline underline-offset-2">SHARE SOL AGE ↗</button>
-            <span className="mx-2 text-gray-400">|</span>
+            <span></span>
             <button onClick={handleRecalculate} className="font-mono text-sm text-base underline underline-offset-2">CALCULATE AGAIN ↗</button>
           </div>
         </div>
