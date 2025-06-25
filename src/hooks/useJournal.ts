@@ -70,7 +70,18 @@ export function useJournal() {
           });
 
           if (!response.ok) {
-            throw new Error(`Failed to migrate entry: ${response.statusText}`);
+            let errorMsg = `Failed to migrate entry: `;
+            try {
+              const errorBody = await response.json();
+              if (errorBody && errorBody.error) {
+                errorMsg += errorBody.error;
+              } else {
+                errorMsg += response.statusText;
+              }
+            } catch (e) {
+              errorMsg += response.statusText;
+            }
+            throw new Error(errorMsg);
           }
 
           const { entry: newEntry } = await response.json();
