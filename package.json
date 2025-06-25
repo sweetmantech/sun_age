@@ -57,6 +57,7 @@
     "@types/react-dom": "^18.3.7",
     "autoprefixer": "^10.4.21",
     "dotenv": "^16.5.0",
+    "dotenv-cli": "^8.0.0",
     "eslint": "^9.28.0",
     "eslint-config-next": "^15.3.3",
     "hardhat": "^2.19.5",
