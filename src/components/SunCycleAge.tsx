@@ -318,12 +318,13 @@ function BookmarkCard({ bookmark, milestone, milestoneDate, daysToMilestone, onR
             {/* SUNDIAL Token Info */}
             {sundialBalance > 0 ? (
               <div className="w-full flex flex-col items-center border border-yellow-300 bg-yellow-50 rounded-none p-4 mt-4">
-                <img
-                  src={SUNDIAL_IMAGE}
+                <Image
+                  src="/sundial_sm.jpg"
                   alt="$SUNDIAL"
                   width={300}
                   height={300}
                   style={{ margin: '0 auto', filter: sundialBalance < 10000000 ? 'blur(8px)' : 'none' }}
+                  priority
                 />
                 <div className="text-lg font-bold mt-2 mb-1">You own $SUNDIAL!</div>
                 <div className="text-2xl font-mono mb-1">{sundialBalance.toLocaleString(undefined, { maximumFractionDigits: 6 })}</div>
