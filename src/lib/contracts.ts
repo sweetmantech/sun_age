@@ -38,6 +38,65 @@ export const SolarPledgeABI = [
     "type": "function"
   },
   {
+    "inputs": [],
+    "name": "getCurrentConvergencePeriodIndex",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "name": "getConvergencePeriod",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint96",
+            "name": "startTime",
+            "type": "uint96"
+          },
+          {
+            "internalType": "uint96",
+            "name": "endTime",
+            "type": "uint96"
+          },
+          {
+            "internalType": "uint96",
+            "name": "periodTotalPledges",
+            "type": "uint96"
+          },
+          {
+            "internalType": "uint256",
+            "name": "totalVolume",
+            "type": "uint256"
+          },
+          {
+            "internalType": "bool",
+            "name": "isActive",
+            "type": "bool"
+          }
+        ],
+        "internalType": "struct SolarPledge.ConvergencePeriod",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [
       {
         "internalType": "address",
