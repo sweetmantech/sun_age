@@ -176,7 +176,7 @@ export function Journal({ solAge }: JournalProps) {
       </div>
 
       {/* Migration notice for local entries */}
-      {localEntries.length > 0 && context?.user?.fid && (
+      {/* {localEntries.length > 0 && context?.user?.fid && (
         <div className="mb-4 p-4 bg-yellow-50 border border-yellow-200">
           {migrationError && (
             <div className="mb-2 p-2 bg-red-100 border border-red-300 text-red-700 font-mono text-xs whitespace-pre-line">
@@ -207,7 +207,7 @@ export function Journal({ solAge }: JournalProps) {
             </button>
           </div>
         </div>
-      )}
+      )} */}
       
       {/* Notice for local entries when not connected */}
       {localEntries.length > 0 && !context?.user?.fid && (

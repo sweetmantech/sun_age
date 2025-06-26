@@ -113,7 +113,7 @@ function BookmarkCard({ bookmark, milestone, milestoneDate, daysToMilestone, onR
     address: SUNDIAL_ADDRESS,
     abi: erc20Abi,
     functionName: 'balanceOf',
-    args: [address],
+    args: [address ?? '0x0000000000000000000000000000000000000000'],
     chainId: 8453,
     query: { enabled: !!address },
   });
@@ -333,6 +333,15 @@ function BookmarkCard({ bookmark, milestone, milestoneDate, daysToMilestone, onR
                     You must have at least 10m $SUNDIAL to reveal this image
                   </div>
                 )}
+                {/* Purchase More $SUNDIAL Button */}
+                <a
+                  href="https://farcaster.xyz/miniapps/4dsI2tk7qlZd/revealcam"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-4 inline-block px-6 py-3 bg-[#d4af37] text-black font-mono text-base tracking-widest uppercase border border-black rounded-none hover:bg-[#e6c75a] transition-colors"
+                >
+                  Purchase More $SUNDIAL
+                </a>
               </div>
             ) : (
               <>
@@ -341,6 +350,15 @@ function BookmarkCard({ bookmark, milestone, milestoneDate, daysToMilestone, onR
                 <p className="text-gray-600 mb-4">
                   NFT signatures and collectibles will be available here soon. Stay tuned!
                 </p>
+                {/* Purchase More $SUNDIAL Button */}
+                <a
+                  href="https://farcaster.xyz/miniapps/4dsI2tk7qlZd/revealcam"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-4 inline-block px-6 py-3 bg-[#d4af37] text-black font-mono text-base tracking-widest uppercase border border-black rounded-none hover:bg-[#e6c75a] transition-colors"
+                >
+                  Purchase More $SUNDIAL
+                </a>
               </>
             )}
           </div>
