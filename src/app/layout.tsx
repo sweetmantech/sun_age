@@ -54,6 +54,7 @@ export const metadata: Metadata = {
         url: `${appUrl}/og-image.png`,
         width: 1200,
         height: 630,
+        alt: PROJECT_TITLE,
       },
     ],
     locale: "en_US",
@@ -64,6 +65,12 @@ export const metadata: Metadata = {
     title: PROJECT_TITLE,
     description: PROJECT_DESCRIPTION,
     images: [`${appUrl}/og-image.png`],
+  },
+  // Static OG image for homepage and generic links
+  otherSocial: {
+    ogImage: 'https://yourdomain.com/suncycles_og.png', // Replace with your actual domain
+    ogTitle: 'Solara – Cosmic Age Calculator',
+    ogDescription: 'Discover your cosmic age and join the Solara journey.',
   },
 };
 

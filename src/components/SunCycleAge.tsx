@@ -61,8 +61,8 @@ function BookmarkCard({ bookmark, milestone, milestoneDate, daysToMilestone, onR
   isLoading?: boolean;
   onChainPledge?: Pledge;
 }) {
+  const { context, isInFrame } = useFrameSDK();
   const [tab, setTab] = useState<'sol age' | 'sol vows' | 'journal' | 'sol sign'>(initialTab || 'sol age');
-  const { context } = useFrameSDK();
   const { daysRemaining, totalPooled } = useConvergenceStats();
   const [isSigning, setIsSigning] = useState(false);
   const [signError, setSignError] = useState<Error | null>(null);
@@ -335,10 +335,10 @@ function BookmarkCard({ bookmark, milestone, milestoneDate, daysToMilestone, onR
                 You must have at least 10m $SUNDIAL to reveal this image
               </div>
             )}
-            {/* Purchase $SUNDIAL Button (existing, but with frame logic) */}
-            {isInFrame ? (
+            {/* Purchase $SUNDIAL Button (mini app aware) */}
+            {isMiniApp ? (
               <button
-                onClick={() => window.open(MINI_APP_URL, '_blank')}
+                onClick={() => sdk.openUrl(MINI_APP_DEEPLINK)}
                 className="mt-4 inline-block px-6 py-3 bg-[#d4af37] text-black font-mono text-base tracking-widest uppercase border border-black rounded-none hover:bg-[#e6c75a] transition-colors"
               >
                 Purchase More $SUNDIAL
@@ -790,6 +790,11 @@ export default function SunCycleAge({ initialConsentData }: SunCycleAgeProps) {
   const [showTooltip, setShowTooltip] = useState(false);
 
   const MINI_APP_URL = 'https://revealcam.fun/reveal/0x2f5d64baefcf66e0218b8d086b08f72619ca895a';
+  const MINI_APP_DEEPLINK = 'https://farcaster.xyz/~/mini-apps/launch?url=' + encodeURIComponent(MINI_APP_URL);
+  const [isMiniApp, setIsMiniApp] = useState(false);
+  useEffect(() => {
+    sdk.isInMiniApp().then(setIsMiniApp);
+  }, []);
 
   if (!isSDKLoaded) {
     return (

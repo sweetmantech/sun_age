@@ -29,6 +29,9 @@ export default function ResultsPage() {
   // Add state to track if user has shared/bookmarked
   const [shared, setShared] = useState(false);
 
+  // Add state for bookmark modal
+  const [showBookmarkModal, setShowBookmarkModal] = useState(false);
+
   // Get data from URL parameters with null checks
   const daysParam = searchParams?.get('days');
   const approxYearsParam = searchParams?.get('approxYears');
@@ -44,13 +47,20 @@ export default function ResultsPage() {
   // New combined handler for save and share
   const MINI_APP_LINK = "https://farcaster.xyz/miniapps/Oa0s4K49lyKB/solaraa-cosmic-age-calculator";
   const handleShare = async () => {
+    handleBookmark();
+    await handleShareInternal();
+    setShared(true);
+  };
+
+  // Separate handler for just sharing (no bookmark)
+  const handleShareInternal = async () => {
     if (!days || !birthDate || !approxYears) return;
     const url = process.env.NEXT_PUBLIC_URL || window.location.origin;
     const userName = context?.user?.displayName || 'TRAVELLER';
     const profilePicUrl = context?.user?.pfp?.url;
     const ogImageUrl = `${url}/api/og/solage?userName=${encodeURIComponent(userName)}&solAge=${days}&birthDate=${encodeURIComponent(birthDate)}&age=${approxYears}` +
       (profilePicUrl ? `&profilePicUrl=${encodeURIComponent(profilePicUrl)}` : '');
-    const message = `Forget birthdays—I've completed ${days} rotations around the sun ☀️🌎 What's your Sol Age?\n\nTry it yourself: ${MINI_APP_LINK}`;
+    const message = `Forget birthdays—I've completed ${days} rotations around the sun ☀️🌎 What's your Sol Age?\n\nTry it yourself: https://farcaster.xyz/miniapps/Oa0s4K49lyKB/solaraa-cosmic-age-calculator`;
     if (isInFrame && sdk) {
       await sdk.actions.composeCast({
         text: message,
@@ -60,6 +70,13 @@ export default function ResultsPage() {
       window.location.href = `https://warpcast.com/~/compose?text=${encodeURIComponent(message + '\n\n[My Sol Age Card](' + ogImageUrl + ')')}`;
     }
   };
+
+  // Handler for bookmark modal confirm
+  const handleBookmarkConfirm = () => {
+    handleBookmark();
+    setShowBookmarkModal(false);
+  };
+
   const handleRecalculate = () => router.push('/');
   const handleBookmark = () => {
     if (days !== null && approxYears !== null && birthDate) {
@@ -74,13 +91,6 @@ export default function ResultsPage() {
       localStorage.setItem("sunCycleBookmark", JSON.stringify(data));
       // Show success message or handle UI feedback
     }
-  };
-
-  // New combined handler for save and share
-  const handleSaveAndShare = async () => {
-    handleBookmark();
-    await handleShare();
-    setShared(true);
   };
 
   if (!days || !birthDate) {
@@ -139,31 +149,30 @@ export default function ResultsPage() {
       {/* CTA section below main content, on white */}
       <div className="w-full bg-white flex flex-col items-center pt-6 pb-4">
         <div className="max-w-md mx-auto w-full px-6 flex flex-col items-center">
-          {shouldShowCommit && (
-            <button
-              className="w-full py-4 mb-4 bg-white text-black font-mono text-medium tracking-base uppercase border border-black rounded-none hover:bg-[#f5e7b2] transition-colors"
-              style={{ borderWidth: 2, borderColor: '#d4af37' }}
-              onClick={() => setShowCeremonyModal(true)}
-            >
-              COMMIT TO COSMIC CONVERGENCE
-            </button>
-          )}
-          {/* Main CTA: Save and Share or View Dashboard */}
+          {/* Main CTA: Share or Bookmark */}
           {!shared ? (
             <button
-              onClick={handleSaveAndShare}
+              onClick={handleShareInternal}
               className="w-full py-4 mb-4 bg-[#d4af37] text-black font-mono text-base tracking-widest uppercase border border-black rounded-none hover:bg-[#e6c75a] transition-colors"
             >
-              SAVE AND SHARE SOL AGE
+              SHARE SOL AGE
             </button>
           ) : (
-            <Link
-              href="/soldash?tab=sol%20age"
-              className="w-full py-4 mb-4 bg-[#d4af37] text-black font-mono text-base tracking-widest uppercase border border-black rounded-none flex items-center justify-center hover:bg-[#e6c75a] transition-colors text-center"
+            <button
+              onClick={() => setShowBookmarkModal(true)}
+              className="w-full py-4 mb-4 bg-[#d4af37] text-black font-mono text-base tracking-widest uppercase border border-black rounded-none hover:bg-[#e6c75a] transition-colors"
             >
-              VIEW SOL DASHBOARD
-            </Link>
+              BOOKMARK SOL AGE
+            </button>
           )}
+          {/* Secondary CTA: Cosmic Convergence */}
+          <button
+            className="w-full py-4 mb-4 bg-white text-black font-mono text-medium tracking-base uppercase border border-black rounded-none hover:bg-[#f5e7b2] transition-colors"
+            style={{ borderWidth: 2, borderColor: '#d4af37' }}
+            onClick={() => setShowCeremonyModal(true)}
+          >
+            WHAT IS THE COSMIC CONVERGENCE?
+          </button>
           <div className="flex w-full justify-between items-center mt-2 mb-6">
             <span></span>
             <button onClick={handleRecalculate} className="font-mono text-sm text-base underline underline-offset-2">CALCULATE AGAIN ↗</button>
@@ -236,6 +245,46 @@ export default function ResultsPage() {
               }}
             >
               BOOKMARK MY SOL AGE
+            </button>
+          </div>
+        </div>
+      )}
+      {/* Bookmark Modal */}
+      {showBookmarkModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          {/* Sunrise gradient overlay, matching tooltip modal */}
+          <div className="absolute inset-0 bg-solara-sunrise" style={{ opacity: 0.6 }} />
+          {/* Modal with blur, border, and offwhite background */}
+          <div className="relative z-10 backdrop-blur-md bg-[#FFFCF2]/50 border border-gray-200 p-6 max-w-[360px] mx-auto flex flex-col items-center animate-fadeIn">
+            <button
+              className="absolute top-4 right-4 text-2xl text-gray-600 hover:text-black"
+              aria-label="Close"
+              onClick={() => setShowBookmarkModal(false)}
+            >
+              ×
+            </button>
+            <div className="text-2xl font-serif font-bold text-center mb-2">Bookmark Your Sol Age</div>
+            <div className="text-xs font-mono text-center text-gray-600 mb-4 tracking-normal uppercase">TRACK MILESTONES, COSMIC EVENTS, AND REFLECT ON YOUR JOURNEY</div>
+            <div className="text-base text-gray-800 font-sans text-left mb-6">
+              Bookmarking your Sol Age allows you to:
+              <ul className="list-disc ml-6 mt-2 mb-2">
+                <li>Track your progress toward new milestones</li>
+                <li>Be notified of upcoming cosmic events</li>
+                <li>Reflect on your journey with affirmations and insights</li>
+              </ul>
+              Stay connected to your cosmic journey and never miss a moment of growth.
+            </div>
+            <button
+              className="w-full py-4 mt-2 mb-2 bg-[#d4af37] text-black font-mono text-base tracking-widest uppercase border-none rounded-none hover:bg-[#e6c75a] transition-colors"
+              onClick={handleBookmarkConfirm}
+            >
+              Confirm and Bookmark
+            </button>
+            <button
+              className="w-full py-2 mb-2 bg-transparent text-black font-mono text-base underline underline-offset-2 border-none rounded-none hover:text-[#d4af37] transition-colors"
+              onClick={() => setShowBookmarkModal(false)}
+            >
+              Cancel
             </button>
           </div>
         </div>
