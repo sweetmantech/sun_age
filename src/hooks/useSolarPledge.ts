@@ -70,7 +70,7 @@ export function useSolarPledge(): UseSolarPledgeResult {
     address: USDC_ADDRESS,
     abi: USDC_ABI,
     functionName: 'allowance',
-    args: [address, SOLAR_PLEDGE_ADDRESS],
+    args: address ? [address, SOLAR_PLEDGE_ADDRESS] : ['0x0000000000000000000000000000000000000000', SOLAR_PLEDGE_ADDRESS],
     query: { enabled: !!address },
   });
 
@@ -78,8 +78,8 @@ export function useSolarPledge(): UseSolarPledgeResult {
   const { data: hasPledged, refetch: refetchPledged } = useReadContract({
     address: SOLAR_PLEDGE_ADDRESS,
     abi: SolarPledgeABI,
-    functionName: 'hasPledged',
-    args: [address],
+    functionName: 'hasPledge',
+    args: address ? [address] : ['0x0000000000000000000000000000000000000000'],
     query: { enabled: !!address },
   });
 
@@ -88,7 +88,7 @@ export function useSolarPledge(): UseSolarPledgeResult {
     address: SOLAR_PLEDGE_ADDRESS,
     abi: SolarPledgeABI,
     functionName: 'getPledge',
-    args: [address],
+    args: address ? [address] : ['0x0000000000000000000000000000000000000000'],
     query: { enabled: !!address },
   });
 
