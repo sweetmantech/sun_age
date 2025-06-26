@@ -12,6 +12,10 @@ module.exports = {
       }
     }
   },
+  paths: {
+    artifacts: "../artifacts",
+    cache: "./cache"
+  },
   networks: {
     hardhat: {
       chainId: 31337
@@ -25,6 +29,11 @@ module.exports = {
       url: process.env.MAINNET_RPC_URL || "",
       accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : [],
       chainId: 1
+    },
+    base: {
+      url: process.env.BASE_RPC_URL || "https://mainnet.base.org",
+      accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : [],
+      chainId: 8453
     }
   },
   etherscan: {

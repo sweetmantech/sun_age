@@ -45,7 +45,7 @@ export default function ResultsPage() {
   const { daysRemaining } = useConvergenceStats();
 
   // New combined handler for save and share
-  const MINI_APP_LINK = "https://farcaster.xyz/miniapps/RG0OzY8kMwq8/solaraa-cosmic-age-calculator";
+  const MINI_APP_LINK = "https://www.solara.fyi";
   const handleShare = async () => {
     handleBookmark();
     await handleShareInternal();
@@ -60,7 +60,7 @@ export default function ResultsPage() {
     const profilePicUrl = context?.user?.pfp?.url;
     const ogImageUrl = `${url}/api/og/solage?userName=${encodeURIComponent(userName)}&solAge=${days}&birthDate=${encodeURIComponent(birthDate)}&age=${approxYears}` +
       (profilePicUrl ? `&profilePicUrl=${encodeURIComponent(profilePicUrl)}` : '');
-    const message = `Forget birthdays—I've completed ${days} rotations around the sun ☀️🌎 What's your Sol Age?\n\nTry it yourself: https://farcaster.xyz/miniapps/RG0OzY8kMwq8/solaraa-cosmic-age-calculator`;
+    const message = `Forget birthdays—I've completed ${days} rotations around the sun ☀️🌎 What's your Sol Age?\n\nTry it yourself: https://www.solara.fyi`;
     if (isInFrame && sdk) {
       await sdk.actions.composeCast({
         text: message,

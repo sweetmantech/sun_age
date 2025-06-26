@@ -3,7 +3,7 @@ const hre = require("hardhat");
 async function main() {
   // Duration in days for the new convergence period.
   // You can change this value as needed.
-  const DURATION_IN_DAYS = 30;
+  const DURATION_IN_DAYS = 15;
 
   // The address of your deployed SolarPledge contract
   const CONTRACT_ADDRESS = "0x860434EA4e4114B63F44C70a304fa3eD2B32E77c";
