@@ -18,6 +18,8 @@ import { useConvergenceStats } from '~/hooks/useConvergenceStats';
 import type { Pledge } from '~/hooks/useSolarPledge';
 import { Journal } from './Journal/Journal';
 import { PulsingStarSpinner } from "~/components/ui/PulsingStarSpinner";
+import { useAccount, useReadContract } from 'wagmi';
+import { erc20Abi } from 'viem';
 // import { revokeUserConsent } from "~/lib/consent";
 
 function WarpcastEmbed({ url }: { url: string }) {
@@ -103,6 +105,19 @@ function BookmarkCard({ bookmark, milestone, milestoneDate, daysToMilestone, onR
       onSolVowsTab();
     }
   }, [tab, onSolVowsTab]);
+
+  const { address } = useAccount();
+  const SUNDIAL_ADDRESS = '0x2f5d64baefcf66e0218b8d086b08f72619ca895a';
+  const SUNDIAL_IMAGE = '/sundial_sm.jpg';
+  const { data: sundialBalanceRaw } = useReadContract({
+    address: SUNDIAL_ADDRESS,
+    abi: erc20Abi,
+    functionName: 'balanceOf',
+    args: [address],
+    chainId: 8453,
+    query: { enabled: !!address },
+  });
+  const sundialBalance = sundialBalanceRaw ? Number(sundialBalanceRaw) / 1e18 : 0;
 
   return (
     <div className="max-w-md w-full flex flex-col items-center sm:space-y-6 relative mt-24 px-0 sm:px-0 h-full">
@@ -300,11 +315,34 @@ function BookmarkCard({ bookmark, milestone, milestoneDate, daysToMilestone, onR
 
         {tab === 'sol sign' && (
           <div className="w-full text-sm font-mono space-y-3 flex flex-col items-center text-center">
-            <div className="text-4xl mb-3">🪐</div>
-            <div className="text-lg font-bold mb-2">Coming Soon</div>
-            <p className="text-gray-600">
-              NFT signatures and collectibles will be available here soon. Stay tuned!
-            </p>
+            {/* SUNDIAL Token Info */}
+            {sundialBalance > 0 ? (
+              <div className="w-full flex flex-col items-center border border-yellow-300 bg-yellow-50 rounded-none p-4 mt-4">
+                <img
+                  src={SUNDIAL_IMAGE}
+                  alt="$SUNDIAL"
+                  width={300}
+                  height={300}
+                  style={{ margin: '0 auto', filter: sundialBalance < 10000000 ? 'blur(8px)' : 'none' }}
+                />
+                <div className="text-lg font-bold mt-2 mb-1">You own $SUNDIAL!</div>
+                <div className="text-2xl font-mono mb-1">{sundialBalance.toLocaleString(undefined, { maximumFractionDigits: 6 })}</div>
+                <div className="text-xs text-gray-500 mb-2">Token: $SUNDIAL</div>
+                {sundialBalance < 10000000 && (
+                  <div className="mt-2 p-2 bg-yellow-200 border border-yellow-400 text-yellow-900 font-mono text-xs rounded-none">
+                    You must have at least 10m $SUNDIAL to reveal this image
+                  </div>
+                )}
+              </div>
+            ) : (
+              <>
+                <div className="text-4xl mb-3">🪐</div>
+                <div className="text-lg font-bold mb-2">Coming Soon</div>
+                <p className="text-gray-600 mb-4">
+                  NFT signatures and collectibles will be available here soon. Stay tuned!
+                </p>
+              </>
+            )}
           </div>
         )}
       </div>
