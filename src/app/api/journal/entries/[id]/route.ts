@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '~/utils/supabase/server';
+import { createClient, createServiceRoleClient } from '~/utils/supabase/server';
 import type { UpdateJournalEntryRequest } from '~/types/journal';
 
 export async function PUT(
@@ -8,12 +8,20 @@ export async function PUT(
 ) {
   try {
     const { id } = await params;
-    const supabase = await createClient();
-    
-    // Get user from session
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const isDev = process.env.NODE_ENV === 'development';
+    const userFidParam = request.nextUrl.searchParams.get('userFid');
+    let supabase;
+    let userFid;
+    if (isDev && userFidParam) {
+      supabase = createServiceRoleClient();
+      userFid = parseInt(userFidParam, 10);
+    } else {
+      supabase = await createClient();
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
+      if (authError || !user) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      }
+      userFid = parseInt(user.id, 10);
     }
 
     // Parse request body
@@ -34,7 +42,7 @@ export async function PUT(
       .from('journal_entries')
       .select('*')
       .eq('id', id)
-      .eq('user_fid', user.id)
+      .eq('user_fid', userFid)
       .single();
 
     if (fetchError || !existingEntry) {
@@ -57,7 +65,7 @@ export async function PUT(
         word_count
       })
       .eq('id', id)
-      .eq('user_fid', user.id)
+      .eq('user_fid', userFid)
       .select()
       .single();
 
@@ -79,12 +87,20 @@ export async function DELETE(
 ) {
   try {
     const { id } = await params;
-    const supabase = await createClient();
-    
-    // Get user from session
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const isDev = process.env.NODE_ENV === 'development';
+    const userFidParam = request.nextUrl.searchParams.get('userFid');
+    let supabase;
+    let userFid;
+    if (isDev && userFidParam) {
+      supabase = createServiceRoleClient();
+      userFid = parseInt(userFidParam, 10);
+    } else {
+      supabase = await createClient();
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
+      if (authError || !user) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      }
+      userFid = parseInt(user.id, 10);
     }
 
     // Check if entry exists and belongs to user
@@ -92,7 +108,7 @@ export async function DELETE(
       .from('journal_entries')
       .select('*')
       .eq('id', id)
-      .eq('user_fid', user.id)
+      .eq('user_fid', userFid)
       .single();
 
     if (fetchError || !existingEntry) {
@@ -109,7 +125,7 @@ export async function DELETE(
       .from('journal_entries')
       .delete()
       .eq('id', id)
-      .eq('user_fid', user.id);
+      .eq('user_fid', userFid);
 
     if (error) {
       console.error('Error deleting journal entry:', error);

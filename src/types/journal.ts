@@ -3,7 +3,7 @@ export interface JournalEntry {
   user_fid: number;
   sol_day: number;
   content: string;
-  preservation_status: 'local' | 'preserved';
+  preservation_status: 'local' | 'synced' | 'preserved';
   preservation_tx_hash?: string;
   word_count: number;
   created_at: string;

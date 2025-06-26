@@ -2,17 +2,28 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient, createServiceRoleClient } from '~/utils/supabase/server';
 
 export async function GET(req: NextRequest) {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const isDev = process.env.NODE_ENV === 'development';
+  const userFidParam = req.nextUrl.searchParams.get('userFid');
 
-  if (!user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  let userFid: number | null = null;
+  let supabase;
+
+  if (isDev && userFidParam) {
+    supabase = createServiceRoleClient();
+    userFid = parseInt(userFidParam, 10);
+  } else {
+    supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    userFid = parseInt(user.id, 10);
   }
 
   const { data: entries, error } = await supabase
     .from('journal_entries')
     .select('*')
-    .eq('user_fid', user.id)
+    .eq('user_fid', userFid)
     .order('created_at', { ascending: false });
 
   if (error) {
@@ -55,7 +66,7 @@ export async function POST(req: NextRequest) {
             content,
             sol_day,
             word_count: content.trim().split(/\s+/).length,
-            preservation_status: 'local',
+            preservation_status: userFid ? 'synced' : 'local',
         };
 
         const { data: entry, error } = await supabase

@@ -188,14 +188,15 @@ export default function SolDashPage() {
               const url = process.env.NEXT_PUBLIC_URL || window.location.origin;
               const userName = bookmark.userName || 'TRAVELLER';
               const ogImageUrl = `${url}/api/og/solage?userName=${encodeURIComponent(userName)}&solAge=${bookmark.days}&birthDate=${encodeURIComponent(bookmark.birthDate)}&age=${bookmark.approxYears}`;
-              const message = `Forget birthdays—I've completed ${bookmark.days} rotations around the sun ☀️🌎 What's your Sol Age? ${url}`;
+              const miniAppUrl = 'https://www.solara.fyi';
+              const message = `Forget birthdays—I've completed ${bookmark.days} rotations around the sun ☀️🌎 What's your Sol Age? ${miniAppUrl}`;
               if (isInFrame && sdk) {
                 await sdk.actions.composeCast({
                   text: message,
-                  embeds: [ogImageUrl]
+                  embeds: [ogImageUrl, miniAppUrl]
                 });
               } else {
-                window.location.href = `https://warpcast.com/~/compose?text=${encodeURIComponent(message + '\n\n[My Sol Age Card](' + ogImageUrl + ')')}`;
+                window.location.href = `https://warpcast.com/~/compose?text=${encodeURIComponent(message + '\n\n[My Sol Age Card](' + ogImageUrl + ')')}&embeds=${encodeURIComponent(ogImageUrl)},${encodeURIComponent(miniAppUrl)}`;
               }
               setTimeout(() => setIsSharing(false), 1000);
             }}

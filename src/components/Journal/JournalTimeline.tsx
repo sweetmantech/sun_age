@@ -8,21 +8,31 @@ interface JournalTimelineProps {
   onStartWriting: () => void;
   onEdit: (entry: JournalEntry) => void;
   onDelete: (id: string) => void;
+  onShare: (entry: JournalEntry) => void;
+  onRead: (entry: JournalEntry) => void;
 }
 
-const PreservationStatus = ({ status }: { status: 'local' | 'preserved' | 'private' }) => {
-  const isPreserved = status === 'preserved';
-  const color = isPreserved ? 'text-yellow-600' : 'text-gray-500';
-
+const PreservationStatus = ({ status }: { status: 'local' | 'synced' | 'preserved' | 'private' }) => {
+  let color = 'text-gray-500';
+  let dot = 'bg-gray-400';
+  let label = status.toUpperCase();
+  if (status === 'preserved') {
+    color = 'text-yellow-600';
+    dot = 'bg-yellow-500';
+  } else if (status === 'synced') {
+    color = 'text-blue-600';
+    dot = 'bg-blue-500';
+    label = 'SYNCED';
+  }
   return (
     <div className={`flex items-center text-xs font-mono tracking-widest ${color}`}>
-      <span className={`w-2 h-2 rounded-full mr-2 ${isPreserved ? 'bg-yellow-500' : 'bg-gray-400'}`}></span>
-      {status.toUpperCase()}
+      <span className={`w-2 h-2 rounded-full mr-2 ${dot}`}></span>
+      {label}
     </div>
   );
 };
 
-export function JournalTimeline({ entries, onStartWriting, onEdit, onDelete }: JournalTimelineProps) {
+export function JournalTimeline({ entries, onStartWriting, onEdit, onDelete, onShare, onRead }: JournalTimelineProps) {
   if (entries.length === 0) {
     return (
       <div className="border border-gray-300 p-6 bg-white/90">
@@ -49,7 +59,15 @@ export function JournalTimeline({ entries, onStartWriting, onEdit, onDelete }: J
   return (
     <div className="space-y-4">
       {entries.map((entry) => (
-        <div key={entry.id} className="border border-gray-300 p-6 bg-white/90">
+        <div
+          key={entry.id}
+          className="border border-gray-300 p-6 bg-white/90 cursor-pointer group"
+          onClick={(e) => {
+            // Prevent click if a button was clicked
+            if ((e.target as HTMLElement).tagName === 'BUTTON') return;
+            onRead(entry);
+          }}
+        >
           <div className="flex justify-between items-center mb-4">
             <h4 className="font-mono text-xs">SOL {entry.sol_day}</h4>
             <PreservationStatus status={entry.preservation_status} />
@@ -58,18 +76,22 @@ export function JournalTimeline({ entries, onStartWriting, onEdit, onDelete }: J
             {entry.content}
           </p>
           <div className="flex justify-between items-center text-xs font-mono uppercase tracking-widest">
-            {entry.preservation_status === 'local' ? (
-                <div className="flex gap-4">
-                    {/* <button className="text-yellow-600 hover:text-yellow-700 underline underline-offset-2">PRESERVE</button> */}
-                    <button onClick={() => onEdit(entry)} className="text-gray-500 hover:text-black underline underline-offset-2">EDIT</button>
-                    <button onClick={() => onDelete(entry.id)} className="text-red-500 hover:text-red-700 underline underline-offset-2">DELETE</button>
-                </div>
-            ) : (
-                <div className="flex gap-4">
-                    {/* <button className="text-gray-500 hover:text-black underline underline-offset-2">SHARE</button> */}
-                    {/* <button className="text-gray-500 hover:text-black underline underline-offset-2">READ</button> */}
-                </div>
-            )}
+            <div className="flex gap-4">
+              <button
+                onClick={(e) => { e.stopPropagation(); onEdit(entry); }}
+                className="text-gray-500 hover:text-black underline underline-offset-2"
+              >EDIT</button>
+              <button
+                onClick={(e) => { e.stopPropagation(); onDelete(entry.id); }}
+                className="text-red-500 hover:text-red-700 underline underline-offset-2"
+              >DELETE</button>
+              {entry.preservation_status === 'synced' && (
+                <button
+                  onClick={(e) => { e.stopPropagation(); onShare(entry); }}
+                  className="text-blue-600 hover:text-blue-800 underline underline-offset-2"
+                >SHARE</button>
+              )}
+            </div>
             <span className="text-gray-500">{entry.word_count} words</span>
           </div>
         </div>

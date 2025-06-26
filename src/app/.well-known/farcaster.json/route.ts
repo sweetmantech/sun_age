@@ -23,7 +23,7 @@ export async function GET() {
       imageUrl: `${appUrl}/suncycles_og.png`,
       ogImageUrl: `${appUrl}/suncycles_og.png`,
       heroImageUrl: `${appUrl}/suncycles_og.png`,
-      noindex: true,
+      noindex: false,
       screenshotUrls: [
         `${appUrl}/results_page.png`,
         `${appUrl}/pledge_page.png`,

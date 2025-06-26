@@ -25,7 +25,10 @@ export function useJournal() {
     try {
       const stored = localStorage.getItem(LOCAL_STORAGE_KEY);
       if (stored) {
-        setEntries(JSON.parse(stored));
+        const allEntries = JSON.parse(stored);
+        // Only load local entries initially, synced/preserved entries will be loaded when userFid is provided
+        const localEntries = allEntries.filter((e: JournalEntry) => e.preservation_status === 'local');
+        setEntries(localEntries);
       }
     } catch (err) {
       console.error('Error loading local journal entries:', err);
@@ -112,13 +115,13 @@ export function useJournal() {
   }, [entries, saveToLocalStorage]);
 
   // Create a new journal entry locally
-  const createEntry = useCallback(async (data: CreateJournalEntryRequest): Promise<JournalEntry> => {
+  const createEntry = useCallback(async (data: CreateJournalEntryRequest, userFid?: number): Promise<JournalEntry> => {
     setLoading(true);
     setError(null);
     try {
       const newEntry: JournalEntry = {
         id: `local_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-        user_fid: 0, // Not yet associated with a user
+        user_fid: userFid || 0, // Use provided userFid or default to 0
         sol_day: data.sol_day,
         content: data.content,
         word_count: data.content.trim().split(/\s+/).length,
@@ -142,31 +145,106 @@ export function useJournal() {
     }
   }, [saveToLocalStorage]);
 
-  // Update a journal entry locally
-  const updateEntry = useCallback(async (id: string, data: UpdateJournalEntryRequest): Promise<JournalEntry> => {
+  // Load entries from API (for authenticated users or dev override)
+  const loadEntries = useCallback(async (filters?: JournalFilters, userFid?: number) => {
     setLoading(true);
     setError(null);
-    
+    try {
+      // Always load local entries from storage first
+      const stored = localStorage.getItem(LOCAL_STORAGE_KEY);
+      let localEntries: JournalEntry[] = [];
+      if (stored) {
+        localEntries = JSON.parse(stored).filter((e: JournalEntry) => e.preservation_status === 'local');
+      }
+
+      // Only load synced/preserved entries from API if userFid is provided
+      if (userFid) {
+        const params = new URLSearchParams();
+        if (filters?.preservation_status && filters.preservation_status !== 'local') {
+          params.append('preservation_status', filters.preservation_status);
+        }
+        if (filters?.search) {
+          params.append('search', filters.search);
+        }
+        // Dev override: add userFid if provided and in dev mode
+        if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development' && userFid) {
+          params.append('userFid', String(userFid));
+        }
+        
+        const response = await fetch(`/api/journal/entries?${params.toString()}`);
+        if (response.ok) {
+          const { entries: apiEntries } = await response.json();
+          // Merge API entries with local entries
+          const merged = [...apiEntries, ...localEntries];
+          // Sort by created_at descending
+          merged.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+          setEntries(merged);
+          saveToLocalStorage(merged);
+        } else {
+          console.warn('Failed to load entries from API, using local only');
+          setEntries(localEntries);
+        }
+      } else {
+        // No userFid provided, only show local entries
+        setEntries(localEntries);
+      }
+    } catch (err) {
+      console.warn('Error loading entries, using local only:', err);
+      // Fallback to local entries only
+      const stored = localStorage.getItem(LOCAL_STORAGE_KEY);
+      if (stored) {
+        const localEntries = JSON.parse(stored).filter((e: JournalEntry) => e.preservation_status === 'local');
+        setEntries(localEntries);
+      }
+    } finally {
+      setLoading(false);
+    }
+  }, [saveToLocalStorage]);
+
+  // Update a journal entry locally or in the database
+  const updateEntry = useCallback(async (id: string, data: UpdateJournalEntryRequest, userFid?: number): Promise<JournalEntry> => {
+    setLoading(true);
+    setError(null);
     try {
       const entryToUpdate = entries.find(e => e.id === id);
-
       if (!entryToUpdate) {
         throw new Error('Entry not found');
       }
-
-      const updatedEntry: JournalEntry = {
-        ...entryToUpdate,
-        content: data.content,
-        word_count: data.content.trim().split(/\s+/).length,
-      };
-
-      setEntries(prev => {
-        const newEntries = prev.map(e => (e.id === id ? updatedEntry : e));
-        saveToLocalStorage(newEntries);
-        return newEntries;
-      });
-
-      return updatedEntry;
+      if (entryToUpdate.preservation_status === 'local') {
+        // Local update
+        const updatedEntry: JournalEntry = {
+          ...entryToUpdate,
+          content: data.content,
+          word_count: data.content.trim().split(/\s+/).length,
+        };
+        setEntries(prev => {
+          const newEntries = prev.map(e => (e.id === id ? updatedEntry : e));
+          saveToLocalStorage(newEntries);
+          return newEntries;
+        });
+        return updatedEntry;
+      } else if (entryToUpdate.preservation_status === 'synced') {
+        // API update
+        const params = new URLSearchParams();
+        if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development' && userFid) {
+          params.append('userFid', String(userFid));
+        }
+        const response = await fetch(`/api/journal/entries/${id}?${params.toString()}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ content: data.content }),
+        });
+        if (!response.ok) {
+          const errorBody = await response.json();
+          throw new Error(errorBody.error || 'Failed to update entry');
+        }
+        const { entry: updatedEntry } = await response.json();
+        // Refresh entries from the database
+        await loadEntries(undefined, userFid);
+        return updatedEntry;
+      } else {
+        throw new Error('Cannot update preserved entries');
+      }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to update entry';
       setError(errorMessage);
@@ -174,18 +252,41 @@ export function useJournal() {
     } finally {
       setLoading(false);
     }
-  }, [entries, saveToLocalStorage]);
+  }, [entries, saveToLocalStorage, loadEntries]);
 
-  // Delete a journal entry locally
-  const deleteEntry = useCallback(async (id: string): Promise<void> => {
+  // Delete a journal entry locally or in the database
+  const deleteEntry = useCallback(async (id: string, userFid?: number): Promise<void> => {
     setLoading(true);
     setError(null);
     try {
-      setEntries(prev => {
-        const newEntries = prev.filter(e => e.id !== id);
-        saveToLocalStorage(newEntries);
-        return newEntries;
-      });
+      const entryToDelete = entries.find(e => e.id === id);
+      if (!entryToDelete) {
+        throw new Error('Entry not found');
+      }
+      if (entryToDelete.preservation_status === 'local') {
+        setEntries(prev => {
+          const newEntries = prev.filter(e => e.id !== id);
+          saveToLocalStorage(newEntries);
+          return newEntries;
+        });
+      } else if (entryToDelete.preservation_status === 'synced') {
+        // API delete
+        const params = new URLSearchParams();
+        if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development' && userFid) {
+          params.append('userFid', String(userFid));
+        }
+        const response = await fetch(`/api/journal/entries/${id}?${params.toString()}`, {
+          method: 'DELETE',
+        });
+        if (!response.ok) {
+          const errorBody = await response.json();
+          throw new Error(errorBody.error || 'Failed to delete entry');
+        }
+        // Refresh entries from the database
+        await loadEntries(undefined, userFid);
+      } else {
+        throw new Error('Cannot delete preserved entries');
+      }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to delete entry';
       setError(errorMessage);
@@ -193,44 +294,7 @@ export function useJournal() {
     } finally {
       setLoading(false);
     }
-  }, [saveToLocalStorage]);
-
-  // Load entries from API (for authenticated users)
-  const loadEntries = useCallback(async (filters?: JournalFilters) => {
-    setLoading(true);
-    setError(null);
-
-    try {
-      const params = new URLSearchParams();
-      if (filters?.preservation_status) {
-        params.append('preservation_status', filters.preservation_status);
-      }
-      if (filters?.search) {
-        params.append('search', filters.search);
-      }
-
-      const response = await fetch(`/api/journal/entries?${params.toString()}`);
-      
-      if (response.ok) {
-        const { entries: apiEntries } = await response.json();
-        // Merge with local entries, prioritizing API entries
-        setEntries(prev => {
-          const localEntries = prev.filter(e => e.preservation_status === 'local');
-          const merged = [...apiEntries, ...localEntries];
-          // Sort by created_at descending
-          merged.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-          saveToLocalStorage(merged);
-          return merged;
-        });
-      } else {
-        console.warn('Failed to load entries from API, using local only');
-      }
-    } catch (err) {
-      console.warn('Error loading entries from API, using local only:', err);
-    } finally {
-      setLoading(false);
-    }
-  }, [saveToLocalStorage]);
+  }, [entries, saveToLocalStorage, loadEntries]);
 
   // Filter entries
   const getFilteredEntries = useCallback((filters?: JournalFilters) => {
