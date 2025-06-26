@@ -25,8 +25,12 @@ export function useConvergenceStats() {
     address: SOLAR_PLEDGE_ADDRESS,
     abi: SolarPledgeABI,
     functionName: 'getConvergencePeriod',
-    args: [currentPeriodIndex],
-    query: { enabled: currentPeriodIndex !== undefined && currentPeriodIndex !== null && currentPeriodIndex !== BigInt('0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff') },
+    args: currentPeriodIndex !== undefined ? [currentPeriodIndex] : [BigInt(0)],
+    query: { 
+      enabled: currentPeriodIndex !== undefined && 
+               currentPeriodIndex !== null && 
+               currentPeriodIndex !== BigInt('0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff') 
+    },
   });
   const period = periodRaw as ConvergencePeriod | undefined;
 
