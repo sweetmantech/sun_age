@@ -6,10 +6,10 @@ export async function GET() {
 
   const config = {
       "accountAssociation": {
-      "header": "eyJmaWQiOjU1NDMsInR5cGUiOiJhdXRoIiwia2V5IjoiMHhjMjIxOWQ2RjI4ODk5RkY0RGE1M0ZBOTM5MTRhY0UzMDY5YWIxNUVlIn0",
-      "payload": "eyJkb21haW4iOiJzb2xhcmEuZnlpIn0",
-      "signature": "yJnTqVvbpqmrEg4t3YWKlzeqJrwv0DKOYbtEEhkDQ4I6+pBM35C3E7adVvXj8IVK174YrYTlj2BNjH8X7CuJYhw="
-    },
+        "header": "eyJmaWQiOjU1NDMsInR5cGUiOiJjdXN0b2R5Iiwia2V5IjoiMHg3QUNjNjBhNTVkMDgxRjhhRGEwODU0NzAwMjY3QTNjNjBhZTFFOUMxIn0",
+        "payload": "eyJkb21haW4iOiJ3d3cuc29sYXJhLmZ5aSJ9",
+        "signature": "MHgyZjE1MjI2YjliMDYyZjFkN2I1MDk4ZDVhZmVhMWQ3Yjk3NGQwYWNmZjhiNDg5MjdmZGRiYjI5NzkzMzA3MDY3MmMyYjEwMDg3ODMxMDI1NDg0MzJiNTRjZjgxYjI3ZjY3ZWIwZWUzZTk4MjYzYzNhNTQ3Y2Y5ZGNhMDNkMTY4YTFi"
+      },
     frame: {
       version: "1",
       name: PROJECT_TITLE,
