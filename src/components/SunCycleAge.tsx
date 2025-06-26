@@ -315,52 +315,43 @@ function BookmarkCard({ bookmark, milestone, milestoneDate, daysToMilestone, onR
 
         {tab === 'sol sign' && (
           <div className="w-full text-sm font-mono space-y-3 flex flex-col items-center text-center">
-            {/* SUNDIAL Token Info */}
-            {sundialBalance > 0 ? (
-              <div className="w-full flex flex-col items-center border border-yellow-300 bg-yellow-50 rounded-none p-4 mt-4">
-                <Image
-                  src="/sundial_sm.jpg"
-                  alt="$SUNDIAL"
-                  width={300}
-                  height={300}
-                  style={{ margin: '0 auto', filter: sundialBalance < 10000000 ? 'blur(8px)' : 'none' }}
-                  priority
-                />
-                <div className="text-lg font-bold mt-2 mb-1">You own $SUNDIAL!</div>
-                <div className="text-2xl font-mono mb-1">{sundialBalance.toLocaleString(undefined, { maximumFractionDigits: 6 })}</div>
-                <div className="text-xs text-gray-500 mb-2">Token: $SUNDIAL</div>
-                {sundialBalance < 10000000 && (
-                  <div className="mt-2 p-2 bg-yellow-200 border border-yellow-400 text-yellow-900 font-mono text-xs rounded-none">
-                    You must have at least 10m $SUNDIAL to reveal this image
-                  </div>
-                )}
-                {/* Purchase More $SUNDIAL Button */}
-                <a
-                  href="https://farcaster.xyz/miniapps/4dsI2tk7qlZd/revealcam"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="mt-4 inline-block px-6 py-3 bg-[#d4af37] text-black font-mono text-base tracking-widest uppercase border border-black rounded-none hover:bg-[#e6c75a] transition-colors"
-                >
-                  Purchase More $SUNDIAL
-                </a>
+            {/* SUNDIAL Title */}
+            <div className="text-4xl font-serif font-bold mb-2">SUNDIAL</div>
+            {/* SUNDIAL Token Image and Label (always show) */}
+            <Image
+              src="/sundial_sm.jpg"
+              alt="$SUNDIAL"
+              width={300}
+              height={300}
+              style={{ margin: '0 auto', filter: sundialBalance > 0 && sundialBalance < 10000000 ? 'blur(8px)' : 'none' }}
+              priority
+            />
+            <div className="text-lg font-bold mt-2 mb-1">$SUNDIAL Token</div>
+            <div className="text-2xl font-mono mb-1">{sundialBalance > 0 ? sundialBalance.toLocaleString(undefined, { maximumFractionDigits: 6 }) : '0.00'}</div>
+            <div className="text-xs text-gray-500 mb-2">Token: $SUNDIAL</div>
+            {/* Callout if balance < 10M */}
+            {sundialBalance > 0 && sundialBalance < 10000000 && (
+              <div className="mt-2 p-2 bg-yellow-200 border border-yellow-400 text-yellow-900 font-mono text-xs rounded-none">
+                You must have at least 10m $SUNDIAL to reveal this image
               </div>
+            )}
+            {/* Purchase $SUNDIAL Button (existing, but with frame logic) */}
+            {isInFrame ? (
+              <button
+                onClick={() => window.open(MINI_APP_URL, '_blank')}
+                className="mt-4 inline-block px-6 py-3 bg-[#d4af37] text-black font-mono text-base tracking-widest uppercase border border-black rounded-none hover:bg-[#e6c75a] transition-colors"
+              >
+                Purchase More $SUNDIAL
+              </button>
             ) : (
-              <>
-                <div className="text-4xl mb-3">🪐</div>
-                <div className="text-lg font-bold mb-2">Coming Soon</div>
-                <p className="text-gray-600 mb-4">
-                  NFT signatures and collectibles will be available here soon. Stay tuned!
-                </p>
-                {/* Purchase More $SUNDIAL Button */}
-                <a
-                  href="https://farcaster.xyz/miniapps/4dsI2tk7qlZd/revealcam"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="mt-4 inline-block px-6 py-3 bg-[#d4af37] text-black font-mono text-base tracking-widest uppercase border border-black rounded-none hover:bg-[#e6c75a] transition-colors"
-                >
-                  Purchase More $SUNDIAL
-                </a>
-              </>
+              <a
+                href={MINI_APP_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-4 inline-block px-6 py-3 bg-[#d4af37] text-black font-mono text-base tracking-widest uppercase border border-black rounded-none hover:bg-[#e6c75a] transition-colors"
+              >
+                Purchase More $SUNDIAL
+              </a>
             )}
           </div>
         )}
@@ -797,6 +788,8 @@ export default function SunCycleAge({ initialConsentData }: SunCycleAgeProps) {
 
   // Tooltip modal state
   const [showTooltip, setShowTooltip] = useState(false);
+
+  const MINI_APP_URL = 'https://revealcam.fun/reveal/0x2f5d64baefcf66e0218b8d086b08f72619ca895a';
 
   if (!isSDKLoaded) {
     return (
