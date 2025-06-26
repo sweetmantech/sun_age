@@ -5,6 +5,7 @@ import { createClient } from '~/utils/supabase/server'
 import { cookies } from 'next/headers'
 import SunCycleAge from '~/components/SunCycleAge'
 import HomeRedirector from './HomeRedirector'
+import Head from 'next/head';
 
 const appUrl =
   process.env.NEXT_PUBLIC_URL ||
@@ -62,6 +63,18 @@ export default async function Page() {
 
   return (
     <>
+      <Head>
+        {/* Static OG and Twitter meta tags for homepage */}
+        <meta property="og:title" content="Solara – Cosmic Age Calculator" />
+        <meta property="og:description" content="Discover your cosmic age and join the Solara journey." />
+        <meta property="og:image" content="https://yourdomain.com/suncycles_og.png" />
+        <meta property="og:url" content="https://yourdomain.com/" />
+        <meta property="og:type" content="website" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="Solara – Cosmic Age Calculator" />
+        <meta name="twitter:description" content="Discover your cosmic age and join the Solara journey." />
+        <meta name="twitter:image" content="https://yourdomain.com/suncycles_og.png" />
+      </Head>
       <HomeRedirector />
       <SunCycleAge initialConsentData={userConsent} />
     </>
