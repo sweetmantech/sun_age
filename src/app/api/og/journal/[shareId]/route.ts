@@ -47,7 +47,36 @@ export async function GET(req: Request) {
   const baseUrl = req.headers.get('host') ? `https://${req.headers.get('host')}` : 'http://localhost:3000';
   const logoUrl = `${baseUrl}/logo.svg`;
   const fontUrl = `${baseUrl}/fonts/GT%20Alpina.ttf`;
-  const gtAlpinaFont = await fetch(fontUrl).then(res => res.arrayBuffer());
+
+  let gtAlpinaFont;
+  try {
+    const fontRes = await fetch(fontUrl);
+    if (!fontRes.ok) throw new Error('Font fetch failed');
+    gtAlpinaFont = await fontRes.arrayBuffer();
+  } catch (e) {
+    console.error('[OG IMAGE] Font fetch error:', e);
+    // Return a fallback image if font fails
+    return new ImageResponse(
+      React.createElement(
+        'div',
+        {
+          style: {
+            width: '1200px',
+            height: '630px',
+            background: '#FDF8EC',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontSize: 48,
+            color: '#D4AF37',
+            fontFamily: 'sans-serif',
+          },
+        },
+        'Solara Reflection'
+      ),
+      { width: 1200, height: 630 }
+    );
+  }
 
   return new ImageResponse(
     React.createElement(
@@ -207,7 +236,7 @@ export async function GET(req: Request) {
           name: 'GT Alpina',
           data: gtAlpinaFont,
           style: 'normal',
-          weight: 600,
+          weight: 400,
         },
       ],
     }

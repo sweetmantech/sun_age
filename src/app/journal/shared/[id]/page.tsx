@@ -1,7 +1,12 @@
 import { Metadata } from 'next';
-import { EntryPreviewModal } from '~/components/Journal/EntryPreviewModal';
+import dynamic from 'next/dynamic';
 import { createServiceRoleClient } from '~/utils/supabase/server';
 import Link from 'next/link';
+
+const EntryPreviewModal = dynamic(
+  () => import('~/components/Journal/EntryPreviewModal').then(mod => mod.EntryPreviewModal),
+  { ssr: false }
+);
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const { id } = await params;
