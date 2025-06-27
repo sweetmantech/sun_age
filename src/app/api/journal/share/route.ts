@@ -1,6 +1,29 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient, createServiceRoleClient } from '~/utils/supabase/server';
 
+export async function GET(req: NextRequest) {
+  const { searchParams } = new URL(req.url);
+  const userFid = searchParams.get('userFid');
+  
+  if (!userFid) {
+    return NextResponse.json({ error: 'userFid parameter required' }, { status: 400 });
+  }
+
+  const supabase = await createClient();
+  
+  const { data: shares, error } = await supabase
+    .from('journal_shares')
+    .select('*')
+    .eq('user_fid', parseInt(userFid, 10))
+    .order('created_at', { ascending: true });
+
+  if (error) {
+    return NextResponse.json({ error: 'Failed to fetch shares' }, { status: 500 });
+  }
+
+  return NextResponse.json(shares || []);
+}
+
 export async function POST(req: NextRequest) {
   const { entryId, userFid } = await req.json();
   
@@ -67,7 +90,7 @@ export async function POST(req: NextRequest) {
   }
 
   // Update the share URL with the actual share ID
-  const shareUrl = `/journal/shared?id=${share.id}`;
+  const shareUrl = `/journal/shared/${share.id}`;
   const { error: updateError } = await supabase
     .from('journal_shares')
     .update({ share_url: shareUrl })

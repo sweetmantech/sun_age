@@ -52,12 +52,14 @@ export function Journal({ solAge }: JournalProps) {
   const [devFarcaster, setDevFarcaster] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
   const [preservationFilter, setPreservationFilter] = useState<'all' | 'local' | 'synced' | 'preserved'>('all');
-  const { sdk, isInFrame } = useFrameSDK();
+  const { sdk, isInFrame, context, connectManually, loading: frameLoading } = useFrameSDK();
   const [previewEntry, setPreviewEntry] = useState<JournalEntry | null>(null);
   
-  // Dev override for userFid: only in development
+  // Get userFid from Farcaster context or dev override
   const isDev = process.env.NODE_ENV === 'development';
-  const userFid = isDev && devFarcaster ? 5543 : undefined;
+  const farcasterUserFid = context?.user?.fid;
+  const devUserFid = isDev && devFarcaster ? 5543 : undefined;
+  const userFid = farcasterUserFid || devUserFid;
   
   const {
     entries,
@@ -128,7 +130,17 @@ export function Journal({ solAge }: JournalProps) {
     try {
       // Use dev toggle or real context
       if (!userFid) {
-        throw new Error('You must be connected via Farcaster to migrate entries');
+        const errorDetails = {
+          farcasterUserFid,
+          devUserFid,
+          hasContext: !!context,
+          hasUser: !!context?.user,
+          isInFrame,
+          isDev,
+          devFarcaster
+        };
+        console.error('[Journal] Migration failed - no userFid available:', errorDetails);
+        throw new Error(`You must be connected via Farcaster to migrate entries. Connection state: ${JSON.stringify(errorDetails)}`);
       }
       console.log('[Journal] Attempting to migrate local entries:', localEntries);
       const result = await migrateLocalEntries(userFid);
@@ -155,6 +167,18 @@ export function Journal({ solAge }: JournalProps) {
 
   // Fetch entries from API when userFid changes (for dev toggle)
   useEffect(() => {
+    // Debug logging for connection state
+    console.log('[Journal] Connection state:', {
+      farcasterUserFid,
+      devUserFid,
+      finalUserFid: userFid,
+      hasContext: !!context,
+      hasUser: !!context?.user,
+      isInFrame,
+      isDev,
+      devFarcaster
+    });
+
     if (userFid) {
       loadEntries(undefined, userFid); // Load from API with dev override
     } else {
@@ -309,6 +333,85 @@ export function Journal({ solAge }: JournalProps) {
           </label>
         </div>
       )}
+
+      {/* Connection status indicator */}
+      {isInFrame && (
+        <div className="mb-2 p-2 border border-gray-300 bg-gray-50">
+          <div className="font-mono text-xs text-gray-700">
+            <div className="flex items-center justify-between">
+              <span>FARCASTER STATUS:</span>
+              <span className={`font-bold ${userFid ? 'text-green-600' : 'text-red-600'}`}>
+                {userFid ? `CONNECTED (FID: ${userFid})` : 'NOT CONNECTED'}
+              </span>
+            </div>
+            <div className="text-xs text-gray-500 mt-1">
+              Context: {context ? 'Loaded' : 'Not loaded'} | 
+              User: {context?.user ? 'Available' : 'Not available'} | 
+              Frame: {isInFrame ? 'Active' : 'Inactive'}
+            </div>
+            {/* Debug details - only show in development */}
+            {isDev && (
+              <details className="mt-2">
+                <summary className="cursor-pointer text-blue-600">Debug Details</summary>
+                <pre className="text-xs mt-1 bg-white p-2 border overflow-auto max-h-32">
+                  {JSON.stringify({
+                    farcasterUserFid,
+                    devUserFid,
+                    finalUserFid: userFid,
+                    hasContext: !!context,
+                    hasUser: !!context?.user,
+                    contextUser: context?.user,
+                    isInFrame,
+                    isDev,
+                    devFarcaster,
+                    frameLoading,
+                    contextDetails: context
+                  }, null, 2)}
+                </pre>
+                {isDev && (
+                  <div className="mt-2 space-y-1">
+                    <button
+                      onClick={async () => {
+                        try {
+                          console.log('[Journal] Testing SDK initialization...');
+                          await sdk.actions.ready({ disableNativeGestures: true });
+                          console.log('[Journal] SDK ready successful');
+                          const frameContext = await sdk.context;
+                          console.log('[Journal] Frame context:', frameContext);
+                          alert(`SDK test successful!\nContext: ${frameContext ? 'Loaded' : 'Not loaded'}\nUser: ${frameContext?.user ? 'Available' : 'Not available'}\nFID: ${frameContext?.user?.fid || 'None'}`);
+                        } catch (err: any) {
+                          console.error('[Journal] SDK test failed:', err);
+                          alert(`SDK test failed: ${err.message}`);
+                        }
+                      }}
+                      className="bg-blue-600 hover:bg-blue-700 text-white font-mono text-xs px-2 py-1 border"
+                    >
+                      Test SDK
+                    </button>
+                    <button
+                      onClick={async () => {
+                        try {
+                          console.log('[Journal] Testing manual connection...');
+                          await connectManually();
+                          console.log('[Journal] Manual connection successful');
+                          alert('Manual connection successful!');
+                        } catch (err: any) {
+                          console.error('[Journal] Manual connection failed:', err);
+                          alert(`Manual connection failed: ${err.message}`);
+                        }
+                      }}
+                      className="bg-green-600 hover:bg-green-700 text-white font-mono text-xs px-2 py-1 border ml-1"
+                    >
+                      Test Connection
+                    </button>
+                  </div>
+                )}
+              </details>
+            )}
+          </div>
+        </div>
+      )}
+
       <div className="flex justify-between items-center py-4 gap-2">
         <div className="flex-1 flex items-center gap-2">
           <input
@@ -422,10 +525,26 @@ export function Journal({ solAge }: JournalProps) {
             <h4 className="font-mono text-sm text-blue-800 mb-1">
               LOCAL ENTRIES DETECTED
             </h4>
-            <p className="text-xs text-blue-700">
+            <p className="text-xs text-blue-700 mb-3">
               You have {localEntries.length} {localEntries.length === 1 ? 'entry' : 'entries'} stored locally. 
               Connect via Farcaster to migrate them to the database and enable sharing.
             </p>
+            {isInFrame && (
+              <button
+                onClick={async () => {
+                  try {
+                    await connectManually();
+                  } catch (err: any) {
+                    console.error('Manual connection failed:', err);
+                    alert(`Connection failed: ${err.message}`);
+                  }
+                }}
+                disabled={frameLoading}
+                className="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-mono text-xs tracking-widest py-2 px-3 border border-blue-700"
+              >
+                {frameLoading ? 'CONNECTING...' : 'CONNECT FARCASTER'}
+              </button>
+            )}
           </div>
         </div>
       )}

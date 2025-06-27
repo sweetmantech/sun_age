@@ -32,6 +32,14 @@ export function useFrameSDK() {
         const frameContext = await sdk.context;
         if (!mounted) return;
         
+        console.log('[useFrameSDK] Frame context loaded:', {
+          hasContext: !!frameContext,
+          hasUser: !!frameContext?.user,
+          fid: frameContext?.user?.fid,
+          clientAdded: frameContext?.client?.added,
+          contextDetails: frameContext
+        });
+        
         if (frameContext) {
           setIsInFrame(true);
           setContext(frameContext);
@@ -73,12 +81,24 @@ export function useFrameSDK() {
         (c) => c.id === "farcaster" || c.name.toLowerCase().includes("frame")
       );
       
+      console.log('[useFrameSDK] Wallet connection check:', {
+        isSDKLoaded,
+        isConnected,
+        isInFrame,
+        hasFarcasterConnector: !!farcasterConnector,
+        connectorId: farcasterConnector?.id,
+        connectorName: farcasterConnector?.name,
+        availableConnectors: connectors.map(c => ({ id: c.id, name: c.name }))
+      });
+      
       if (!isSDKLoaded || isConnected || !isInFrame || !farcasterConnector) return;
 
       try {
         if (mounted) setLoading(true);
         if (mounted) setError(null);
+        console.log('[useFrameSDK] Attempting to connect wallet...');
         await connect({ connector: farcasterConnector });
+        console.log('[useFrameSDK] Wallet connected successfully');
       } catch (err) {
         console.error("Error connecting wallet:", err);
         if (mounted) {
@@ -141,12 +161,37 @@ export function useFrameSDK() {
     }
   }, [isSDKLoaded, context]);
 
+  // Manual connection function
+  const connectManually = useCallback(async () => {
+    const farcasterConnector = connectors.find(
+      (c) => c.id === "farcaster" || c.name.toLowerCase().includes("frame")
+    );
+    
+    if (!farcasterConnector) {
+      throw new Error('No Farcaster connector available');
+    }
+
+    try {
+      setLoading(true);
+      setError(null);
+      console.log('[useFrameSDK] Manual connection attempt...');
+      await connect({ connector: farcasterConnector });
+      console.log('[useFrameSDK] Manual connection successful');
+    } catch (err) {
+      console.error("Error in manual connection:", err);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, [connect, connectors]);
+
   return {
     isSDKLoaded,
     isInFrame,
     isFramePinned,
     context,
     pinFrame,
+    connectManually,
     loading,
     error,
     isConnected,

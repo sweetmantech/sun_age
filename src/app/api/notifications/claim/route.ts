@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '~/utils/supabase/server';
+import { sendFarcasterNotification } from '~/lib/notifs';
 
 export async function POST(req: NextRequest) {
   const { userFid, entryId, shareId } = await req.json();
@@ -34,5 +35,19 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Could not create notification' }, { status: 500 });
   }
 
-  return NextResponse.json({ sent: true });
+  // Send Farcaster notification
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+  const targetUrl = `${baseUrl}/claim?entry=${entryId}&share=${shareId}`;
+  
+  const notificationSent = await sendFarcasterNotification(userFid, {
+    title: "🎉 Cosmic Achievement Unlocked!",
+    body: "You've shared your first reflection. Claim your 10,000 $SOLAR tokens.",
+    targetUrl
+  });
+
+  return NextResponse.json({ 
+    sent: true, 
+    notificationSent,
+    targetUrl 
+  });
 }
