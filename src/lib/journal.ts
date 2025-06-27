@@ -64,20 +64,23 @@ export async function composeAndShareEntry(entry: JournalEntry, sdk?: any, isInF
     shareId: result.shareId
   });
   
-  // Compose the cast using Farcaster Mini App SDK
-  const miniAppUrl = 'https://www.solara.fyi';
-  // Use new dynamic route for share URL
-  const ogImageUrl = window.location.origin + `/journal/shared/${result.shareId}`;
-  const shareText = `🌞 My Solara reflection:\n\n${entry.content.slice(0, 200)}...\n\nRead more or try Solara: ${miniAppUrl}`;
+  // Get the mini app URL - use environment variable or fallback to current origin
+  const miniAppUrl = process.env.NEXT_PUBLIC_URL || window.location.origin;
+  
+  // Create the share URL that opens directly in the mini app
+  const shareUrl = `${miniAppUrl}/journal/shared/${result.shareId}`;
+  
+  // Simple share text without dynamic OG image
+  const shareText = `🌞 My Solara reflection:\n\n${entry.content.slice(0, 200)}...\n\nRead more: ${shareUrl}`;
   
   if (isInFrame && sdk) {
     await sdk.actions.composeCast({
       text: shareText,
-      embeds: [ogImageUrl, miniAppUrl],
+      embeds: [shareUrl],
     });
   } else {
     window.open(
-      `https://warpcast.com/~/compose?text=${encodeURIComponent(shareText)}&embeds=${encodeURIComponent(ogImageUrl)},${encodeURIComponent(miniAppUrl)}`,
+      `https://warpcast.com/~/compose?text=${encodeURIComponent(shareText)}&embeds=${encodeURIComponent(shareUrl)}`,
       "_blank"
     );
   }

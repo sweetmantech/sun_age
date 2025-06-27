@@ -5,6 +5,7 @@ import { notFound } from 'next/navigation';
 import { EntryPreviewModal } from '~/components/Journal/EntryPreviewModal';
 import type { JournalEntry } from '~/types/journal';
 import { useJournal } from '~/hooks/useJournal';
+import { useFrameSDK } from '~/hooks/useFrameSDK';
 
 interface ShareData {
   entry: JournalEntry;
@@ -17,6 +18,7 @@ export default function SharedJournalPage({ params }: { params: Promise<{ id: st
   const [error, setError] = useState(false);
   const [userSolAge, setUserSolAge] = useState<number | null>(null);
   const { entries } = useJournal();
+  const { sdk, isInFrame } = useFrameSDK();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -26,7 +28,9 @@ export default function SharedJournalPage({ params }: { params: Promise<{ id: st
           setError(true);
           return;
         }
-        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+        
+        // Use the current origin instead of hardcoded base URL
+        const baseUrl = window.location.origin;
         const res = await fetch(`${baseUrl}/api/journal/shared/${id}`);
         if (!res.ok) {
           setError(true);
@@ -40,6 +44,7 @@ export default function SharedJournalPage({ params }: { params: Promise<{ id: st
         setLoading(false);
       }
     };
+
     fetchData();
 
     // Get solAge from localStorage
@@ -53,6 +58,16 @@ export default function SharedJournalPage({ params }: { params: Promise<{ id: st
       }
     }
   }, [params]);
+
+  const handleClose = () => {
+    if (isInFrame && sdk) {
+      // In Farcaster frame, navigate back to the main app
+      sdk.actions.openUrl(window.location.origin);
+    } else {
+      // Outside frame, redirect to main app
+      window.location.href = '/';
+    }
+  };
 
   if (loading) {
     return (
@@ -75,7 +90,7 @@ export default function SharedJournalPage({ params }: { params: Promise<{ id: st
     <EntryPreviewModal
       entry={entry}
       isOpen={true}
-      onClose={() => window.location.href = '/'}
+      onClose={handleClose}
       isOwnEntry={isOwnEntry}
       isOnboarded={isOnboarded}
       userSolAge={userSolAge}
