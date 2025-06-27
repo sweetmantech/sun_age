@@ -12,6 +12,8 @@ import React from 'react';
 import { PulsingStarSpinner } from "~/components/ui/PulsingStarSpinner";
 import { useFrameSDK } from '~/hooks/useFrameSDK';
 import { composeAndShareEntry } from '~/lib/journal';
+import { EntryPreviewModal } from './EntryPreviewModal';
+import { ClaimModal } from '../ClaimModal';
 
 interface JournalProps {
   solAge: number;
@@ -52,6 +54,7 @@ export function Journal({ solAge }: JournalProps) {
   const [showFilters, setShowFilters] = useState(false);
   const [preservationFilter, setPreservationFilter] = useState<'all' | 'local' | 'synced' | 'preserved'>('all');
   const { sdk, isInFrame } = useFrameSDK();
+  const [previewEntry, setPreviewEntry] = useState<JournalEntry | null>(null);
   
   const isDev = process.env.NODE_ENV === 'development';
   const userFid = isDev && devFarcaster ? 5543 : undefined;
@@ -90,7 +93,7 @@ export function Journal({ solAge }: JournalProps) {
   };
 
   const handleEdit = (entry: JournalEntry) => {
-    setEditingEntry(entry);
+    setEditingEntry({ ...entry });
   };
 
   const handleSave = async (entryToSave: { id?: string, content: string }) => {
@@ -171,8 +174,25 @@ export function Journal({ solAge }: JournalProps) {
         devUserFid: userFid,
         preservationStatus: entry.preservation_status
       });
-      await composeAndShareEntry(entry, sdk, isInFrame, userFid);
-      // Optional: Show success feedback
+      
+      const result = await composeAndShareEntry(entry, sdk, isInFrame, userFid);
+      
+      // Check if this is the user's first share and show claim modal
+      const sharesRes = await fetch(`/api/journal/share?userFid=${userFid}`);
+      if (sharesRes.ok) {
+        const shares = await sharesRes.json();
+        if (shares.length === 1) {
+          // This is the first share - show claim modal
+          setClaimData({
+            entryId: entry.id,
+            shareId: result.shareId,
+            userFid: userFid || 0,
+            amount: 10000
+          });
+          setShowClaimModal(true);
+        }
+      }
+      
       console.log('Entry shared successfully');
     } catch (err: any) {
       setShareError(err.message || 'Failed to share entry');
@@ -183,7 +203,7 @@ export function Journal({ solAge }: JournalProps) {
   };
 
   const handleRead = (entry: JournalEntry) => {
-    setReadingEntry(entry);
+    setPreviewEntry(entry);
   };
 
   const handleSwitchToEdit = (entry: JournalEntry) => {
@@ -194,6 +214,36 @@ export function Journal({ solAge }: JournalProps) {
   const handleFilterChange = (filter: 'all' | 'local' | 'synced' | 'preserved') => {
     setPreservationFilter(filter);
   };
+
+  // Handler for "Add a reflection" CTA
+  const handleAddReflection = () => {
+    setPreviewEntry(null);
+    setEditingEntry({
+      id: '',
+      user_fid: userFid || 0,
+      sol_day: solAge,
+      content: '',
+      preservation_status: 'local',
+      word_count: 0,
+      created_at: new Date().toISOString()
+    });
+  };
+
+  // Handler for "View your journey" CTA
+  const handleViewJourney = () => {
+    setPreviewEntry(null);
+    // Navigate to soldash sol age tab (implement navigation as needed)
+    window.location.href = '/soldash';
+  };
+
+  // Claim modal state
+  const [showClaimModal, setShowClaimModal] = useState(false);
+  const [claimData, setClaimData] = useState<{
+    entryId: string;
+    shareId: string;
+    userFid: number;
+    amount: number;
+  } | null>(null);
 
   if (loading) {
     return <div>Loading journal...</div>;
@@ -237,6 +287,29 @@ export function Journal({ solAge }: JournalProps) {
         onAutoSave={handleSave}
         onFinish={() => setSharingEntry(null)}
         mode="edit"
+      />
+    );
+  }
+
+  // Show the entry preview modal if previewEntry is set
+  if (previewEntry) {
+    const isOwnEntry =
+      previewEntry.preservation_status === 'local' ||
+      (!!userFid && previewEntry.user_fid === userFid);
+    return (
+      <EntryPreviewModal
+        entry={previewEntry}
+        isOpen={!!previewEntry}
+        onClose={() => setPreviewEntry(null)}
+        isOwnEntry={isOwnEntry}
+        onEdit={() => {
+          setEditingEntry({ ...previewEntry });
+          setPreviewEntry(null);
+        }}
+        onShare={() => {
+          setPreviewEntry(null);
+          handleShare(previewEntry);
+        }}
       />
     );
   }
@@ -412,6 +485,21 @@ export function Journal({ solAge }: JournalProps) {
         message="Are you sure you want to permanently delete this reflection?"
         confirmText="Delete"
       />
+
+      {/* Claim Modal */}
+      {claimData && (
+        <ClaimModal
+          isOpen={showClaimModal}
+          onClose={() => {
+            setShowClaimModal(false);
+            setClaimData(null);
+          }}
+          entryId={claimData.entryId}
+          shareId={claimData.shareId}
+          userFid={claimData.userFid}
+          claimAmount={claimData.amount}
+        />
+      )}
     </div>
   );
 } 
