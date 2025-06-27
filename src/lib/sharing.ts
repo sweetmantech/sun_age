@@ -14,7 +14,7 @@ export async function composeWithBotReference(options: ShareOptions) {
   const { text, embeds, botPostType, sdk, isInFrame } = options;
   
   // Get bot post reference if type is specified
-  let botPost = null;
+  let botPost: any = null;
   if (botPostType) {
     botPost = await getLatestBotPost(botPostType);
   }
@@ -26,7 +26,7 @@ export async function composeWithBotReference(options: ShareOptions) {
   };
   
   // Add parent reference to quote the bot post if available
-  if (botPost?.cast_hash) {
+  if (botPost && botPost.cast_hash) {
     composeOptions.parent = {
       type: 'cast',
       hash: botPost.cast_hash
@@ -38,7 +38,7 @@ export async function composeWithBotReference(options: ShareOptions) {
   } else {
     // For non-frame sharing, add bot post reference as a link
     let fallbackText = text;
-    if (botPost?.cast_hash) {
+    if (botPost && botPost.cast_hash) {
       fallbackText += `\n\nInspired by: https://warpcast.com/${botPost.cast_hash}`;
     }
     

@@ -549,7 +549,7 @@ export default function SunCycleAge({ initialConsentData }: SunCycleAgeProps) {
       const { shareSolAge } = await import('~/lib/sharing');
       await shareSolAge(
         days,
-        approxYears,
+        approxYears || 0,
         birthDate,
         userName,
         profilePicUrl,
