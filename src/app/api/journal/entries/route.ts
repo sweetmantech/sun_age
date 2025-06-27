@@ -38,16 +38,34 @@ export async function POST(req: NextRequest) {
     try {
         console.log('[API] Journal entries POST request received');
         
+        // Check content length
+        const contentLength = req.headers.get('content-length');
+        console.log('[API] Content length:', contentLength);
+        
         const body = await req.json();
         console.log('[API] Request body:', body);
+        console.log('[API] Request body type:', typeof body);
+        console.log('[API] Request body keys:', Object.keys(body));
         
         const { content, sol_day, userFid } = body;
 
-        console.log('[API] Extracted fields:', { content: !!content, sol_day, userFid, userFidType: typeof userFid });
+        console.log('[API] Extracted fields:', { 
+            content: !!content, 
+            contentLength: content?.length,
+            sol_day, 
+            userFid, 
+            userFidType: typeof userFid 
+        });
 
-        if (!content || typeof sol_day === 'undefined') {
-            console.error('[API] Missing required fields:', { content: !!content, sol_day });
-            return NextResponse.json({ error: 'Missing required fields: content and sol_day' }, { status: 400 });
+        // Validate content
+        if (!content || typeof content !== 'string') {
+            console.error('[API] Invalid content:', { content, contentType: typeof content });
+            return NextResponse.json({ error: 'Invalid content field' }, { status: 400 });
+        }
+
+        if (!sol_day || typeof sol_day !== 'number') {
+            console.error('[API] Invalid sol_day:', { sol_day, solDayType: typeof sol_day });
+            return NextResponse.json({ error: 'Invalid sol_day field' }, { status: 400 });
         }
 
         // If userFid is provided, use service role to bypass RLS (for migration)
@@ -106,6 +124,11 @@ export async function POST(req: NextRequest) {
 
     } catch (error) {
         console.error('[API] Error parsing request body:', error);
+        console.error('[API] Error details:', {
+            name: error instanceof Error ? error.name : 'Unknown',
+            message: error instanceof Error ? error.message : String(error),
+            stack: error instanceof Error ? error.stack : undefined
+        });
         return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
     }
 } 
