@@ -1,6 +1,7 @@
 // Shared journal utilities
 
 import type { JournalEntry } from '~/types/journal';
+import { getLatestBotPost } from './botPosts';
 
 // Helper for sharing API call
 export async function shareJournalEntry(entryId: string, userFid: number) {
@@ -64,20 +65,41 @@ export async function composeAndShareEntry(entry: JournalEntry, sdk?: any, isInF
     shareId: result.shareId
   });
   
+  // Get the latest bot affirmation post to reference
+  const botPost = await getLatestBotPost('journal_affirmation');
+  
   // Compose the cast using Farcaster Mini App SDK
   const miniAppUrl = 'https://www.solara.fyi';
   // Use new dynamic route for share URL
   const ogImageUrl = window.location.origin + `/journal/shared/${result.shareId}`;
   const shareText = `🌞 My Solara reflection:\n\n${entry.content.slice(0, 200)}...\n\nRead more or try Solara: ${miniAppUrl}`;
   
+  // Prepare compose options with bot post reference if available
+  const composeOptions: any = {
+    text: shareText,
+    embeds: [ogImageUrl, miniAppUrl],
+  };
+  
+  // Add parent reference to quote the bot's affirmation post
+  if (botPost?.cast_hash) {
+    composeOptions.parent = {
+      type: 'cast',
+      hash: botPost.cast_hash
+    };
+  }
+  
   if (isInFrame && sdk) {
-    await sdk.actions.composeCast({
-      text: shareText,
-      embeds: [ogImageUrl, miniAppUrl],
-    });
+    await sdk.actions.composeCast(composeOptions);
   } else {
+    // For non-frame sharing, we'll need to construct the URL with parent parameter
+    // Note: Warpcast compose URLs don't directly support parent, so we'll add it as a mention for now
+    let fallbackText = shareText;
+    if (botPost?.cast_hash) {
+      fallbackText += `\n\nInspired by this reflection prompt: https://warpcast.com/${botPost.cast_hash}`;
+    }
+    
     window.open(
-      `https://warpcast.com/~/compose?text=${encodeURIComponent(shareText)}&embeds=${encodeURIComponent(ogImageUrl)},${encodeURIComponent(miniAppUrl)}`,
+      `https://warpcast.com/~/compose?text=${encodeURIComponent(fallbackText)}&embeds=${encodeURIComponent(ogImageUrl)},${encodeURIComponent(miniAppUrl)}`,
       "_blank"
     );
   }

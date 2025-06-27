@@ -542,20 +542,20 @@ export default function SunCycleAge({ initialConsentData }: SunCycleAgeProps) {
   const onShare = async () => {
     if (days === null) return;
     setIsSharing(true);
-    const url = process.env.NEXT_PUBLIC_URL || window.location.origin;
     const userName = context?.user?.displayName || 'TRAVELLER';
-    const ogImageUrl = `${url}/api/og/solage?userName=${encodeURIComponent(userName)}&solAge=${days}&birthDate=${encodeURIComponent(birthDate)}&age=${approxYears}`;
-    const miniAppUrl = 'https://www.solara.fyi';
-    const message = `Forget birthdays—I've completed ${days} rotations around the sun ☀️🌎 What's your Sol Age? ${miniAppUrl}`;
+    const profilePicUrl = context?.user?.pfp?.url;
+    
     try {
-      if (isInFrame && sdk) {
-        await sdk.actions.composeCast({
-          text: message,
-          embeds: [ogImageUrl, miniAppUrl],
-        });
-      } else {
-        window.location.href = `https://warpcast.com/~/compose?text=${encodeURIComponent(message + '\n\n[My Sol Age Card](' + ogImageUrl + ')')}&embeds=${encodeURIComponent(ogImageUrl)},${encodeURIComponent(miniAppUrl)}`;
-      }
+      const { shareSolAge } = await import('~/lib/sharing');
+      await shareSolAge(
+        days,
+        approxYears,
+        birthDate,
+        userName,
+        profilePicUrl,
+        sdk,
+        isInFrame
+      );
     } catch (err) {
       console.error(err);
     } finally {

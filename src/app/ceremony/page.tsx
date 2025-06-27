@@ -528,21 +528,26 @@ export default function CeremonyStepper() {
                 <button
                   className="w-full py-4 mb-8 bg-white text-black font-mono text-base tracking-widest uppercase border border-gray-400 rounded-none hover:bg-gray-50 transition-colors"
                   onClick={async () => {
-                    const url = process.env.NEXT_PUBLIC_URL || window.location.origin;
-                    const userName = context?.user?.displayName || 'TRAVELLER';
-                    const fid = context?.user?.fid || '...';
-                    const profilePicUrl = context?.user?.pfpUrl || '';
-                    const solAge = urlDays || '';
-                    const currentDate = today;
-                    const ogImageUrl = `${url}/api/og/vow?userName=${encodeURIComponent(userName)}&fid=${fid}&solAge=${solAge}&currentDate=${encodeURIComponent(currentDate)}${profilePicUrl ? `&profilePicUrl=${encodeURIComponent(profilePicUrl)}` : ''}`;
-                    const shareText = `I've inscribed my Solar Vow into eternity:\n"${signatureMsg}"\n\nMake a vow and join the convergence: ${url}`;
-                    if (isInFrame && sdk) {
-                      await sdk.actions.composeCast({
-                        text: shareText,
-                        embeds: [ogImageUrl],
-                      });
-                    } else {
-                      window.location.href = `https://warpcast.com/~/compose?text=${encodeURIComponent(shareText + '\n\n[My Solar Vow Card](' + ogImageUrl + ')')}`;
+                    try {
+                      const { sharePledge } = await import('~/lib/sharing');
+                      const userName = context?.user?.displayName || 'TRAVELLER';
+                      const fid = context?.user?.fid?.toString() || '';
+                      const profilePicUrl = context?.user?.pfpUrl || '';
+                      const solAge = urlDays || '';
+                      const currentDate = today;
+                      
+                      await sharePledge(
+                        signatureMsg,
+                        userName,
+                        fid,
+                        solAge,
+                        currentDate,
+                        profilePicUrl,
+                        sdk,
+                        isInFrame
+                      );
+                    } catch (err) {
+                      console.error(err);
                     }
                   }}
                 >
