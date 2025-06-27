@@ -3,14 +3,14 @@
 import type { JournalEntry } from '~/types/journal';
 
 // Helper for sharing API call
-export const shareJournalEntry = async (entryId: string, sdk?: any, isInFrame?: boolean) => {
+export const shareJournalEntry = async (entryId: string, userFid: number, sdk?: any, isInFrame?: boolean) => {
   try {
-    console.log('[shareJournalEntry] Starting share for entry:', entryId);
+    console.log('[shareJournalEntry] Starting share for entry:', entryId, 'userFid:', userFid);
     
     const response = await fetch('/api/journal/share', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ entryId })
+      body: JSON.stringify({ entryId, userFid })
     });
 
     if (!response.ok) {
@@ -94,7 +94,7 @@ export async function composeAndShareEntry(entry: JournalEntry, sdk?: any, isInF
 
   // Use provided userFid (for dev override) or fall back to entry.user_fid
   const finalUserFid = userFid || entry.user_fid;
-  const result = await shareJournalEntry(entry.id, sdk, isInFrame);
+  const result = await shareJournalEntry(entry.id, finalUserFid, sdk, isInFrame);
   
   // Trigger notification for first entry claim
   try {
