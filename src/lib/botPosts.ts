@@ -65,7 +65,7 @@ export async function createBotPost(
   content: string,
   postType: BotPostType,
   miniAppUrl?: string,
-  botFid: number = 5543 // Default to solaracosmos FID, update this to actual FID
+  botFid: number = 1090419 // @solaracosmos FID
 ): Promise<{ success: boolean; error?: string; postId?: string }> {
   try {
     const response = await fetch('/api/bot-posts', {

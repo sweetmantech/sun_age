@@ -7,7 +7,7 @@ require('dotenv').config();
 const client = new NeynarAPIClient(process.env.NEYNAR_API_KEY);
 
 // Bot configuration
-const BOT_FID = process.env.BOT_FID || 5543; // Replace with actual @solaracosmos FID
+const BOT_FID = process.env.BOT_FID || 1090419; // @solaracosmos FID
 const SIGNER_UUID = process.env.SIGNER_UUID;
 const SOLARA_API_BASE = process.env.SOLARA_API_BASE || 'https://www.solara.fyi';
 
