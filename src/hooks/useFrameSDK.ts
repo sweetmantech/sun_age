@@ -28,8 +28,18 @@ export function useFrameSDK() {
         if (!mounted) return;
         setIsSDKLoaded(true);
 
-        // Check frame context
-        const frameContext = await sdk.context;
+        // Check frame context with retry mechanism
+        let frameContext = await sdk.context;
+        let retryCount = 0;
+        
+        // Retry up to 10 times if context is not immediately available
+        while (!frameContext && retryCount < 10 && mounted) {
+          console.log(`[useFrameSDK] Context not available, retrying... (${retryCount + 1}/10)`);
+          await new Promise(resolve => setTimeout(resolve, 500));
+          frameContext = await sdk.context;
+          retryCount++;
+        }
+        
         if (!mounted) return;
         
         console.log('[useFrameSDK] Frame context loaded:', {
@@ -37,6 +47,7 @@ export function useFrameSDK() {
           hasUser: !!frameContext?.user,
           fid: frameContext?.user?.fid,
           clientAdded: frameContext?.client?.added,
+          retryCount,
           contextDetails: frameContext
         });
         
@@ -185,6 +196,31 @@ export function useFrameSDK() {
     }
   }, [connect, connectors]);
 
+  // Manual context refresh function
+  const refreshContext = useCallback(async () => {
+    try {
+      console.log('[useFrameSDK] Manually refreshing context...');
+      const frameContext = await sdk.context;
+      console.log('[useFrameSDK] Refreshed context:', {
+        hasContext: !!frameContext,
+        hasUser: !!frameContext?.user,
+        fid: frameContext?.user?.fid,
+        contextDetails: frameContext
+      });
+      
+      if (frameContext) {
+        setContext(frameContext);
+        setIsInFrame(true);
+        setIsFramePinned(frameContext.client.added);
+      }
+      
+      return frameContext;
+    } catch (err) {
+      console.error('[useFrameSDK] Error refreshing context:', err);
+      throw err;
+    }
+  }, [sdk]);
+
   return {
     isSDKLoaded,
     isInFrame,
@@ -192,6 +228,7 @@ export function useFrameSDK() {
     context,
     pinFrame,
     connectManually,
+    refreshContext,
     loading,
     error,
     isConnected,
