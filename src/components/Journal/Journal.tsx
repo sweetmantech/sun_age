@@ -168,6 +168,54 @@ export function Journal({ solAge }: JournalProps) {
         throw new Error(`You must be connected via Farcaster to migrate entries. Connection state: ${JSON.stringify(errorDetails)}`);
       }
       console.log('[Journal] Attempting to migrate local entries:', localEntries);
+      console.log('[Journal] Migration userFid:', userFid, 'type:', typeof userFid);
+      console.log('[Journal] Local entries count:', localEntries.length);
+      
+      // Log details of each local entry
+      localEntries.forEach((entry, index) => {
+        console.log(`[Journal] Local entry ${index}:`, {
+          id: entry.id,
+          content: entry.content?.substring(0, 50) + '...',
+          contentLength: entry.content?.length,
+          sol_day: entry.sol_day,
+          sol_dayType: typeof entry.sol_day,
+          preservation_status: entry.preservation_status,
+          created_at: entry.created_at
+        });
+      });
+      
+      if (localEntries.length === 0) {
+        console.log('[Journal] No local entries to migrate');
+        setMigrationError('No local entries found to migrate.');
+        return;
+      }
+      
+      // Test API endpoint first
+      console.log('[Journal] Testing API endpoint...');
+      try {
+        const testResponse = await fetch('/api/journal/entries', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            content: 'Test entry for API validation',
+            sol_day: 1,
+            userFid: userFid
+          })
+        });
+        console.log('[Journal] Test API response status:', testResponse.status);
+        if (!testResponse.ok) {
+          const testError = await testResponse.json();
+          console.error('[Journal] Test API error:', testError);
+          throw new Error(`API test failed: ${testError.error || testResponse.statusText}`);
+        }
+        const testResult = await testResponse.json();
+        console.log('[Journal] Test API success:', testResult);
+      } catch (err: any) {
+        console.error('[Journal] API test failed:', err);
+        setMigrationError(`API test failed: ${err.message}`);
+        return;
+      }
+      
       const result = await migrateLocalEntries(userFid);
       console.log('[Journal] Migration result:', result);
       if (result.errors.length > 0) {
