@@ -37,13 +37,29 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
     try {
         console.log('[API] Journal entries POST request received');
+        console.log('[API] Request URL:', req.url);
+        console.log('[API] Request method:', req.method);
+        console.log('[API] Request headers:', Object.fromEntries(req.headers.entries()));
         
         // Check content length
         const contentLength = req.headers.get('content-length');
         console.log('[API] Content length:', contentLength);
         
-        const body = await req.json();
-        console.log('[API] Request body:', body);
+        // Try to read the raw body first
+        const rawBody = await req.text();
+        console.log('[API] Raw request body:', rawBody);
+        console.log('[API] Raw body length:', rawBody.length);
+        console.log('[API] Raw body type:', typeof rawBody);
+        
+        let body;
+        try {
+            body = JSON.parse(rawBody);
+        } catch (parseError) {
+            console.error('[API] JSON parse error:', parseError);
+            return NextResponse.json({ error: 'Invalid JSON in request body' }, { status: 400 });
+        }
+        
+        console.log('[API] Parsed request body:', body);
         console.log('[API] Request body type:', typeof body);
         console.log('[API] Request body keys:', Object.keys(body));
         

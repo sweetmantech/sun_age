@@ -193,18 +193,35 @@ export function Journal({ solAge }: JournalProps) {
       // Test API endpoint first
       console.log('[Journal] Testing API endpoint...');
       try {
+        const testRequestBody = {
+          content: 'Test entry for API validation',
+          sol_day: 1,
+          userFid: userFid
+        };
+        
+        console.log('[Journal] Test request body:', testRequestBody);
+        console.log('[Journal] Test request body JSON:', JSON.stringify(testRequestBody));
+        console.log('[Journal] Test request body type:', typeof JSON.stringify(testRequestBody));
+        
         const testResponse = await fetch('/api/journal/entries', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            content: 'Test entry for API validation',
-            sol_day: 1,
-            userFid: userFid
-          })
+          headers: { 
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          },
+          body: JSON.stringify(testRequestBody)
         });
+        
         console.log('[Journal] Test API response status:', testResponse.status);
+        console.log('[Journal] Test API response headers:', Object.fromEntries(testResponse.headers.entries()));
+        
         if (!testResponse.ok) {
-          const testError = await testResponse.json();
+          let testError;
+          try {
+            testError = await testResponse.json();
+          } catch (e) {
+            testError = { error: await testResponse.text() };
+          }
           console.error('[Journal] Test API error:', testError);
           throw new Error(`API test failed: ${testError.error || testResponse.statusText}`);
         }
