@@ -36,9 +36,17 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
     try {
-        const { content, sol_day, userFid } = await req.json();
+        console.log('[API] Journal entries POST request received');
+        
+        const body = await req.json();
+        console.log('[API] Request body:', body);
+        
+        const { content, sol_day, userFid } = body;
+
+        console.log('[API] Extracted fields:', { content: !!content, sol_day, userFid, userFidType: typeof userFid });
 
         if (!content || typeof sol_day === 'undefined') {
+            console.error('[API] Missing required fields:', { content: !!content, sol_day });
             return NextResponse.json({ error: 'Missing required fields: content and sol_day' }, { status: 400 });
         }
 
@@ -48,17 +56,28 @@ export async function POST(req: NextRequest) {
         let finalUserFid: number;
         
         if (userFid) {
+            // Validate userFid is a number
+            const parsedUserFid = typeof userFid === 'string' ? parseInt(userFid, 10) : userFid;
+            if (isNaN(parsedUserFid)) {
+                console.error('[API] Invalid userFid:', userFid);
+                return NextResponse.json({ error: 'Invalid userFid' }, { status: 400 });
+            }
+            
             // Use service role for migration
+            console.log('[API] Using service role for migration with userFid:', parsedUserFid);
             supabase = createServiceRoleClient();
-            finalUserFid = userFid;
+            finalUserFid = parsedUserFid;
         } else {
             // Use regular client with auth
+            console.log('[API] Using regular client with auth');
             supabase = await createClient();
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) {
+                console.error('[API] No authenticated user found');
                 return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
             }
             finalUserFid = parseInt(user.id);
+            console.log('[API] Using authenticated user FID:', finalUserFid);
         }
 
         const newEntry = {
@@ -69,6 +88,8 @@ export async function POST(req: NextRequest) {
             preservation_status: userFid ? 'synced' : 'local',
         };
 
+        console.log('[API] Creating new entry:', newEntry);
+
         const { data: entry, error } = await supabase
             .from('journal_entries')
             .insert(newEntry)
@@ -76,14 +97,15 @@ export async function POST(req: NextRequest) {
             .single();
 
         if (error) {
-            console.error('Error creating journal entry:', error);
+            console.error('[API] Error creating journal entry:', error);
             return NextResponse.json({ error: 'Failed to create journal entry' }, { status: 500 });
         }
 
+        console.log('[API] Entry created successfully:', entry);
         return NextResponse.json({ entry });
 
     } catch (error) {
-        console.error('Error parsing request body:', error);
+        console.error('[API] Error parsing request body:', error);
         return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
     }
 } 

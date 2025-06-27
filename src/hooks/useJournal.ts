@@ -54,28 +54,48 @@ export function useJournal() {
     setError(null);
     
     try {
+      // Validate userFid
+      if (!userFid || typeof userFid !== 'number' || isNaN(userFid)) {
+        throw new Error(`Invalid userFid: ${userFid} (type: ${typeof userFid})`);
+      }
+
       const localEntries = entries.filter(e => e.preservation_status === 'local');
       
       if (localEntries.length === 0) {
         return { migrated: 0, errors: [] };
       }
 
+      console.log('[useJournal] Starting migration with userFid:', userFid, 'type:', typeof userFid);
+      console.log('[useJournal] Local entries to migrate:', localEntries);
+
       const results = await Promise.allSettled(
         localEntries.map(async (entry) => {
+          const requestBody = {
+            content: entry.content,
+            sol_day: entry.sol_day,
+            userFid: userFid
+          };
+          
+          console.log('[useJournal] Sending migration request:', {
+            entryId: entry.id,
+            requestBody,
+            userFid: userFid,
+            userFidType: typeof userFid
+          });
+
           const response = await fetch('/api/journal/entries', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              content: entry.content,
-              sol_day: entry.sol_day,
-              userFid: userFid
-            })
+            body: JSON.stringify(requestBody)
           });
 
+          console.log('[useJournal] Migration response status:', response.status);
+          
           if (!response.ok) {
             let errorMsg = `Failed to migrate entry: `;
             try {
               const errorBody = await response.json();
+              console.error('[useJournal] Migration error response:', errorBody);
               if (errorBody && errorBody.error) {
                 errorMsg += errorBody.error;
               } else {
@@ -88,6 +108,7 @@ export function useJournal() {
           }
 
           const { entry: newEntry } = await response.json();
+          console.log('[useJournal] Migration successful for entry:', entry.id, 'New entry:', newEntry);
           return { oldId: entry.id, newEntry };
         })
       );
@@ -96,6 +117,8 @@ export function useJournal() {
       const errors = results.filter(r => r.status === 'rejected').map(r => 
         (r as PromiseRejectedResult).reason
       );
+
+      console.log('[useJournal] Migration complete. Migrated:', migrated, 'Errors:', errors);
 
       // Remove migrated entries from local storage
       if (migrated > 0) {
