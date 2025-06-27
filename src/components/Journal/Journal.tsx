@@ -244,7 +244,9 @@ export function Journal({ solAge }: JournalProps) {
       } else {
         setMigrationError(null);
         console.log('[Journal] Migration successful. Migrated:', result.migrated);
-        // Refresh entries from the database after migration, passing userFid for dev override
+        // Add a small delay to ensure database transaction is committed
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        // Refresh entries from the database after migration
         await loadEntries(undefined, userFid);
       }
     } catch (err: any) {
@@ -269,11 +271,8 @@ export function Journal({ solAge }: JournalProps) {
       devFarcaster
     });
 
-    if (userFid) {
-      loadEntries(undefined, userFid); // Load from API with dev override
-    } else {
-      loadEntries(undefined, undefined); // Load from local storage only
-    }
+    // Load entries with userFid (API will handle authentication)
+    loadEntries(undefined, userFid);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userFid]);
 

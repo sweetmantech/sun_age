@@ -168,51 +168,75 @@ export function useJournal() {
     }
   }, [saveToLocalStorage]);
 
-  // Load entries from API (for authenticated users or dev override)
+  // Load entries from API (for authenticated users)
   const loadEntries = useCallback(async (filters?: JournalFilters, userFid?: number) => {
     setLoading(true);
     setError(null);
     try {
+      console.log('[useJournal] loadEntries called with filters:', filters, 'userFid:', userFid);
+      
       // Always load local entries from storage first
       const stored = localStorage.getItem(LOCAL_STORAGE_KEY);
       let localEntries: JournalEntry[] = [];
       if (stored) {
         localEntries = JSON.parse(stored).filter((e: JournalEntry) => e.preservation_status === 'local');
       }
+      console.log('[useJournal] Local entries from storage:', localEntries.length);
 
-      // Only load synced/preserved entries from API if userFid is provided
+      // Try to load synced/preserved entries from API
+      const params = new URLSearchParams();
+      if (filters?.preservation_status && filters.preservation_status !== 'local') {
+        params.append('preservation_status', filters.preservation_status);
+      }
+      if (filters?.search) {
+        params.append('search', filters.search);
+      }
+      
+      // Add userFid parameter (required for service role client)
       if (userFid) {
-        const params = new URLSearchParams();
-        if (filters?.preservation_status && filters.preservation_status !== 'local') {
-          params.append('preservation_status', filters.preservation_status);
-        }
-        if (filters?.search) {
-          params.append('search', filters.search);
-        }
-        // Dev override: add userFid if provided and in dev mode
-        if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development' && userFid) {
-          params.append('userFid', String(userFid));
-        }
-        
-        const response = await fetch(`/api/journal/entries?${params.toString()}`);
-        if (response.ok) {
-          const { entries: apiEntries } = await response.json();
-          // Merge API entries with local entries
-          const merged = [...apiEntries, ...localEntries];
-          // Sort by created_at descending
-          merged.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-          setEntries(merged);
-          saveToLocalStorage(merged);
-        } else {
-          console.warn('Failed to load entries from API, using local only');
-          setEntries(localEntries);
-        }
+        params.append('userFid', String(userFid));
       } else {
-        // No userFid provided, only show local entries
+        console.log('[useJournal] No userFid provided, skipping API call');
+        setEntries(localEntries);
+        return;
+      }
+      
+      const apiUrl = `/api/journal/entries?${params.toString()}`;
+      console.log('[useJournal] Fetching from API:', apiUrl);
+      
+      const response = await fetch(apiUrl);
+      console.log('[useJournal] API response status:', response.status);
+      console.log('[useJournal] API response headers:', Object.fromEntries(response.headers.entries()));
+      
+      if (response.ok) {
+        const { entries: apiEntries } = await response.json();
+        console.log('[useJournal] API entries received:', apiEntries.length, apiEntries);
+        
+        // Merge API entries with local entries
+        const merged = [...apiEntries, ...localEntries];
+        console.log('[useJournal] Merged entries:', merged.length);
+        
+        // Sort by created_at descending
+        merged.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+        console.log('[useJournal] Setting entries:', merged.length);
+        setEntries(merged);
+        saveToLocalStorage(merged);
+      } else if (response.status === 400) {
+        // Missing userFid parameter
+        console.log('[useJournal] Missing userFid parameter, showing local entries only');
+        setEntries(localEntries);
+      } else {
+        console.warn('[useJournal] Failed to load entries from API, using local only. Status:', response.status);
+        try {
+          const errorText = await response.text();
+          console.warn('[useJournal] API error response:', errorText);
+        } catch (e) {
+          console.warn('[useJournal] Could not read error response');
+        }
         setEntries(localEntries);
       }
     } catch (err) {
-      console.warn('Error loading entries, using local only:', err);
+      console.warn('[useJournal] Error loading entries, using local only:', err);
       // Fallback to local entries only
       const stored = localStorage.getItem(LOCAL_STORAGE_KEY);
       if (stored) {
