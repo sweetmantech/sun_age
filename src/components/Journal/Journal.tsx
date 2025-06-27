@@ -55,6 +55,7 @@ export function Journal({ solAge }: JournalProps) {
   const { sdk, isInFrame } = useFrameSDK();
   const [previewEntry, setPreviewEntry] = useState<JournalEntry | null>(null);
   
+  // Dev override for userFid: only in development
   const isDev = process.env.NODE_ENV === 'development';
   const userFid = isDev && devFarcaster ? 5543 : undefined;
   
