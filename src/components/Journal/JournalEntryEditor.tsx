@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useDailyContent } from '~/hooks/useDailyContent';
 import type { JournalEntry } from '~/types/journal';
 import { useFrameSDK } from '~/hooks/useFrameSDK';
@@ -60,8 +60,10 @@ export function JournalEntryEditor({ entry, onSave, onAutoSave, onFinish, onEdit
   }, [entry]);
 
   // Auto-save functionality with debounce (only in edit mode)
-  const autoSave = useCallback(
-    debounce(async (contentToSave: string) => {
+  const autoSaveRef = useRef<((contentToSave: string) => void) | null>(null);
+  
+  useEffect(() => {
+    autoSaveRef.current = debounce(async (contentToSave: string) => {
       if (contentToSave.trim() === '' || isReadMode) return;
       
       setIsAutoSaving(true);
@@ -73,16 +75,15 @@ export function JournalEntryEditor({ entry, onSave, onAutoSave, onFinish, onEdit
       } finally {
         setIsAutoSaving(false);
       }
-    }, 2000), // 2 second debounce
-    [entry.id, onAutoSave, isReadMode]
-  );
+    }, 2000); // 2 second debounce
+  }, [entry.id, onAutoSave, isReadMode]);
 
   // Trigger auto-save when content changes (only in edit mode)
   useEffect(() => {
-    if (!isReadMode && content !== entry.content) {
-      autoSave(content);
+    if (!isReadMode && content !== entry.content && autoSaveRef.current) {
+      autoSaveRef.current(content);
     }
-  }, [content, entry.content, autoSave, isReadMode]);
+  }, [content, entry.content, isReadMode]);
 
   const handleSave = async () => {
     setIsSaving(true);
@@ -118,8 +119,8 @@ export function JournalEntryEditor({ entry, onSave, onAutoSave, onFinish, onEdit
     const generateResponseStarter = (prompt: string): string => {
         const starters: { [key: string]: string } = {
             "How did this Sol day shape me?": "This Sol day shaped me by ",
-            "What patterns am I noticing in my cosmic journey?": "In my cosmic journey, I'm noticing a pattern of ",
-            "What wisdom emerged from today's orbit?": "From today's orbit, the wisdom that emerged was ",
+            "What patterns am I noticing in my cosmic journey?": "In my cosmic journey, I&apos;m noticing a pattern of ",
+            "What wisdom emerged from today's orbit?": "From today&apos;s orbit, the wisdom that emerged was ",
         };
         return starters[prompt] || prompt;
     }

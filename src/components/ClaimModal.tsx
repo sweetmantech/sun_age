@@ -129,7 +129,7 @@ export function ClaimModal({ isOpen, onClose, entryId, shareId, userFid, claimAm
               <div className="text-4xl mb-4">🌞</div>
               <h2 className="text-xl font-bold mb-2">Claim Your Tokens!</h2>
               <p className="text-gray-600 mb-6">
-                You've shared your first reflection! Visit the claim page to receive your {claimAmount.toLocaleString()} $SOLAR tokens.
+                You&apos;ve shared your first reflection! Visit the claim page to receive your {claimAmount.toLocaleString()} $SOLAR tokens.
               </p>
               
               <div className="space-y-4">
@@ -146,7 +146,7 @@ export function ClaimModal({ isOpen, onClose, entryId, shareId, userFid, claimAm
                   onClick={handleVisitLink}
                   className="w-full px-4 py-2 border border-gray-300 text-gray-700 font-mono text-sm hover:bg-gray-50 transition-colors"
                 >
-                  I'VE VISITED THE PAGE
+                  I&apos;VE VISITED THE PAGE
                 </button>
                 
                 <button

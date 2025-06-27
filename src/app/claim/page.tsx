@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useAccount, useConnect } from 'wagmi';
 import { truncateAddress } from '~/lib/truncateAddress';
+import Image from 'next/image';
 
 interface ClaimData {
   eligible: boolean;
@@ -139,7 +140,7 @@ export default function ClaimPage() {
           filter: 'blur(16px)',
         }} />
       </div>
-      <img src="/envelope.png" alt="Envelope art" className="w-20 h-20 object-contain mb-4 z-10" style={{ filter: 'grayscale(1)' }} />
+      <Image src="/envelope.png" alt="Envelope art" width={80} height={80} className="object-contain mb-4 z-10" style={{ filter: 'grayscale(1)' }} />
       <h1 className="text-2xl font-serif font-bold mb-2 text-black text-center z-10">Notifications</h1>
       <p className="uppercase tracking-widest text-xs text-gray-500 text-center max-w-xs mb-2 z-10" style={{ letterSpacing: '0.15em' }}>
         As we rotate the app shifts and transforms. Learn about those changes here.
@@ -189,8 +190,8 @@ export default function ClaimPage() {
   } else if (claimData?.eligible) {
     CardContent = (
       <>
-        <img src="/envelope.png" alt="Envelope" className="w-12 h-12 object-contain mb-4" />
-        <div className="text-lg font-serif font-bold text-center mb-2 text-black">You've shared your first reflection!</div>
+        <Image src="/envelope.png" alt="Envelope" width={48} height={48} className="object-contain mb-4" />
+        <div className="text-lg font-serif font-bold text-center mb-2 text-black">You&apos;ve shared your first reflection!</div>
         <div className="text-base font-serif text-center mb-6 text-black">You can claim {claimData?.amount?.toLocaleString()} $SOLAR tokens.</div>
         {(isConnected && address) ? (
           <>
