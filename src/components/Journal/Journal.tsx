@@ -333,10 +333,6 @@ export function Journal({ solAge }: JournalProps) {
     window.location.href = '/soldash';
   };
 
-  if (loading) {
-    return <div>Loading journal...</div>;
-  }
-
   if (error) {
     return <div className="text-red-500">Error loading journal: {error}</div>;
   }
@@ -407,7 +403,17 @@ export function Journal({ solAge }: JournalProps) {
   console.log('Filtered entries:', filteredEntries);
 
   return (
-    <div className="w-full max-w-2xl mx-auto">
+    <div className="w-full max-w-2xl mx-auto relative">
+      {/* Loading overlay - only show when loading and we have entries */}
+      {loading && entries.length > 0 && (
+        <div className="absolute inset-0 bg-white/80 backdrop-blur-sm z-10 flex items-center justify-center">
+          <div className="text-center">
+            <PulsingStarSpinner />
+            <div className="mt-2 font-mono text-xs text-gray-600">REFRESHING ENTRIES...</div>
+          </div>
+        </div>
+      )}
+
       {/* Dev-only Farcaster toggle */}
       {isDev && (
         <div className="mb-2 flex items-center gap-2 p-2 border border-dashed border-gray-400 bg-yellow-50">
@@ -686,7 +692,8 @@ export function Journal({ solAge }: JournalProps) {
       
       {entries.length > 0 ? (
         <JournalTimeline 
-          entries={filteredEntries} 
+          entries={filteredEntries}
+          loading={loading}
           onEdit={handleEdit} 
           onDelete={handleDeleteRequest} 
           onStartWriting={handleStartWriting} 

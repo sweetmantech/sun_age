@@ -5,6 +5,7 @@ import type { JournalEntry } from '~/types/journal';
 
 interface JournalTimelineProps {
   entries: JournalEntry[];
+  loading?: boolean;
   onStartWriting: () => void;
   onEdit: (entry: JournalEntry) => void;
   onDelete: (id: string) => void;
@@ -32,7 +33,41 @@ const PreservationStatus = ({ status }: { status: 'local' | 'synced' | 'preserve
   );
 };
 
-export function JournalTimeline({ entries, onStartWriting, onEdit, onDelete, onShare, onRead }: JournalTimelineProps) {
+// Skeleton loading component
+const EntrySkeleton = () => (
+  <div className="border border-gray-300 p-6 bg-white/90 animate-pulse">
+    <div className="flex justify-between items-center mb-4">
+      <div className="h-4 bg-gray-200 rounded w-16"></div>
+      <div className="h-4 bg-gray-200 rounded w-20"></div>
+    </div>
+    <div className="space-y-2 mb-6">
+      <div className="h-6 bg-gray-200 rounded w-full"></div>
+      <div className="h-6 bg-gray-200 rounded w-3/4"></div>
+      <div className="h-6 bg-gray-200 rounded w-1/2"></div>
+    </div>
+    <div className="flex justify-between items-center">
+      <div className="flex gap-4">
+        <div className="h-4 bg-gray-200 rounded w-12"></div>
+        <div className="h-4 bg-gray-200 rounded w-16"></div>
+        <div className="h-4 bg-gray-200 rounded w-14"></div>
+      </div>
+      <div className="h-4 bg-gray-200 rounded w-16"></div>
+    </div>
+  </div>
+);
+
+export function JournalTimeline({ entries, loading = false, onStartWriting, onEdit, onDelete, onShare, onRead }: JournalTimelineProps) {
+  // Show skeleton loading when loading and no entries
+  if (loading && entries.length === 0) {
+    return (
+      <div className="space-y-4">
+        <EntrySkeleton />
+        <EntrySkeleton />
+        <EntrySkeleton />
+      </div>
+    );
+  }
+
   if (entries.length === 0) {
     return (
       <div className="border border-gray-300 p-6 bg-white/90">

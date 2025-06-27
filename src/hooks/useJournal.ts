@@ -273,8 +273,10 @@ export function useJournal() {
       } else if (entryToUpdate.preservation_status === 'synced') {
         // API update
         const params = new URLSearchParams();
-        if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development' && userFid) {
+        if (userFid) {
           params.append('userFid', String(userFid));
+        } else {
+          throw new Error('userFid required for synced entry updates');
         }
         const response = await fetch(`/api/journal/entries/${id}?${params.toString()}`, {
           method: 'PUT',
@@ -319,8 +321,10 @@ export function useJournal() {
       } else if (entryToDelete.preservation_status === 'synced') {
         // API delete
         const params = new URLSearchParams();
-        if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development' && userFid) {
+        if (userFid) {
           params.append('userFid', String(userFid));
+        } else {
+          throw new Error('userFid required for synced entry deletion');
         }
         const response = await fetch(`/api/journal/entries/${id}?${params.toString()}`, {
           method: 'DELETE',
