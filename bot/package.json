@@ -8,7 +8,9 @@
     "dev": "node index.js",
     "stop": "pm2 kill",
     "logs": "pm2 logs",
-    "status": "pm2 status"
+    "status": "pm2 status",
+    "test-connection": "node test-connection.js",
+    "setup": "./deploy.sh"
   },
   "dependencies": {
     "@neynar/nodejs-sdk": "^1.0.0",
