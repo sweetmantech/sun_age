@@ -1,5 +1,5 @@
 import { Metadata } from 'next';
-import { SharedEntryViewer } from '~/components/Journal/SharedEntryViewer';
+import { EntryPreviewModal } from '~/components/Journal/EntryPreviewModal';
 import { createServiceRoleClient } from '~/utils/supabase/server';
 import Link from 'next/link';
 
@@ -85,10 +85,34 @@ export default async function SharedJournalPage({ params }: { params: Promise<{ 
     );
   }
 
+  // Get user's sol age and entry count for the callout
+  let userSolAge: number | null = null;
+  let userEntryCount: number | undefined = undefined;
+  
+  // Try to get from localStorage (client-side only)
+  if (typeof window !== 'undefined') {
+    try {
+      const bookmark = localStorage.getItem('sunCycleBookmark');
+      if (bookmark) {
+        const parsed = JSON.parse(bookmark);
+        userSolAge = parsed.days || null;
+      }
+    } catch (e) {
+      console.error('Error parsing bookmark:', e);
+    }
+  }
+
   return (
-    <SharedEntryViewer 
-      entry={share.journal_entries} 
-      authorFid={share.user_fid} 
-    />
+    <div className="min-h-screen bg-white">
+      <EntryPreviewModal
+        entry={share.journal_entries}
+        isOpen={true}
+        onClose={() => window.history.back()}
+        isOwnEntry={false}
+        isOnboarded={!!userSolAge}
+        userSolAge={userSolAge}
+        userEntryCount={userEntryCount}
+      />
+    </div>
   );
 } 
