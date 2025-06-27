@@ -1,8 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServiceRoleClient } from '~/utils/supabase/server';
 
-export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
+type RouteContext = {
+  params: Promise<{ id: string }>;
+};
+
+export async function GET(req: NextRequest, context: RouteContext) {
+  const { id } = await context.params;
   console.log('[API] GET /api/journal/shared/[id] called for share:', id);
   
   const supabase = createServiceRoleClient();

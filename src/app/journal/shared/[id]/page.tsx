@@ -1,32 +1,17 @@
-"use client";
-
-import { useEffect, useState } from 'react';
-import { notFound } from 'next/navigation';
-import { EntryPreviewModal } from '~/components/Journal/EntryPreviewModal';
-import type { JournalEntry } from '~/types/journal';
-import { useJournal } from '~/hooks/useJournal';
-import { useFrameSDK } from '~/hooks/useFrameSDK';
 import { Metadata } from 'next';
 import { SharedEntryViewer } from '~/components/Journal/SharedEntryViewer';
 import { createServiceRoleClient } from '~/utils/supabase/server';
+import Link from 'next/link';
 
-interface ShareData {
-  entry: JournalEntry;
-  authorFid: number;
-}
-
-interface PageProps {
-  params: { id: string };
-}
-
-export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const { id } = await params;
   const supabase = createServiceRoleClient();
   
   // Fetch share and entry data
   const { data: share } = await supabase
     .from('journal_shares')
     .select('*, journal_entries(*), user_fid')
-    .eq('id', params.id)
+    .eq('id', id)
     .single();
 
   const entry = share?.journal_entries;
@@ -41,7 +26,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   }
 
   const baseUrl = process.env.NEXT_PUBLIC_URL || 'https://www.solara.fyi';
-  const ogImageUrl = `${baseUrl}/api/og/journal/${params.id}`;
+  const ogImageUrl = `${baseUrl}/api/og/journal/${id}`;
   
   // Create the fc:frame metadata for proper mini app embedding
   const frameData = {
@@ -51,7 +36,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       title: "🌞 Read on Solara",
       action: {
         type: "launch_frame",
-        url: `${baseUrl}/journal/shared/${params.id}`,
+        url: `${baseUrl}/journal/shared/${id}`,
         name: "Solara",
         splashImageUrl: `${baseUrl}/logo.png`,
         splashBackgroundColor: "#FDF8EC"
@@ -73,13 +58,14 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   };
 }
 
-export default async function SharedJournalPage({ params }: PageProps) {
+export default async function SharedJournalPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   const supabase = createServiceRoleClient();
   
   const { data: share, error } = await supabase
     .from('journal_shares')
     .select('*, journal_entries(*), user_fid')
-    .eq('id', params.id)
+    .eq('id', id)
     .single();
 
   if (error || !share || !share.journal_entries) {
@@ -88,12 +74,12 @@ export default async function SharedJournalPage({ params }: PageProps) {
         <div className="text-center">
           <h1 className="text-2xl font-serif font-bold mb-4">Entry Not Found</h1>
           <p className="text-gray-600 mb-4">This journal entry may have been deleted or is no longer available.</p>
-          <a 
+          <Link 
             href="/" 
             className="inline-block px-6 py-3 bg-[#d4af37] text-black font-mono text-sm tracking-widest uppercase border border-black rounded-none hover:bg-[#e6c75a] transition-colors"
           >
             GO TO SOLARA
-          </a>
+          </Link>
         </div>
       </div>
     );

@@ -2,19 +2,20 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServiceRoleClient } from '~/utils/supabase/server';
 import type { UpdateJournalEntryRequest } from '~/types/journal';
 
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+type RouteContext = {
+  params: Promise<{ id: string }>;
+};
+
+export async function PUT(req: NextRequest, context: RouteContext) {
   try {
-    const { id } = await params;
+    const { id } = await context.params;
     console.log('[API] PUT /api/journal/entries/[id] called for entry:', id);
     
     // Use service role client since Farcaster users aren't authenticated with Supabase
     const supabase = createServiceRoleClient();
     
     // Get userFid from query params
-    const userFidParam = request.nextUrl.searchParams.get('userFid');
+    const userFidParam = req.nextUrl.searchParams.get('userFid');
     if (!userFidParam) {
       return NextResponse.json({ error: 'userFid parameter required' }, { status: 400 });
     }
@@ -27,7 +28,7 @@ export async function PUT(
     console.log('[API] Using user FID:', userFid);
 
     // Parse request body
-    const body: UpdateJournalEntryRequest = await request.json();
+    const body: UpdateJournalEntryRequest = await req.json();
     const { content } = body;
 
     // Validate input
@@ -79,24 +80,21 @@ export async function PUT(
     console.log('[API] Entry updated successfully:', entry);
     return NextResponse.json({ entry });
   } catch (error) {
-    console.error('[API] Unexpected error in PUT /api/journal/entries/[id]:', error);
+    console.error('[API] PUT /api/journal/entries/[id] error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
 
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function DELETE(req: NextRequest, context: RouteContext) {
   try {
-    const { id } = await params;
+    const { id } = await context.params;
     console.log('[API] DELETE /api/journal/entries/[id] called for entry:', id);
     
     // Use service role client since Farcaster users aren't authenticated with Supabase
     const supabase = createServiceRoleClient();
     
     // Get userFid from query params
-    const userFidParam = request.nextUrl.searchParams.get('userFid');
+    const userFidParam = req.nextUrl.searchParams.get('userFid');
     if (!userFidParam) {
       return NextResponse.json({ error: 'userFid parameter required' }, { status: 400 });
     }
@@ -140,7 +138,7 @@ export async function DELETE(
     console.log('[API] Entry deleted successfully');
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('[API] Unexpected error in DELETE /api/journal/entries/[id]:', error);
+    console.error('[API] DELETE /api/journal/entries/[id] error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 } 
