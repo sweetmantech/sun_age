@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useDailyContent } from '~/hooks/useDailyContent';
 import type { JournalEntry } from '~/types/journal';
 import { useFrameSDK } from '~/hooks/useFrameSDK';
@@ -42,48 +42,37 @@ function DailyPromptDisplay({ onDismiss }: DailyPromptDisplayProps) {
 }
 
 export function JournalEntryEditor({ entry, onSave, onAutoSave, onFinish, onEdit, mode = 'edit' }: JournalEntryEditorProps) {
-  const [content, setContent] = useState(entry.content);
-  const [showPrompts, setShowPrompts] = useState(false);
-  const [showDailyPrompt, setShowDailyPrompt] = useState(mode === 'edit');
-  const [isSharing, setIsSharing] = useState(false);
+  const [content, setContent] = useState(entry.content || '');
   const [isSaving, setIsSaving] = useState(false);
-  const [shareUrl, setShareUrl] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [isAutoSaving, setIsAutoSaving] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [isSharing, setIsSharing] = useState(false);
+  const [shareUrl, setShareUrl] = useState<string | null>(null);
+  const [showPrompts, setShowPrompts] = useState(false);
+  const [showDailyPrompt, setShowDailyPrompt] = useState(true);
   const { sdk, isInFrame } = useFrameSDK();
+  const { content: dailyContent, isLoading: dailyContentLoading } = useDailyContent();
+
+  // Auto-save functionality
+  const debouncedAutoSave = useMemo(
+    () => debounce(async (contentToSave: string) => {
+      if (contentToSave.trim() && contentToSave !== entry.content) {
+        try {
+          await onAutoSave({ id: entry.id, content: contentToSave });
+          setLastSaved(new Date());
+        } catch (e: any) {
+          console.error('Auto-save failed:', e);
+        }
+      }
+    }, 2000),
+    [onAutoSave, entry.id, entry.content]
+  );
+
+  useEffect(() => {
+    debouncedAutoSave(content);
+  }, [content, debouncedAutoSave]);
 
   const isReadMode = mode === 'read';
-
-  useEffect(() => {
-    setContent(entry.content);
-  }, [entry]);
-
-  // Auto-save functionality with debounce (only in edit mode)
-  const autoSaveRef = useRef<((contentToSave: string) => void) | null>(null);
-  
-  useEffect(() => {
-    autoSaveRef.current = debounce(async (contentToSave: string) => {
-      if (contentToSave.trim() === '' || isReadMode) return;
-      
-      setIsAutoSaving(true);
-      try {
-        await onAutoSave({ id: entry.id, content: contentToSave });
-        setLastSaved(new Date());
-      } catch (err) {
-        console.error('Auto-save failed:', err);
-      } finally {
-        setIsAutoSaving(false);
-      }
-    }, 2000); // 2 second debounce
-  }, [entry.id, onAutoSave, isReadMode]);
-
-  // Trigger auto-save when content changes (only in edit mode)
-  useEffect(() => {
-    if (!isReadMode && content !== entry.content && autoSaveRef.current) {
-      autoSaveRef.current(content);
-    }
-  }, [content, entry.content, isReadMode]);
 
   const handleSave = async () => {
     setIsSaving(true);
@@ -187,7 +176,6 @@ export function JournalEntryEditor({ entry, onSave, onAutoSave, onFinish, onEdit
                         ) : (
                           <>
                             <span>PRIVATE UNTIL YOU CHOOSE TO SHARE IT</span>
-                            {isAutoSaving && <span className="text-blue-600">• AUTO-SAVING</span>}
                             {lastSaved && <span className="text-green-600">• SAVED {lastSaved.toLocaleTimeString()}</span>}
                           </>
                         )}
@@ -238,16 +226,59 @@ export function JournalEntryEditor({ entry, onSave, onAutoSave, onFinish, onEdit
                                 </svg>
                               </button>
                             </div>
-                            <div className="space-y-3">
-                              <button onClick={(e) => handlePromptClick(e.currentTarget.textContent)} className="w-full text-left p-3 border border-gray-200 font-serif text-black hover:bg-gray-50" style={{ backgroundColor: '#FEFDF8' }}>
-                                How did this Sol day shape me?
-                              </button>
-                              <button onClick={(e) => handlePromptClick(e.currentTarget.textContent)} className="w-full text-left p-3 border border-gray-200 font-serif text-black hover:bg-gray-50" style={{ backgroundColor: '#FEFDF8' }}>
-                                What patterns am I noticing in my cosmic journey?
-                              </button>
-                              <button onClick={(e) => handlePromptClick(e.currentTarget.textContent)} className="w-full text-left p-3 border border-gray-200 font-serif text-black hover:bg-gray-50" style={{ backgroundColor: '#FEFDF8' }}>
-                                What wisdom emerged from today&apos;s orbit?
-                              </button>
+                            
+                            {/* Daily Content Section */}
+                            {dailyContent && !dailyContentLoading && (
+                              <>
+                                {/* Primary Affirmation */}
+                                <div className="mb-4">
+                                  <div className="text-xs font-semibold tracking-widest text-yellow-700 mb-2">TODAY&apos;S AFFIRMATION</div>
+                                  <button 
+                                    onClick={(e) => handlePromptClick(dailyContent.primary.text)} 
+                                    className="w-full text-left p-3 border border-yellow-200 font-serif text-black hover:bg-yellow-50" 
+                                    style={{ backgroundColor: '#FFFCF2' }}
+                                  >
+                                    {dailyContent.primary.text}
+                                  </button>
+                                </div>
+                                
+                                {/* Secondary Prompts */}
+                                {dailyContent.secondary && dailyContent.secondary.length > 0 && (
+                                  <div className="mb-4">
+                                    <div className="text-xs font-semibold tracking-widest text-gray-700 mb-2">DAILY REFLECTION PROMPTS</div>
+                                    <div className="space-y-2">
+                                      {dailyContent.secondary.map((prompt, index) => (
+                                        <button 
+                                          key={prompt.id}
+                                          onClick={(e) => handlePromptClick(prompt.text)} 
+                                          className="w-full text-left p-3 border border-gray-200 font-serif text-black hover:bg-gray-50" 
+                                          style={{ backgroundColor: '#FEFDF8' }}
+                                        >
+                                          {prompt.text}
+                                        </button>
+                                      ))}
+                                    </div>
+                                  </div>
+                                )}
+                                
+                                <div className="border-t border-gray-200 my-4"></div>
+                              </>
+                            )}
+                            
+                            {/* Generic Prompts */}
+                            <div>
+                              <div className="text-xs font-semibold tracking-widest text-gray-700 mb-2">COSMIC REFLECTION STARTERS</div>
+                              <div className="space-y-3">
+                                <button onClick={(e) => handlePromptClick(e.currentTarget.textContent)} className="w-full text-left p-3 border border-gray-200 font-serif text-black hover:bg-gray-50" style={{ backgroundColor: '#FEFDF8' }}>
+                                  How did this Sol day shape me?
+                                </button>
+                                <button onClick={(e) => handlePromptClick(e.currentTarget.textContent)} className="w-full text-left p-3 border border-gray-200 font-serif text-black hover:bg-gray-50" style={{ backgroundColor: '#FEFDF8' }}>
+                                  What patterns am I noticing in my cosmic journey?
+                                </button>
+                                <button onClick={(e) => handlePromptClick(e.currentTarget.textContent)} className="w-full text-left p-3 border border-gray-200 font-serif text-black hover:bg-gray-50" style={{ backgroundColor: '#FEFDF8' }}>
+                                  What wisdom emerged from today&apos;s orbit?
+                                </button>
+                              </div>
                             </div>
                           </div>
                         )}
