@@ -21,8 +21,6 @@ export async function GET(req: Request) {
     const profilePicUrl = searchParams.get('profilePicUrl');
     const sunUrl = `${baseUrl}/sunsun.png`;
     const logoUrl = `${baseUrl}/logo.png`;
-    const fontUrl = `${baseUrl}/fonts/GT%20Alpina.ttf`;
-    const gtAlpinaFont = await fetch(fontUrl).then(res => res.arrayBuffer());
 
     return new ImageResponse(
       React.createElement(
@@ -37,7 +35,7 @@ export async function GET(req: Request) {
             alignItems: 'center',
             justifyContent: 'center',
             position: 'relative',
-            fontFamily: 'Geist Mono, monospace, sans-serif',
+            fontFamily: 'monospace, sans-serif',
           },
         },
         // Profile Picture Circle - Only render if profilePicUrl is present
@@ -125,7 +123,7 @@ export async function GET(req: Request) {
             'div',
             {
               style: {
-                fontFamily: 'Geist Mono, monospace',
+                fontFamily: 'monospace',
                 fontSize: 32,
                 color: '#555',
                 letterSpacing: 2,
@@ -140,7 +138,7 @@ export async function GET(req: Request) {
             'div',
             {
               style: {
-                fontFamily: 'GT Alpina',
+                fontFamily: 'Georgia, serif',
                 fontSize: 120,
                 fontWeight: 600,
                 color: '#222',
@@ -155,7 +153,7 @@ export async function GET(req: Request) {
             'div',
             {
               style: {
-                fontFamily: 'Geist Mono, monospace',
+                fontFamily: 'monospace',
                 fontSize: 32,
                 color: '#555',
                 marginBottom: 8,
@@ -169,7 +167,7 @@ export async function GET(req: Request) {
             'div',
             {
               style: {
-                fontFamily: 'Geist Mono, monospace',
+                fontFamily: 'monospace',
                 fontSize: 32,
                 color: '#555',
                 marginBottom: 32,
@@ -198,17 +196,10 @@ export async function GET(req: Request) {
       {
         width: 1200,
         height: 630,
-        fonts: [
-          {
-            name: 'GT Alpina',
-            data: gtAlpinaFont,
-            style: 'normal',
-            weight: 600,
-          },
-        ],
       }
     );
   } catch (err: any) {
+    console.error('[OG IMAGE] Error generating solage image:', err);
     return new Response(`OG image error: ${err.message}`, { status: 500 });
   }
 } 
