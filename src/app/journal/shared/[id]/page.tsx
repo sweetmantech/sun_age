@@ -1,13 +1,8 @@
 "use client";
 
-import { Metadata } from 'next';
-import { createServiceRoleClient } from '~/utils/supabase/server';
 import Link from 'next/link';
 import EntryPreviewModalClient from '~/components/Journal/EntryPreviewModalClient';
 import { useEffect, useState } from 'react';
-
-// Note: generateMetadata needs to be in a separate server component
-// We'll handle metadata differently for client components
 
 export default function SharedJournalPage({ params }: { params: Promise<{ id: string }> }) {
   const [share, setShare] = useState<any>(null);

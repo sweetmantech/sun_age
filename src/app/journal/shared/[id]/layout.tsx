@@ -13,14 +13,24 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
     .single();
 
   const entry = share?.journal_entries;
-  const authorName = share?.author_name || 'Solara User';
-  const authorHandle = share?.author_handle || '@SOLARA';
   
   if (!entry) {
     return {
       title: 'Journal Entry - Solara',
       description: 'A cosmic reflection from the Solara community',
     };
+  }
+
+  // Fetch the author's profile information
+  let authorName = 'Solara User';
+  if (share?.user_fid) {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('username, display_name')
+      .eq('fid', share.user_fid)
+      .single();
+    
+    authorName = profile?.display_name || profile?.username || 'Solara User';
   }
 
   const baseUrl = process.env.NEXT_PUBLIC_URL || 'https://www.solara.fyi';
