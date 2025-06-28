@@ -48,7 +48,36 @@ export async function GET(req: Request) {
       preview = preview.slice(0, maxLength - 3) + '...';
     }
 
-    console.log('[OG IMAGE] Generating image with:', { solNumber, date, preview, authorName });
+    // Try to load the font from the public directory
+    let gtAlpinaFont: ArrayBuffer | null = null;
+    try {
+      const baseUrl = req.headers.get('host') ? `https://${req.headers.get('host')}` : 'http://localhost:3000';
+      const fontUrl = `${baseUrl}/fonts/GT%20Alpina.ttf`;
+      console.log('[OG IMAGE] Attempting to load font from:', fontUrl);
+      
+      const fontRes = await fetch(fontUrl);
+      if (fontRes.ok) {
+        gtAlpinaFont = await fontRes.arrayBuffer();
+        console.log('[OG IMAGE] Font loaded successfully, size:', gtAlpinaFont.byteLength);
+      } else {
+        console.log('[OG IMAGE] Font fetch failed with status:', fontRes.status);
+      }
+    } catch (e) {
+      console.error('[OG IMAGE] Font loading error:', e);
+    }
+
+    console.log('[OG IMAGE] Generating image with:', { solNumber, date, preview, authorName, hasFont: !!gtAlpinaFont });
+
+    const fontConfig = gtAlpinaFont ? {
+      fonts: [
+        {
+          name: 'GT Alpina',
+          data: gtAlpinaFont,
+          style: 'normal' as const,
+          weight: 400 as const,
+        },
+      ],
+    } : {};
 
     return new ImageResponse(
       React.createElement(
@@ -63,7 +92,7 @@ export async function GET(req: Request) {
             alignItems: 'center',
             justifyContent: 'center',
             position: 'relative',
-            fontFamily: 'Georgia, serif',
+            fontFamily: gtAlpinaFont ? 'GT Alpina, Georgia, serif' : 'Georgia, serif',
           },
         },
         [
@@ -107,7 +136,7 @@ export async function GET(req: Request) {
                 'div',
                 {
                   style: {
-                    fontFamily: 'Georgia, serif',
+                    fontFamily: gtAlpinaFont ? 'GT Alpina, Georgia, serif' : 'Georgia, serif',
                     fontSize: 72,
                     color: '#D4AF37',
                     fontWeight: 600,
@@ -150,7 +179,7 @@ export async function GET(req: Request) {
             {
               style: {
                 margin: '60px 0 0 0',
-                fontFamily: 'Georgia, serif',
+                fontFamily: gtAlpinaFont ? 'GT Alpina, Georgia, serif' : 'Georgia, serif',
                 fontSize: 44,
                 color: '#222',
                 textAlign: 'center',
@@ -190,6 +219,7 @@ export async function GET(req: Request) {
       {
         width: 1200,
         height: 630,
+        ...fontConfig,
       }
     );
   } catch (error) {

@@ -18,6 +18,34 @@ export async function GET(req: Request) {
       : 'http://localhost:3000';
     const logoUrl = `${baseUrl}/logo.png`;
 
+    // Try to load the font from the public directory
+    let gtAlpinaFont: ArrayBuffer | null = null;
+    try {
+      const fontUrl = `${baseUrl}/fonts/GT%20Alpina.ttf`;
+      console.log('[OG IMAGE] Attempting to load font from:', fontUrl);
+      
+      const fontRes = await fetch(fontUrl);
+      if (fontRes.ok) {
+        gtAlpinaFont = await fontRes.arrayBuffer();
+        console.log('[OG IMAGE] Font loaded successfully, size:', gtAlpinaFont.byteLength);
+      } else {
+        console.log('[OG IMAGE] Font fetch failed with status:', fontRes.status);
+      }
+    } catch (e) {
+      console.error('[OG IMAGE] Font loading error:', e);
+    }
+
+    const fontConfig = gtAlpinaFont ? {
+      fonts: [
+        {
+          name: 'GT Alpina',
+          data: gtAlpinaFont,
+          style: 'normal' as const,
+          weight: 600 as const,
+        },
+      ],
+    } : {};
+
     return new ImageResponse(
       React.createElement(
         'div',
@@ -85,7 +113,7 @@ export async function GET(req: Request) {
           {
             style: {
               margin: '40px 0 0 0',
-              fontFamily: 'Georgia, serif',
+              fontFamily: gtAlpinaFont ? 'GT Alpina, Georgia, serif' : 'Georgia, serif',
               fontSize: 44,
               color: '#222',
               textAlign: 'center',
@@ -114,6 +142,7 @@ export async function GET(req: Request) {
       {
         width: 1200,
         height: 630,
+        ...fontConfig,
       }
     );
   } catch (err: any) {
