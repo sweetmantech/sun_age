@@ -1,4 +1,4 @@
-import { createClient } from '~/utils/supabase/server';
+import { createServiceRoleClient } from '~/utils/supabase/server';
 
 // Helper function to format the daily content response
 const formatDailyContent = (date: string, primaryPrompt: any, secondaryPrompts: any[]) => {
@@ -21,7 +21,7 @@ const formatDailyContent = (date: string, primaryPrompt: any, secondaryPrompts: 
 
 // Main function to select daily content
 export const selectDailyContent = async (date: Date) => {
-  const supabase = await createClient();
+  const supabase = createServiceRoleClient();
   const dateString = date.toISOString().split('T')[0];
   const dayOfYear = Math.floor((date.getTime() - new Date(date.getFullYear(), 0, 0).getTime()) / 86400000);
 
