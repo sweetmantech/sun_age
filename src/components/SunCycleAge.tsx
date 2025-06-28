@@ -20,6 +20,7 @@ import { Journal } from './Journal/Journal';
 import { PulsingStarSpinner } from "~/components/ui/PulsingStarSpinner";
 import { useAccount, useReadContract } from 'wagmi';
 import { erc20Abi } from 'viem';
+import { createClient } from '~/utils/supabase/client';
 // import { revokeUserConsent } from "~/lib/consent";
 
 function WarpcastEmbed({ url }: { url: string }) {
@@ -36,7 +37,7 @@ function WarpcastEmbed({ url }: { url: string }) {
 }
 
 interface SunCycleAgeProps {
-  initialConsentData?: any[] | null;
+  // Remove initialConsentData prop since we'll fetch it on the client side
 }
 
 function BookmarkCard({ bookmark, milestone, milestoneDate, daysToMilestone, onRecalculate, onClear, isRecalculating, sinceLastVisit, milestoneCard, showMilestoneModal, setShowMilestoneModal, nextNumericalMilestones, onShare, isSharing, initialTab, hasPledged, vow, onSolVowsTab, isLoading, onChainPledge }: {
@@ -418,7 +419,7 @@ function PledgeDetailsCard({ days, pledge, daysRemaining, totalPooled }) {
   );
 }
 
-export default function SunCycleAge({ initialConsentData }: SunCycleAgeProps) {
+export default function SunCycleAge({}: SunCycleAgeProps) {
   const { 
     isSDKLoaded, 
     pinFrame, 
@@ -465,13 +466,6 @@ export default function SunCycleAge({ initialConsentData }: SunCycleAgeProps) {
   const [daysToMilestone, setDaysToMilestone] = useState<number | null>(null);
   const [milestoneDate, setMilestoneDate] = useState<string | null>(null);
   const [lastMilestoneNotified, setLastMilestoneNotified] = useState<number | null>(null);
-
-  // Log initial consent data for debugging
-  useEffect(() => {
-    if (initialConsentData) {
-      console.log("Initial consent data:", initialConsentData);
-    }
-  }, [initialConsentData]);
 
   useEffect(() => {
     if (days !== null) {
@@ -810,6 +804,43 @@ export default function SunCycleAge({ initialConsentData }: SunCycleAgeProps) {
 
   // Tooltip modal state
   const [showTooltip, setShowTooltip] = useState(false);
+
+  const [userConsent, setUserConsent] = useState<any[] | null>(null);
+  const [consentLoading, setConsentLoading] = useState(true);
+
+  // Fetch user consent data on the client side
+  useEffect(() => {
+    const fetchUserConsent = async () => {
+      try {
+        const supabase = createClient();
+        const { data, error } = await supabase
+          .from('user_notification_details')
+          .select('*')
+          .order('created_at', { ascending: false })
+          .limit(10);
+
+        if (error) {
+          console.error("Error fetching user consent:", error);
+        } else {
+          console.log("User consent data:", data);
+          setUserConsent(data);
+        }
+      } catch (err) {
+        console.error("Error in fetchUserConsent:", err);
+      } finally {
+        setConsentLoading(false);
+      }
+    };
+
+    fetchUserConsent();
+  }, []);
+
+  // Log initial consent data for debugging
+  useEffect(() => {
+    if (userConsent) {
+      console.log("Initial consent data:", userConsent);
+    }
+  }, [userConsent]);
 
   if (!isSDKLoaded) {
     return (
