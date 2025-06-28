@@ -36,11 +36,6 @@ function WarpcastEmbed({ url }: { url: string }) {
   );
 }
 
-interface SunCycleAgeProps {
-  // Empty interface - no props needed since we fetch data on client side
-  // eslint-disable-next-line @typescript-eslint/no-empty-object-type
-}
-
 function BookmarkCard({ bookmark, milestone, milestoneDate, daysToMilestone, onRecalculate, onClear, isRecalculating, sinceLastVisit, milestoneCard, showMilestoneModal, setShowMilestoneModal, nextNumericalMilestones, onShare, isSharing, initialTab, hasPledged, vow, onSolVowsTab, isLoading, onChainPledge }: {
   bookmark: any;
   milestone: any;
@@ -420,7 +415,7 @@ function PledgeDetailsCard({ days, pledge, daysRemaining, totalPooled }) {
   );
 }
 
-export default function SunCycleAge({}: SunCycleAgeProps) {
+export default function SunCycleAge() {
   const { 
     isSDKLoaded, 
     pinFrame, 
