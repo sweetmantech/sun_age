@@ -40,7 +40,7 @@ export const EntryPreviewModal: React.FC<EntryPreviewModalProps> = ({
     : entry.content;
 
   const handleAddReflection = () => {
-    window.location.href = '/journal';
+    window.location.href = '/soldash?tab=journal';
   };
   const handleViewJourney = () => {
     window.location.href = '/soldash';
