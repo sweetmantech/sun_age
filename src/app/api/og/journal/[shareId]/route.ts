@@ -86,6 +86,7 @@ export async function GET(req: Request) {
     React.createElement(
       'div',
       {
+        // Root OG image container: ensure flex, column, center, and font fallback
         style: {
           width: '1200px',
           height: '630px',
@@ -95,7 +96,7 @@ export async function GET(req: Request) {
           alignItems: 'center',
           justifyContent: 'center',
           position: 'relative',
-          fontFamily: 'GT Alpina, serif',
+          fontFamily: 'GT Alpina, serif', // fallback to serif
         },
       },
       [
@@ -109,6 +110,7 @@ export async function GET(req: Request) {
               justifyContent: 'space-between',
               alignItems: 'flex-start',
               padding: '48px 60px 0 60px',
+              fontFamily: 'Geist Mono, monospace, serif', // fallback
             },
           },
           [
@@ -116,7 +118,7 @@ export async function GET(req: Request) {
               'div',
               {
                 style: {
-                  fontFamily: 'Geist Mono, monospace',
+                  fontFamily: 'Geist Mono, monospace, serif',
                   fontSize: 32,
                   color: '#222',
                   letterSpacing: 2,
@@ -138,7 +140,7 @@ export async function GET(req: Request) {
               'div',
               {
                 style: {
-                  fontFamily: 'GT Alpina',
+                  fontFamily: 'GT Alpina, serif',
                   fontSize: 72,
                   color: '#D4AF37',
                   fontWeight: 600,
@@ -153,7 +155,7 @@ export async function GET(req: Request) {
               {
                 style: {
                   textAlign: 'right',
-                  fontFamily: 'Geist Mono, monospace',
+                  fontFamily: 'Geist Mono, monospace, serif',
                   fontSize: 28,
                   color: '#222',
                 },
@@ -181,7 +183,7 @@ export async function GET(req: Request) {
           {
             style: {
               margin: '60px 0 0 0',
-              fontFamily: 'GT Alpina',
+              fontFamily: 'GT Alpina, serif',
               fontSize: 44,
               color: '#222',
               textAlign: 'center',
@@ -204,7 +206,7 @@ export async function GET(req: Request) {
                 border: '1.5px solid #D4AF37',
                 borderRadius: 0,
                 padding: '22px 60px',
-                fontFamily: 'Geist Mono, monospace',
+                fontFamily: 'Geist Mono, monospace, serif',
                 fontSize: 32,
                 color: '#444',
                 letterSpacing: 2,

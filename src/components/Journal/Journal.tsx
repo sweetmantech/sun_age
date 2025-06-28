@@ -12,7 +12,7 @@ import React from 'react';
 import { PulsingStarSpinner } from "~/components/ui/PulsingStarSpinner";
 import { useFrameSDK } from '~/hooks/useFrameSDK';
 import { composeAndShareEntry } from '~/lib/journal';
-import { EntryPreviewModal } from './EntryPreviewModal';
+import EntryPreviewModalClient from './EntryPreviewModalClient';
 
 interface JournalProps {
   solAge: number;
@@ -381,7 +381,7 @@ export function Journal({ solAge }: JournalProps) {
       previewEntry.preservation_status === 'local' ||
       (!!userFid && previewEntry.user_fid === userFid);
     return (
-      <EntryPreviewModal
+      <EntryPreviewModalClient
         entry={previewEntry}
         isOpen={!!previewEntry}
         onClose={() => setPreviewEntry(null)}
@@ -394,6 +394,9 @@ export function Journal({ solAge }: JournalProps) {
           setPreviewEntry(null);
           handleShare(previewEntry);
         }}
+        isOnboarded={true}
+        userSolAge={solAge}
+        userEntryCount={entries.length}
       />
     );
   }
