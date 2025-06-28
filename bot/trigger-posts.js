@@ -1,13 +1,12 @@
-const { NeynarAPIClient } = require("@neynar/nodejs-sdk");
-const cron = require('node-cron');
-const axios = require('axios');
 require('dotenv').config();
+const { NeynarAPIClient } = require("@neynar/nodejs-sdk");
+const axios = require('axios');
 
 // Initialize Neynar client with v2 API
 const client = new NeynarAPIClient(process.env.NEYNAR_API_KEY);
 
 // Bot configuration
-const BOT_FID = process.env.BOT_FID || 1090419; // @solaracosmos FID
+const BOT_FID = process.env.BOT_FID || 1090419;
 const SIGNER_UUID = process.env.SIGNER_UUID;
 const SOLARA_API_BASE = process.env.SOLARA_API_BASE || 'https://www.solara.fyi';
 
@@ -59,36 +58,6 @@ const CONTENT_TEMPLATES = {
   ]
 };
 
-// Track which content was used to avoid immediate repeats
-let usedContent = {
-  journal_affirmation: [],
-  sol_age_prompt: [],
-  pledge_encouragement: []
-};
-
-// Get random content that hasn't been used recently
-function getRandomContent(type) {
-  const templates = CONTENT_TEMPLATES[type];
-  const available = templates.filter((_, index) => !usedContent[type].includes(index));
-  
-  // If all content has been used, reset
-  if (available.length === 0) {
-    usedContent[type] = [];
-    return templates[Math.floor(Math.random() * templates.length)];
-  }
-  
-  const selected = available[Math.floor(Math.random() * available.length)];
-  const selectedIndex = templates.indexOf(selected);
-  usedContent[type].push(selectedIndex);
-  
-  // Keep only last 2 used items to allow cycling
-  if (usedContent[type].length > 2) {
-    usedContent[type].shift();
-  }
-  
-  return selected;
-}
-
 // Register bot post in Solara database
 async function registerBotPost(castHash, content, postType, miniAppUrl) {
   try {
@@ -113,12 +82,13 @@ async function registerBotPost(castHash, content, postType, miniAppUrl) {
   }
 }
 
-// Main function to create and publish a cast using v2 API
+// Main function to create and publish a cast
 async function publishCast(postType) {
   try {
     console.log(`🚀 Publishing ${postType} cast...`);
     
-    const content = getRandomContent(postType);
+    const templates = CONTENT_TEMPLATES[postType];
+    const content = templates[Math.floor(Math.random() * templates.length)];
     
     // Publish cast using Neynar v2 API
     const cast = await client.publishCast(SIGNER_UUID, content.text, {
@@ -140,7 +110,7 @@ async function publishCast(postType) {
       );
       
       if (registered) {
-        console.log(`🎯 Bot post ready for flywheel referencing!`);
+        console.log(`🎯 ${postType} post ready for flywheel referencing!`);
       }
       
       return cast;
@@ -158,98 +128,30 @@ async function publishCast(postType) {
   }
 }
 
-// Posting schedule - optimized for engagement
-function setupSchedule() {
-  console.log('🕒 Setting up posting schedule...');
+// Trigger all three types of posts
+async function triggerAllPosts() {
+  console.log('🎯 Triggering all bot post types for testing...\n');
   
-  // Journal affirmations: Daily at 8 AM ET (good for morning reflection)
-  cron.schedule('0 8 * * *', () => {
-    console.log('⏰ Scheduled journal affirmation post');
-    publishCast('journal_affirmation');
-  }, {
-    timezone: "America/New_York"
-  });
+  // Post each type with a delay between them
+  await publishCast('journal_affirmation');
+  console.log('\n---\n');
   
-  // Sol Age prompts: Every 3 days at 2 PM ET (afternoon discovery)
-  cron.schedule('0 14 */3 * *', () => {
-    console.log('⏰ Scheduled sol age prompt post');
-    publishCast('sol_age_prompt');
-  }, {
-    timezone: "America/New_York"
-  });
+  await new Promise(resolve => setTimeout(resolve, 2000)); // 2 second delay
+  await publishCast('sol_age_prompt');
+  console.log('\n---\n');
   
-  // Pledge encouragement: Twice weekly (Tuesday 6 PM, Friday 10 AM ET)
-  cron.schedule('0 18 * * 2', () => {
-    console.log('⏰ Scheduled pledge encouragement post');
-    publishCast('pledge_encouragement');
-  }, {
-    timezone: "America/New_York"
-  });
+  await new Promise(resolve => setTimeout(resolve, 2000)); // 2 second delay
+  await publishCast('pledge_encouragement');
   
-  cron.schedule('0 10 * * 5', () => {
-    console.log('⏰ Scheduled pledge encouragement post');
-    publishCast('pledge_encouragement');
-  }, {
-    timezone: "America/New_York"
-  });
-  
-  console.log('✅ All schedules configured!');
-  console.log('📅 Journal affirmations: Daily at 8 AM ET');
-  console.log('📅 Sol Age prompts: Every 3 days at 2 PM ET');
-  console.log('📅 Pledge encouragement: Tue 6 PM & Fri 10 AM ET');
+  console.log('\n✅ All post types triggered!');
+  console.log('🎯 You can now test sharing for all content types.');
 }
 
-// Health check endpoint (if needed)
-function healthCheck() {
-  console.log('💓 Bot health check - all systems operational');
-  console.log('🤖 Bot FID:', BOT_FID);
-  console.log('🔑 Signer configured:', !!SIGNER_UUID);
-  console.log('🌐 API base:', SOLARA_API_BASE);
-}
-
-// Initialize bot
-async function initializeBot() {
-  console.log('🌞 Initializing @solaracosmos bot...');
-  
-  // Validate configuration
-  if (!process.env.NEYNAR_API_KEY) {
-    console.error('❌ NEYNAR_API_KEY not found in environment variables');
-    process.exit(1);
-  }
-  
-  if (!SIGNER_UUID) {
-    console.error('❌ SIGNER_UUID not found in environment variables');
-    process.exit(1);
-  }
-  
-  console.log('✅ Configuration validated');
-  
-  // Setup posting schedule
-  setupSchedule();
-  
-  // Run health check
-  healthCheck();
-  
-  // Optional: Post immediately for testing (comment out in production)
-  if (process.env.NODE_ENV === 'development') {
-    console.log('🧪 Development mode - posting test content...');
-    setTimeout(() => publishCast('journal_affirmation'), 5000);
-  }
-  
-  console.log('🚀 @solaracosmos bot is now running!');
-  console.log('📊 Bot will create anchor posts for the Solara flywheel system');
-}
-
-// Handle graceful shutdown
-process.on('SIGINT', () => {
-  console.log('👋 Shutting down @solaracosmos bot...');
+// Run the script
+triggerAllPosts().then(() => {
+  console.log('✅ Script completed');
   process.exit(0);
-});
-
-process.on('SIGTERM', () => {
-  console.log('👋 Shutting down @solaracosmos bot...');
-  process.exit(0);
-});
-
-// Start the bot
-initializeBot();
+}).catch((error) => {
+  console.error('❌ Script failed:', error);
+  process.exit(1);
+}); 

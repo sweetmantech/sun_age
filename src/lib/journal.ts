@@ -95,46 +95,37 @@ export async function composeAndShareEntry(entry: JournalEntry, sdk?: any, isInF
 
   // Use provided userFid (for dev override) or fall back to entry.user_fid
   const finalUserFid = userFid || entry.user_fid;
-  const result = await shareJournalEntry(entry.id, finalUserFid, sdk, isInFrame);
   
-  // Get the latest bot affirmation post to reference
-  const botPost = await getLatestBotPost('journal_affirmation');
+  // First, create the share record
+  const response = await fetch('/api/journal/share', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ entryId: entry.id, userFid: finalUserFid })
+  });
+
+  if (!response.ok) {
+    throw new Error(`Share API failed: ${response.status}`);
+  }
+
+  const result = await response.json();
+  console.log('[composeAndShareEntry] Share result:', result);
+
+  if (!result.shareId) {
+    throw new Error('No shareId returned from API');
+  }
   
-  // Compose the cast using Farcaster Mini App SDK
+  // Compose the cast using the centralized sharing function
   const miniAppUrl = 'https://www.solara.fyi';
-  // Use new dynamic route for share URL
   const ogImageUrl = window.location.origin + `/journal/shared/${result.shareId}`;
   const shareText = `🌞 My Solara reflection:\n\n${entry.content.slice(0, 200)}...\n\nRead more or try Solara: ${miniAppUrl}`;
   
-  // Prepare compose options with bot post reference if available
-  const composeOptions: any = {
+  // Use the centralized sharing function for consistency
+  const { composeWithBotReference } = await import('./sharing');
+  return await composeWithBotReference({
     text: shareText,
     embeds: [ogImageUrl, miniAppUrl],
-  };
-  
-  // Add parent reference to quote the bot's affirmation post
-  if (botPost?.cast_hash) {
-    composeOptions.parent = {
-      type: 'cast',
-      hash: botPost.cast_hash
-    };
-  }
-  
-  if (isInFrame && sdk) {
-    await sdk.actions.composeCast(composeOptions);
-  } else {
-    // For non-frame sharing, we'll need to construct the URL with parent parameter
-    // Note: Warpcast compose URLs don't directly support parent, so we'll add it as a mention for now
-    let fallbackText = shareText;
-    if (botPost?.cast_hash) {
-      fallbackText += `\n\nInspired by this reflection prompt: https://warpcast.com/${botPost.cast_hash}`;
-    }
-    
-    window.open(
-      `https://warpcast.com/~/compose?text=${encodeURIComponent(fallbackText)}&embeds=${encodeURIComponent(ogImageUrl)},${encodeURIComponent(miniAppUrl)}`,
-      "_blank"
-    );
-  }
-
-  return result;
+    botPostType: 'journal_affirmation',
+    sdk,
+    isInFrame
+  });
 } 

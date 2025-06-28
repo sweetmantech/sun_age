@@ -17,6 +17,7 @@ export async function composeWithBotReference(options: ShareOptions) {
   let botPost: any = null;
   if (botPostType) {
     botPost = await getLatestBotPost(botPostType);
+    console.log(`[composeWithBotReference] Bot post found for ${botPostType}:`, botPost?.cast_hash);
   }
   
   // Prepare compose options
@@ -31,17 +32,20 @@ export async function composeWithBotReference(options: ShareOptions) {
       type: 'cast',
       hash: botPost.cast_hash
     };
+    console.log(`[composeWithBotReference] Added parent reference:`, botPost.cast_hash);
   }
   
   if (isInFrame && sdk) {
+    console.log(`[composeWithBotReference] Sharing via Farcaster SDK with options:`, composeOptions);
     return await sdk.actions.composeCast(composeOptions);
   } else {
     // For non-frame sharing, add bot post reference as a link
     let fallbackText = text;
     if (botPost && botPost.cast_hash) {
-      fallbackText += `\n\nInspired by: https://warpcast.com/${botPost.cast_hash}`;
+      fallbackText += `\n\nInspired by this reflection prompt: https://warpcast.com/solaracosmos/${botPost.cast_hash}`;
     }
     
+    console.log(`[composeWithBotReference] Sharing via Warpcast compose URL with bot reference`);
     const composeUrl = `https://warpcast.com/~/compose?text=${encodeURIComponent(fallbackText)}&embeds=${encodeURIComponent(embeds.join(','))}`;
     window.open(composeUrl, "_blank");
     return { success: true };
