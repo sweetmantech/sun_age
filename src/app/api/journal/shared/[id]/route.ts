@@ -11,7 +11,7 @@ export async function GET(
     
     const { data: share, error } = await supabase
       .from('journal_shares')
-      .select('*, journal_entries(*), user_fid')
+      .select(`*, journal_entries(*), user_fid, users:profiles!inner(fid, username, display_name)`)
       .eq('id', id)
       .single();
 
@@ -22,7 +22,12 @@ export async function GET(
       });
     }
 
-    return new Response(JSON.stringify(share), {
+    return new Response(JSON.stringify({
+      entry: share.journal_entries,
+      authorFid: share.user_fid,
+      authorUsername: share.users?.username || null,
+      authorDisplayName: share.users?.display_name || null
+    }), {
       status: 200,
       headers: { 'Content-Type': 'application/json' },
     });

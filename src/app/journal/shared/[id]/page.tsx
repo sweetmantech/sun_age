@@ -58,7 +58,7 @@ export default function SharedJournalPage({ params }: { params: Promise<{ id: st
     );
   }
 
-  if (error || !share || !share.journal_entries) {
+  if (error || !share || !share.entry) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="text-center">
@@ -78,13 +78,15 @@ export default function SharedJournalPage({ params }: { params: Promise<{ id: st
   return (
     <div className="min-h-screen bg-white">
       <EntryPreviewModalClient
-        entry={share.journal_entries}
+        entry={share.entry}
         isOpen={true}
         onClose={() => window.history.back()}
         isOwnEntry={false}
         isOnboarded={!!userSolAge}
         userSolAge={userSolAge}
         userEntryCount={userEntryCount}
+        authorUsername={share.authorUsername}
+        authorDisplayName={share.authorDisplayName}
       />
     </div>
   );

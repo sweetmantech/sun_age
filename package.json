@@ -27,6 +27,7 @@
     "@farcaster/frame-node": "^0.0.32",
     "@farcaster/frame-sdk": "0.0.53",
     "@farcaster/frame-wagmi-connector": "^0.0.42",
+    "@supabase/postgrest-js": "^1.19.4",
     "@supabase/ssr": "^0.6.1",
     "@supabase/supabase-js": "^2.49.7",
     "@tanstack/react-query": "^5.67.3",

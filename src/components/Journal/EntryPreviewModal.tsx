@@ -14,6 +14,8 @@ interface EntryPreviewModalProps {
   onShare?: () => void;
   userSolAge?: number | null;
   userEntryCount?: number;
+  authorUsername?: string | null;
+  authorDisplayName?: string | null;
 }
 
 export const EntryPreviewModal: React.FC<EntryPreviewModalProps> = ({
@@ -26,6 +28,8 @@ export const EntryPreviewModal: React.FC<EntryPreviewModalProps> = ({
   onShare,
   userSolAge,
   userEntryCount,
+  authorUsername,
+  authorDisplayName,
 }) => {
   const [showFull, setShowFull] = useState(false);
 
@@ -38,6 +42,14 @@ export const EntryPreviewModal: React.FC<EntryPreviewModalProps> = ({
   const previewText = needsReadMore && !showFull
     ? lines.slice(0, maxLines).join('\n') + '...'
     : entry.content;
+
+  // Determine author display name
+  let displayName: string = 'Solara User';
+  if (isOwnEntry) {
+    displayName = authorDisplayName ?? authorUsername ?? 'You';
+  } else if (authorDisplayName || authorUsername) {
+    displayName = authorDisplayName ?? authorUsername ?? 'Solara User';
+  }
 
   const handleAddReflection = () => {
     window.location.href = '/soldash?tab=journal';
@@ -87,7 +99,7 @@ export const EntryPreviewModal: React.FC<EntryPreviewModalProps> = ({
                 <span className="text-gray-400">•</span>
                 <span>{new Date(entry.created_at).toLocaleDateString('en-US', { year: 'numeric', month: '2-digit', day: '2-digit' }).replace(/\//g, ".")}</span>
                 <span className="text-gray-400">•</span>
-                <span>Sol Su <span className="ml-1">🌞</span></span>
+                <span>{displayName} <span className="ml-1">🌞</span></span>
                 <span className="text-gray-400">•</span>
                 <span className="font-mono text-xs px-2 py-0.5 border rounded-none bg-yellow-50 border-yellow-300 text-yellow-700" style={{ fontWeight: 500, fontSize: '0.75rem' }}>{entry.preservation_status.toUpperCase()}</span>
               </div>
