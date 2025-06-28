@@ -2,6 +2,7 @@ import { Metadata } from 'next';
 import dynamic from 'next/dynamic';
 import { createServiceRoleClient } from '~/utils/supabase/server';
 import Link from 'next/link';
+import EntryPreviewModalClient from '~/components/Journal/EntryPreviewModalClient';
 
 const EntryPreviewModal = dynamic(
   () => import('~/components/Journal/EntryPreviewModal').then(mod => mod.EntryPreviewModal),
@@ -109,7 +110,7 @@ export default async function SharedJournalPage({ params }: { params: Promise<{ 
 
   return (
     <div className="min-h-screen bg-white">
-      <EntryPreviewModal
+      <EntryPreviewModalClient
         entry={share.journal_entries}
         isOpen={true}
         onClose={() => window.history.back()}
