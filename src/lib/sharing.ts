@@ -20,33 +20,35 @@ export async function composeWithBotReference(options: ShareOptions) {
     console.log(`[composeWithBotReference] Bot post found for ${botPostType}:`, botPost?.cast_hash);
   }
   
-  // Prepare compose options
+  // Prepare compose options - start with existing embeds
+  let finalEmbeds = [...embeds];
+  
+  // Add bot cast URL as an embed for proper quoting (instead of parent reference)
+  if (botPost && botPost.cast_hash) {
+    const botCastUrl = `https://warpcast.com/solaracosmos/${botPost.cast_hash}`;
+    // Farcaster allows max 2 embeds, so we need to prioritize
+    if (finalEmbeds.length < 2) {
+      finalEmbeds.push(botCastUrl);
+      console.log(`[composeWithBotReference] Added bot cast as embed:`, botCastUrl);
+    } else {
+      // If we're at the limit, replace the last embed with the bot cast
+      finalEmbeds[finalEmbeds.length - 1] = botCastUrl;
+      console.log(`[composeWithBotReference] Replaced last embed with bot cast:`, botCastUrl);
+    }
+  }
+  
   const composeOptions: any = {
     text,
-    embeds,
+    embeds: finalEmbeds,
   };
-  
-  // Add parent reference to quote the bot post if available
-  if (botPost && botPost.cast_hash) {
-    composeOptions.parent = {
-      type: 'cast',
-      hash: botPost.cast_hash
-    };
-    console.log(`[composeWithBotReference] Added parent reference:`, botPost.cast_hash);
-  }
   
   if (isInFrame && sdk) {
     console.log(`[composeWithBotReference] Sharing via Farcaster SDK with options:`, composeOptions);
     return await sdk.actions.composeCast(composeOptions);
   } else {
-    // For non-frame sharing, add bot post reference as a link
-    let fallbackText = text;
-    if (botPost && botPost.cast_hash) {
-      fallbackText += `\n\nInspired by this reflection prompt: https://warpcast.com/solaracosmos/${botPost.cast_hash}`;
-    }
-    
-    console.log(`[composeWithBotReference] Sharing via Warpcast compose URL with bot reference`);
-    const composeUrl = `https://warpcast.com/~/compose?text=${encodeURIComponent(fallbackText)}&embeds=${encodeURIComponent(embeds.join(','))}`;
+    // For non-frame sharing, include bot cast URL in embeds
+    console.log(`[composeWithBotReference] Sharing via Warpcast compose URL with bot cast embed`);
+    const composeUrl = `https://warpcast.com/~/compose?text=${encodeURIComponent(text)}&embeds=${encodeURIComponent(finalEmbeds.join(','))}`;
     window.open(composeUrl, "_blank");
     return { success: true };
   }
