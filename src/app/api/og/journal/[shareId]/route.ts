@@ -96,81 +96,89 @@ export async function GET(req: Request) {
           },
         },
         [
-          // Header
+          // Centered Header Block
           React.createElement(
             'div',
             {
               style: {
                 width: '100%',
                 display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'flex-start',
-                padding: '48px 60px 0 60px',
-                fontFamily: 'monospace',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                marginBottom: 24,
               },
             },
             [
-              React.createElement(
-                'div',
-                {
-                  style: {
-                    display: 'flex',
-                    flexDirection: 'column',
-                    fontFamily: 'monospace',
-                    fontSize: 32,
-                    color: '#222',
-                    letterSpacing: 2,
-                  },
-                },
-                [
-                  solNumber,
-                  React.createElement('br'),
-                  React.createElement(
-                    'span',
-                    {
-                      style: { fontSize: 22, color: '#888', letterSpacing: 2 },
-                    },
-                    date
-                  ),
-                ]
-              ),
+              // SOLARA Title
               React.createElement(
                 'div',
                 {
                   style: {
                     fontFamily: gtAlpinaFont ? 'GT Alpina, Georgia, serif' : 'Georgia, serif',
-                    fontSize: 72,
+                    fontSize: 56,
                     color: '#D4AF37',
                     fontWeight: 600,
                     letterSpacing: 2,
                     textAlign: 'center',
+                    marginBottom: 12,
                   },
                 },
                 'SOLARA'
               ),
+              // Sol Age and Date
               React.createElement(
                 'div',
                 {
                   style: {
                     display: 'flex',
-                    flexDirection: 'column',
-                    textAlign: 'right',
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 18,
+                    fontFamily: 'monospace',
+                    fontSize: 32,
+                    color: '#222',
+                    letterSpacing: 2,
+                    marginBottom: 6,
+                  },
+                },
+                [
+                  solNumber,
+                  React.createElement(
+                    'span',
+                    {
+                      style: { fontSize: 28, color: '#888', letterSpacing: 2 },
+                    },
+                    date
+                  ),
+                ]
+              ),
+              // Farcaster User Info
+              React.createElement(
+                'div',
+                {
+                  style: {
+                    display: 'flex',
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    justifyContent: 'center',
                     fontFamily: 'monospace',
                     fontSize: 28,
                     color: '#222',
+                    marginBottom: 0,
                   },
                 },
                 [
                   authorName,
                   React.createElement(
                     'span',
-                    { style: { fontSize: 28 } },
-                    ' 🌞'
+                    { style: { fontSize: 28, marginLeft: 8 } },
+                    '🌞'
                   ),
-                  React.createElement('br'),
                   React.createElement(
                     'span',
-                    { style: { fontSize: 22, color: '#888' } },
+                    { style: { fontSize: 22, color: '#888', marginLeft: 12 } },
                     authorHandle
                   ),
                 ]
@@ -182,7 +190,7 @@ export async function GET(req: Request) {
             'div',
             {
               style: {
-                margin: '60px 0 0 0',
+                margin: '40px 0 0 0',
                 fontFamily: gtAlpinaFont ? 'GT Alpina, Georgia, serif' : 'Georgia, serif',
                 fontSize: 44,
                 color: '#222',
