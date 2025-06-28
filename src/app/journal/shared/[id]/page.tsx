@@ -1,72 +1,62 @@
+"use client";
+
 import { Metadata } from 'next';
 import { createServiceRoleClient } from '~/utils/supabase/server';
 import Link from 'next/link';
 import EntryPreviewModalClient from '~/components/Journal/EntryPreviewModalClient';
+import { useEffect, useState } from 'react';
 
-export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
-  const { id } = await params;
-  const supabase = createServiceRoleClient();
-  
-  // Fetch share and entry data
-  const { data: share } = await supabase
-    .from('journal_shares')
-    .select('*, journal_entries(*), user_fid')
-    .eq('id', id)
-    .single();
+// Note: generateMetadata needs to be in a separate server component
+// We'll handle metadata differently for client components
 
-  const entry = share?.journal_entries;
-  const authorName = share?.author_name || 'Solara User';
-  const authorHandle = share?.author_handle || '@SOLARA';
-  
-  if (!entry) {
-    return {
-      title: 'Journal Entry - Solara',
-      description: 'A cosmic reflection from the Solara community',
-    };
-  }
+export default function SharedJournalPage({ params }: { params: Promise<{ id: string }> }) {
+  const [share, setShare] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [userSolAge, setUserSolAge] = useState<number | null>(null);
+  const [userEntryCount, setUserEntryCount] = useState<number | undefined>(undefined);
 
-  const baseUrl = process.env.NEXT_PUBLIC_URL || 'https://www.solara.fyi';
-  const ogImageUrl = `${baseUrl}/api/og/journal/${id}`;
-  
-  // Create the fc:frame metadata for proper mini app embedding
-  const frameData = {
-    version: "next",
-    imageUrl: ogImageUrl,
-    button: {
-      title: "🌞 Read on Solara",
-      action: {
-        type: "launch_frame",
-        url: `${baseUrl}/journal/shared/${id}`,
-        name: "Solara",
-        splashImageUrl: `${baseUrl}/logo.png`,
-        splashBackgroundColor: "#FDF8EC"
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const { id } = await params;
+        const response = await fetch(`/api/journal/shared/${id}`);
+        if (!response.ok) {
+          throw new Error('Entry not found');
+        }
+        const data = await response.json();
+        setShare(data);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to load entry');
+      } finally {
+        setLoading(false);
       }
+    };
+
+    // Get user's sol age from localStorage
+    try {
+      const bookmark = localStorage.getItem('sunCycleBookmark');
+      if (bookmark) {
+        const parsed = JSON.parse(bookmark);
+        setUserSolAge(parsed.days || null);
+      }
+    } catch (e) {
+      console.error('Error parsing bookmark:', e);
     }
-  };
 
-  return {
-    title: `Journal Entry by ${authorName} - Solara`,
-    description: entry.content?.slice(0, 200) + '...',
-    openGraph: {
-      title: `Journal Entry by ${authorName} - Solara`,
-      description: entry.content?.slice(0, 200) + '...',
-      images: [ogImageUrl],
-    },
-    other: {
-      'fc:frame': JSON.stringify(frameData),
-    },
-  };
-}
+    fetchData();
+  }, [params]);
 
-export default async function SharedJournalPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
-  const supabase = createServiceRoleClient();
-  
-  const { data: share, error } = await supabase
-    .from('journal_shares')
-    .select('*, journal_entries(*), user_fid')
-    .eq('id', id)
-    .single();
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#d4af37] mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading journal entry...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (error || !share || !share.journal_entries) {
     return (
@@ -83,23 +73,6 @@ export default async function SharedJournalPage({ params }: { params: Promise<{ 
         </div>
       </div>
     );
-  }
-
-  // Get user's sol age and entry count for the callout
-  let userSolAge: number | null = null;
-  let userEntryCount: number | undefined = undefined;
-  
-  // Try to get from localStorage (client-side only)
-  if (typeof window !== 'undefined') {
-    try {
-      const bookmark = localStorage.getItem('sunCycleBookmark');
-      if (bookmark) {
-        const parsed = JSON.parse(bookmark);
-        userSolAge = parsed.days || null;
-      }
-    } catch (e) {
-      console.error('Error parsing bookmark:', e);
-    }
   }
 
   return (
