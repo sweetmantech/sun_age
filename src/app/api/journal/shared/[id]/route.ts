@@ -9,9 +9,10 @@ export async function GET(
     const { id } = await params;
     const supabase = createServiceRoleClient();
     
+    // First get the share and entry
     const { data: share, error } = await supabase
       .from('journal_shares')
-      .select(`*, journal_entries(*), user_fid, users:profiles!inner(fid, username, display_name)`)
+      .select(`*, journal_entries(*)`)
       .eq('id', id)
       .single();
 
@@ -22,11 +23,18 @@ export async function GET(
       });
     }
 
+    // Then get the author's profile information
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('fid, username, display_name')
+      .eq('fid', share.user_fid)
+      .single();
+
     return new Response(JSON.stringify({
       entry: share.journal_entries,
       authorFid: share.user_fid,
-      authorUsername: share.users?.username || null,
-      authorDisplayName: share.users?.display_name || null
+      authorUsername: profile?.username || null,
+      authorDisplayName: profile?.display_name || null
     }), {
       status: 200,
       headers: { 'Content-Type': 'application/json' },
