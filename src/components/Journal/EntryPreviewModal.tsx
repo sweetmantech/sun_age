@@ -121,11 +121,11 @@ export const EntryPreviewModal: React.FC<EntryPreviewModalProps> = ({
                     <div className="text-xl mb-2">✨</div>
                     <div className="font-serif text-xl font-normal mb-2 text-center">Start your cosmic journey</div>
                     <div className="font-mono text-xs text-gray-700 mb-4 text-center tracking-widest" style={{ letterSpacing: '0.08em' }}>
-                      DISCOVER HOW MANY DAYS YOU'VE ORBITED THE SUN AND BEGIN TRACKING YOUR REFLECTIONS
+                      DISCOVER HOW MANY DAYS YOU&apos;VE ORBITED THE SUN AND BEGIN TRACKING YOUR REFLECTIONS
                     </div>
                     <div className="w-full mb-4">
                       <div className="bg-[#fff4aa] border border-yellow-200 text-center font-mono text-base py-2" style={{ color: '#bfa12a' }}>
-                        THIS TRAVELLER'S JOURNEY <br />
+                        THIS TRAVELLER&apos;S JOURNEY <br />
                         <span className="font-serif text-[20px] text-[#bfa12a]">Sol {entry.sol_day}</span> <span className="font-mono text-xs text-[#bfa12a]">and counting</span>
                       </div>
                     </div>
