@@ -197,7 +197,7 @@ export async function GET(req: Request) {
           // CTA
           React.createElement(
             'div',
-            { style: { marginTop: 60 } },
+            { style: { marginTop: 60, display: 'flex' } },
             React.createElement(
               'div',
               {
