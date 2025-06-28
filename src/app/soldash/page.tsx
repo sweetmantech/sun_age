@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { BookmarkCard } from "../../components/SunCycleAge";
 import { getNextMilestone, getNextNumericalMilestones, getNextMilestoneByType } from "../../lib/milestones";
 import MilestoneCard from "../../components/SunCycleAge/MilestoneCard";
@@ -24,6 +24,7 @@ interface Bookmark {
 
 export default function SolDashPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { isInFrame, sdk } = useFrameSDK();
   const [bookmark, setBookmark] = useState<Bookmark | null>(null);
   const [showMilestoneModal, setShowMilestoneModal] = useState(false);
@@ -34,11 +35,41 @@ export default function SolDashPage() {
   const [ceremony, setCeremony] = useState({ hasPledged: false, vow: "" });
   const { address } = useAccount();
 
+  // Get the tab from URL query parameter and normalize it
+  const getInitialTab = () => {
+    const tabParam = searchParams.get('tab');
+    if (!tabParam) return 'sol age'; // Default to sol age if no tab specified
+    
+    // Normalize the tab parameter
+    const normalizedTab = tabParam.toLowerCase().trim();
+    
+    // Map URL values to tab names
+    if (normalizedTab === 'sol%20age' || normalizedTab === 'sol age' || normalizedTab === 'solage') {
+      return 'sol age';
+    }
+    if (normalizedTab === 'sol%20vows' || normalizedTab === 'sol vows' || normalizedTab === 'solvows') {
+      return 'sol vows';
+    }
+    if (normalizedTab === 'journal') {
+      return 'journal';
+    }
+    if (normalizedTab === 'sol%20sign' || normalizedTab === 'sol sign' || normalizedTab === 'solsign') {
+      return 'sol sign';
+    }
+    
+    // Default fallback
+    return 'sol age';
+  };
+
+  const initialTab = getInitialTab();
+
   console.log('[SolDashPage] Render with:', {
     address,
     onChainHasPledged,
     onChainVow,
-    isLoading
+    isLoading,
+    initialTab,
+    tabParam: searchParams.get('tab')
   });
 
   // Add function to refresh pledge data
@@ -201,7 +232,7 @@ export default function SolDashPage() {
               setTimeout(() => setIsSharing(false), 1000);
             }}
             isSharing={isSharing}
-            initialTab="sol vows"
+            initialTab={initialTab}
             hasPledged={hasPledged}
             vow={vow}
             onSolVowsTab={handleSolVowsTab}
