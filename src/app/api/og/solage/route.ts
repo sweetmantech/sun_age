@@ -66,160 +66,164 @@ export async function GET(req: Request) {
             fontFamily: 'monospace, sans-serif',
           },
         },
-        // Profile Picture Circle - Only render if profilePicUrl is present
-        hasProfilePic && React.createElement(
-          'div',
-          {
-            style: {
-              position: 'absolute',
-              top: 48,
-              left: 0,
-              right: 0,
-              margin: 'auto',
-              width: 120,
-              height: 120,
-              borderRadius: '50%',
-              border: '4px solid #E6C75A',
-              background: '#fff',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              overflow: 'hidden',
+        [
+          // Profile Picture Circle - Only render if profilePicUrl is present
+          hasProfilePic && React.createElement(
+            'div',
+            {
+              style: {
+                position: 'absolute',
+                top: 48,
+                left: 0,
+                right: 0,
+                margin: 'auto',
+                width: 120,
+                height: 120,
+                borderRadius: '50%',
+                border: '4px solid #E6C75A',
+                background: '#fff',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                overflow: 'hidden',
+              },
             },
-          },
-          React.createElement('img', {
-            src: profilePicUrl,
-            alt: 'Profile',
-            width: 104,
-            height: 104,
-            style: { borderRadius: '50%' },
-          })
-        ),
-        // Sun faces
-        React.createElement(
-          'div',
-          {
-            style: {
-              position: 'absolute',
-              left: 60,
-              top: 180,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
+            React.createElement('img', {
+              src: profilePicUrl,
+              alt: 'Profile',
+              width: 104,
+              height: 104,
+              style: { borderRadius: '50%' },
+            })
+          ),
+          // Sun faces
+          React.createElement(
+            'div',
+            {
+              style: {
+                position: 'absolute',
+                left: 60,
+                top: 180,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              },
             },
-          },
+            React.createElement('img', {
+              src: sunUrl,
+              alt: 'Sun',
+              width: 100,
+              height: 100,
+            })
+          ),
+          React.createElement(
+            'div',
+            {
+              style: {
+                position: 'absolute',
+                right: 60,
+                top: 180,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              },
+            },
+            React.createElement('img', {
+              src: sunUrl,
+              alt: 'Sun',
+              width: 100,
+              height: 100,
+            })
+          ),
+          // Main Content
+          React.createElement(
+            'div',
+            {
+              style: {
+                marginTop: hasProfilePic ? 200 : 100,
+                width: '100%',
+                textAlign: 'center',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+              },
+            },
+            [
+              React.createElement(
+                'div',
+                {
+                  style: {
+                    fontFamily: 'monospace',
+                    fontSize: 32,
+                    color: '#555',
+                    letterSpacing: 2,
+                    marginBottom: 16,
+                    display: 'flex',
+                    justifyContent: 'center'
+                  },
+                },
+                `DEAR ${userName === 'SolaraUser' ? 'TRAVELLER' : userName.toUpperCase()}, YOU HAVE MADE`
+              ),
+              React.createElement(
+                'div',
+                {
+                  style: {
+                    fontFamily: gtAlpinaFont ? 'GT Alpina, Georgia, serif' : 'Georgia, serif',
+                    fontSize: 120,
+                    fontWeight: 600,
+                    color: '#222',
+                    margin: '24px 0',
+                    display: 'flex',
+                    justifyContent: 'center'
+                  },
+                },
+                solAge
+              ),
+              React.createElement(
+                'div',
+                {
+                  style: {
+                    fontFamily: 'monospace',
+                    fontSize: 32,
+                    color: '#555',
+                    marginBottom: 8,
+                    display: 'flex',
+                    justifyContent: 'center'
+                  },
+                },
+                `SOLAR ROTATIONS SINCE ${birthDate}`
+              ),
+              React.createElement(
+                'div',
+                {
+                  style: {
+                    fontFamily: 'monospace',
+                    fontSize: 32,
+                    color: '#555',
+                    marginBottom: 32,
+                    display: 'flex',
+                    justifyContent: 'center'
+                  },
+                },
+                `~${age} years old`
+              )
+            ]
+          ),
+          // SOLARA Logo - partially cut off at bottom
           React.createElement('img', {
-            src: sunUrl,
-            alt: 'Sun',
-            width: 100,
+            src: logoUrl,
+            alt: 'Solara',
+            width: 400,
             height: 100,
-          })
-        ),
-        React.createElement(
-          'div',
-          {
             style: {
               position: 'absolute',
-              right: 60,
-              top: 180,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
+              left: '50%',
+              bottom: -20,
+              transform: 'translateX(-50%)',
+              opacity: 0.18,
             },
-          },
-          React.createElement('img', {
-            src: sunUrl,
-            alt: 'Sun',
-            width: 100,
-            height: 100,
           })
-        ),
-        // Main Content
-        React.createElement(
-          'div',
-          {
-            style: {
-              marginTop: hasProfilePic ? 200 : 100,
-              width: '100%',
-              textAlign: 'center',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-            },
-          },
-          React.createElement(
-            'div',
-            {
-              style: {
-                fontFamily: 'monospace',
-                fontSize: 32,
-                color: '#555',
-                letterSpacing: 2,
-                marginBottom: 16,
-                display: 'flex',
-                justifyContent: 'center'
-              },
-            },
-            `DEAR ${userName === 'SolaraUser' ? 'TRAVELLER' : userName.toUpperCase()}, YOU HAVE MADE`
-          ),
-          React.createElement(
-            'div',
-            {
-              style: {
-                fontFamily: gtAlpinaFont ? 'GT Alpina, Georgia, serif' : 'Georgia, serif',
-                fontSize: 120,
-                fontWeight: 600,
-                color: '#222',
-                margin: '24px 0',
-                display: 'flex',
-                justifyContent: 'center'
-              },
-            },
-            solAge
-          ),
-          React.createElement(
-            'div',
-            {
-              style: {
-                fontFamily: 'monospace',
-                fontSize: 32,
-                color: '#555',
-                marginBottom: 8,
-                display: 'flex',
-                justifyContent: 'center'
-              },
-            },
-            `SOLAR ROTATIONS SINCE ${birthDate}`
-          ),
-          React.createElement(
-            'div',
-            {
-              style: {
-                fontFamily: 'monospace',
-                fontSize: 32,
-                color: '#555',
-                marginBottom: 32,
-                display: 'flex',
-                justifyContent: 'center'
-              },
-            },
-            `~${age} years old`
-          )
-        ),
-        // SOLARA Logo - partially cut off at bottom
-        React.createElement('img', {
-          src: logoUrl,
-          alt: 'Solara',
-          width: 400,
-          height: 100,
-          style: {
-            position: 'absolute',
-            left: '50%',
-            bottom: -20,
-            transform: 'translateX(-50%)',
-            opacity: 0.18,
-          },
-        })
+        ]
       ),
       {
         width: 1200,

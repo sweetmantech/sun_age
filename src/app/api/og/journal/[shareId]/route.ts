@@ -114,6 +114,8 @@ export async function GET(req: Request) {
                 'div',
                 {
                   style: {
+                    display: 'flex',
+                    flexDirection: 'column',
                     fontFamily: 'monospace',
                     fontSize: 32,
                     color: '#222',
@@ -150,6 +152,8 @@ export async function GET(req: Request) {
                 'div',
                 {
                   style: {
+                    display: 'flex',
+                    flexDirection: 'column',
                     textAlign: 'right',
                     fontFamily: 'monospace',
                     fontSize: 28,
