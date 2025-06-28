@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import "~/app/globals.css";
 import type { Metadata } from "next";
+import { Analytics } from '@vercel/analytics/react';
 import ThemeProviderClient from "~/components/providers/theme-provider-client";
 import { CosmicBackground } from "~/components/ui/cosmic-background";
 import { PROJECT_TITLE, PROJECT_DESCRIPTION } from "../lib/constants";
@@ -109,6 +110,7 @@ export default function RootLayout({
             {/* Footer is handled in SunCycleAge.tsx */}
           </ThemeProviderClient>
         </Providers>
+        <Analytics />
       </body>
     </html>
   );

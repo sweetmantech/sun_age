@@ -12,7 +12,7 @@ import React from 'react';
 import { PulsingStarSpinner } from "~/components/ui/PulsingStarSpinner";
 import { useFrameSDK } from '~/hooks/useFrameSDK';
 import { composeAndShareEntry } from '~/lib/journal';
-import { EntryPreviewModal } from './EntryPreviewModal';
+import EntryPreviewModalClient from './EntryPreviewModalClient';
 
 interface JournalProps {
   solAge: number;
@@ -244,7 +244,9 @@ export function Journal({ solAge }: JournalProps) {
       } else {
         setMigrationError(null);
         console.log('[Journal] Migration successful. Migrated:', result.migrated);
-        // Refresh entries from the database after migration, passing userFid for dev override
+        // Add a small delay to ensure database transaction is committed
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        // Refresh entries from the database after migration
         await loadEntries(undefined, userFid);
       }
     } catch (err: any) {
@@ -269,11 +271,8 @@ export function Journal({ solAge }: JournalProps) {
       devFarcaster
     });
 
-    if (userFid) {
-      loadEntries(undefined, userFid); // Load from API with dev override
-    } else {
-      loadEntries(undefined, undefined); // Load from local storage only
-    }
+    // Load entries with userFid (API will handle authentication)
+    loadEntries(undefined, userFid);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userFid]);
 
@@ -334,10 +333,6 @@ export function Journal({ solAge }: JournalProps) {
     window.location.href = '/soldash';
   };
 
-  if (loading) {
-    return <div>Loading journal...</div>;
-  }
-
   if (error) {
     return <div className="text-red-500">Error loading journal: {error}</div>;
   }
@@ -386,7 +381,7 @@ export function Journal({ solAge }: JournalProps) {
       previewEntry.preservation_status === 'local' ||
       (!!userFid && previewEntry.user_fid === userFid);
     return (
-      <EntryPreviewModal
+      <EntryPreviewModalClient
         entry={previewEntry}
         isOpen={!!previewEntry}
         onClose={() => setPreviewEntry(null)}
@@ -399,6 +394,9 @@ export function Journal({ solAge }: JournalProps) {
           setPreviewEntry(null);
           handleShare(previewEntry);
         }}
+        isOnboarded={true}
+        userSolAge={solAge}
+        userEntryCount={entries.length}
       />
     );
   }
@@ -408,7 +406,17 @@ export function Journal({ solAge }: JournalProps) {
   console.log('Filtered entries:', filteredEntries);
 
   return (
-    <div className="w-full max-w-2xl mx-auto">
+    <div className="w-full max-w-2xl mx-auto relative">
+      {/* Loading overlay - only show when loading and we have entries */}
+      {loading && entries.length > 0 && (
+        <div className="absolute inset-0 bg-white/80 backdrop-blur-sm z-10 flex items-center justify-center">
+          <div className="text-center">
+            <PulsingStarSpinner />
+            <div className="mt-2 font-mono text-xs text-gray-600">REFRESHING ENTRIES...</div>
+          </div>
+        </div>
+      )}
+
       {/* Dev-only Farcaster toggle */}
       {isDev && (
         <div className="mb-2 flex items-center gap-2 p-2 border border-dashed border-gray-400 bg-yellow-50">
@@ -424,8 +432,8 @@ export function Journal({ solAge }: JournalProps) {
         </div>
       )}
 
-      {/* Connection status indicator */}
-      {isInFrame && (
+      {/* Connection status indicator - only show in development */}
+      {isInFrame && isDev && (
         <div className="mb-2 p-2 border border-gray-300 bg-gray-50">
           <div className="font-mono text-xs text-gray-700">
             <div className="flex items-center justify-between">
@@ -440,101 +448,99 @@ export function Journal({ solAge }: JournalProps) {
               Frame: {isInFrame ? 'Active' : 'Inactive'}
             </div>
             {/* Debug details - only show in development */}
-            {isDev && (
-              <details className="mt-2">
-                <summary className="cursor-pointer text-blue-600">Debug Details</summary>
-                <pre className="text-xs mt-1 bg-white p-2 border overflow-auto max-h-32">
-                  {JSON.stringify({
-                    farcasterUserFid,
-                    devUserFid,
-                    finalUserFid: userFid,
-                    hasContext: !!context,
-                    hasUser: !!context?.user,
-                    contextUser: context?.user,
-                    isInFrame,
-                    isDev,
-                    devFarcaster,
-                    frameLoading,
-                    contextDetails: context
-                  }, null, 2)}
-                </pre>
-                <div className="mt-2 space-y-1">
+            <details className="mt-2">
+              <summary className="cursor-pointer text-blue-600">Debug Details</summary>
+              <pre className="text-xs mt-1 bg-white p-2 border overflow-auto max-h-32">
+                {JSON.stringify({
+                  farcasterUserFid,
+                  devUserFid,
+                  finalUserFid: userFid,
+                  hasContext: !!context,
+                  hasUser: !!context?.user,
+                  contextUser: context?.user,
+                  isInFrame,
+                  isDev,
+                  devFarcaster,
+                  frameLoading,
+                  contextDetails: context
+                }, null, 2)}
+              </pre>
+              <div className="mt-2 space-y-1">
+                <button
+                  onClick={async () => {
+                    try {
+                      console.log('[Journal] Testing SDK initialization...');
+                      await sdk.actions.ready({ disableNativeGestures: true });
+                      console.log('[Journal] SDK ready successful');
+                      const frameContext = await sdk.context;
+                      console.log('[Journal] Frame context:', frameContext);
+                      alert(`SDK test successful!\nContext: ${frameContext ? 'Loaded' : 'Not loaded'}\nUser: ${frameContext?.user ? 'Available' : 'Not available'}\nFID: ${frameContext?.user?.fid || 'None'}`);
+                    } catch (err: any) {
+                      console.error('[Journal] SDK test failed:', err);
+                      alert(`SDK test failed: ${err.message}`);
+                    }
+                  }}
+                  className="bg-blue-600 hover:bg-blue-700 text-white font-mono text-xs px-2 py-1 border"
+                >
+                  Test SDK
+                </button>
+                <button
+                  onClick={async () => {
+                    try {
+                      console.log('[Journal] Testing manual connection...');
+                      await connectManually();
+                      console.log('[Journal] Manual connection successful');
+                      alert('Manual connection successful!');
+                    } catch (err: any) {
+                      console.error('[Journal] Manual connection failed:', err);
+                      alert(`Manual connection failed: ${err.message}`);
+                    }
+                  }}
+                  className="bg-green-600 hover:bg-green-700 text-white font-mono text-xs px-2 py-1 border ml-1"
+                >
+                  Test Connection
+                </button>
+                {isDev && (
                   <button
                     onClick={async () => {
                       try {
-                        console.log('[Journal] Testing SDK initialization...');
-                        await sdk.actions.ready({ disableNativeGestures: true });
-                        console.log('[Journal] SDK ready successful');
-                        const frameContext = await sdk.context;
-                        console.log('[Journal] Frame context:', frameContext);
-                        alert(`SDK test successful!\nContext: ${frameContext ? 'Loaded' : 'Not loaded'}\nUser: ${frameContext?.user ? 'Available' : 'Not available'}\nFID: ${frameContext?.user?.fid || 'None'}`);
+                        console.log('[Journal] Refreshing context...');
+                        const refreshedContext = await refreshContext();
+                        console.log('[Journal] Context refreshed:', refreshedContext);
+                        alert(`Context refreshed!\nHas context: ${!!refreshedContext}\nHas user: ${!!refreshedContext?.user}\nFID: ${refreshedContext?.user?.fid || 'None'}`);
                       } catch (err: any) {
-                        console.error('[Journal] SDK test failed:', err);
-                        alert(`SDK test failed: ${err.message}`);
+                        console.error('[Journal] Context refresh failed:', err);
+                        alert(`Context refresh failed: ${err.message}`);
                       }
                     }}
-                    className="bg-blue-600 hover:bg-blue-700 text-white font-mono text-xs px-2 py-1 border"
+                    className="bg-orange-600 hover:bg-orange-700 text-white font-mono text-xs px-2 py-1 border ml-1"
                   >
-                    Test SDK
+                    Refresh Context
                   </button>
-                  <button
-                    onClick={async () => {
-                      try {
-                        console.log('[Journal] Testing manual connection...');
-                        await connectManually();
-                        console.log('[Journal] Manual connection successful');
-                        alert('Manual connection successful!');
-                      } catch (err: any) {
-                        console.error('[Journal] Manual connection failed:', err);
-                        alert(`Manual connection failed: ${err.message}`);
-                      }
-                    }}
-                    className="bg-green-600 hover:bg-green-700 text-white font-mono text-xs px-2 py-1 border ml-1"
-                  >
-                    Test Connection
-                  </button>
-                  {isDev && (
-                    <button
-                      onClick={async () => {
-                        try {
-                          console.log('[Journal] Refreshing context...');
-                          const refreshedContext = await refreshContext();
-                          console.log('[Journal] Context refreshed:', refreshedContext);
-                          alert(`Context refreshed!\nHas context: ${!!refreshedContext}\nHas user: ${!!refreshedContext?.user}\nFID: ${refreshedContext?.user?.fid || 'None'}`);
-                        } catch (err: any) {
-                          console.error('[Journal] Context refresh failed:', err);
-                          alert(`Context refresh failed: ${err.message}`);
-                        }
-                      }}
-                      className="bg-orange-600 hover:bg-orange-700 text-white font-mono text-xs px-2 py-1 border ml-1"
-                    >
-                      Refresh Context
-                    </button>
-                  )}
-                  <button
-                    onClick={() => {
-                      const testData = {
-                        userFid,
-                        userFidType: typeof userFid,
-                        farcasterUserFid,
-                        devUserFid,
-                        hasContext: !!context,
-                        hasUser: !!context?.user,
-                        contextUser: context?.user,
-                        isInFrame,
-                        isDev,
-                        devFarcaster
-                      };
-                      console.log('[Journal] Current state:', testData);
-                      alert(`Current state:\n${JSON.stringify(testData, null, 2)}`);
-                    }}
-                    className="bg-purple-600 hover:bg-purple-700 text-white font-mono text-xs px-2 py-1 border ml-1"
-                  >
-                    Check State
-                  </button>
-                </div>
-              </details>
-            )}
+                )}
+                <button
+                  onClick={() => {
+                    const testData = {
+                      userFid,
+                      userFidType: typeof userFid,
+                      farcasterUserFid,
+                      devUserFid,
+                      hasContext: !!context,
+                      hasUser: !!context?.user,
+                      contextUser: context?.user,
+                      isInFrame,
+                      isDev,
+                      devFarcaster
+                    };
+                    console.log('[Journal] Current state:', testData);
+                    alert(`Current state:\n${JSON.stringify(testData, null, 2)}`);
+                  }}
+                  className="bg-purple-600 hover:bg-purple-700 text-white font-mono text-xs px-2 py-1 border ml-1"
+                >
+                  Check State
+                </button>
+              </div>
+            </details>
           </div>
         </div>
       )}
@@ -687,7 +693,8 @@ export function Journal({ solAge }: JournalProps) {
       
       {entries.length > 0 ? (
         <JournalTimeline 
-          entries={filteredEntries} 
+          entries={filteredEntries}
+          loading={loading}
           onEdit={handleEdit} 
           onDelete={handleDeleteRequest} 
           onStartWriting={handleStartWriting} 

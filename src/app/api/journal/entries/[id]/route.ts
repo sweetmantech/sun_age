@@ -1,31 +1,34 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient, createServiceRoleClient } from '~/utils/supabase/server';
+import { createServiceRoleClient } from '~/utils/supabase/server';
 import type { UpdateJournalEntryRequest } from '~/types/journal';
 
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+type RouteContext = {
+  params: Promise<{ id: string }>;
+};
+
+export async function PUT(req: NextRequest, context: RouteContext) {
   try {
-    const { id } = await params;
-    const isDev = process.env.NODE_ENV === 'development';
-    const userFidParam = request.nextUrl.searchParams.get('userFid');
-    let supabase;
-    let userFid;
-    if (isDev && userFidParam) {
-      supabase = createServiceRoleClient();
-      userFid = parseInt(userFidParam, 10);
-    } else {
-      supabase = await createClient();
-      const { data: { user }, error: authError } = await supabase.auth.getUser();
-      if (authError || !user) {
-        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-      }
-      userFid = parseInt(user.id, 10);
+    const { id } = await context.params;
+    console.log('[API] PUT /api/journal/entries/[id] called for entry:', id);
+    
+    // Use service role client since Farcaster users aren't authenticated with Supabase
+    const supabase = createServiceRoleClient();
+    
+    // Get userFid from query params
+    const userFidParam = req.nextUrl.searchParams.get('userFid');
+    if (!userFidParam) {
+      return NextResponse.json({ error: 'userFid parameter required' }, { status: 400 });
     }
+    
+    const userFid = parseInt(userFidParam, 10);
+    if (isNaN(userFid)) {
+      return NextResponse.json({ error: 'Invalid userFid' }, { status: 400 });
+    }
+    
+    console.log('[API] Using user FID:', userFid);
 
     // Parse request body
-    const body: UpdateJournalEntryRequest = await request.json();
+    const body: UpdateJournalEntryRequest = await req.json();
     const { content } = body;
 
     // Validate input
@@ -49,7 +52,7 @@ export async function PUT(
       return NextResponse.json({ error: 'Entry not found' }, { status: 404 });
     }
 
-    // Only allow editing local entries
+    // Only allow editing local and synced entries
     if (existingEntry.preservation_status === 'preserved') {
       return NextResponse.json({ error: 'Cannot edit preserved entries' }, { status: 400 });
     }
@@ -70,38 +73,38 @@ export async function PUT(
       .single();
 
     if (error) {
-      console.error('Error updating journal entry:', error);
+      console.error('[API] Error updating journal entry:', error);
       return NextResponse.json({ error: 'Failed to update entry' }, { status: 500 });
     }
 
+    console.log('[API] Entry updated successfully:', entry);
     return NextResponse.json({ entry });
   } catch (error) {
-    console.error('Unexpected error in PUT /api/journal/entries/[id]:', error);
+    console.error('[API] PUT /api/journal/entries/[id] error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
 
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function DELETE(req: NextRequest, context: RouteContext) {
   try {
-    const { id } = await params;
-    const isDev = process.env.NODE_ENV === 'development';
-    const userFidParam = request.nextUrl.searchParams.get('userFid');
-    let supabase;
-    let userFid;
-    if (isDev && userFidParam) {
-      supabase = createServiceRoleClient();
-      userFid = parseInt(userFidParam, 10);
-    } else {
-      supabase = await createClient();
-      const { data: { user }, error: authError } = await supabase.auth.getUser();
-      if (authError || !user) {
-        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-      }
-      userFid = parseInt(user.id, 10);
+    const { id } = await context.params;
+    console.log('[API] DELETE /api/journal/entries/[id] called for entry:', id);
+    
+    // Use service role client since Farcaster users aren't authenticated with Supabase
+    const supabase = createServiceRoleClient();
+    
+    // Get userFid from query params
+    const userFidParam = req.nextUrl.searchParams.get('userFid');
+    if (!userFidParam) {
+      return NextResponse.json({ error: 'userFid parameter required' }, { status: 400 });
     }
+    
+    const userFid = parseInt(userFidParam, 10);
+    if (isNaN(userFid)) {
+      return NextResponse.json({ error: 'Invalid userFid' }, { status: 400 });
+    }
+    
+    console.log('[API] Using user FID:', userFid);
 
     // Check if entry exists and belongs to user
     const { data: existingEntry, error: fetchError } = await supabase
@@ -115,7 +118,7 @@ export async function DELETE(
       return NextResponse.json({ error: 'Entry not found' }, { status: 404 });
     }
 
-    // Only allow deleting local entries
+    // Only allow deleting local and synced entries
     if (existingEntry.preservation_status === 'preserved') {
       return NextResponse.json({ error: 'Cannot delete preserved entries' }, { status: 400 });
     }
@@ -128,13 +131,14 @@ export async function DELETE(
       .eq('user_fid', userFid);
 
     if (error) {
-      console.error('Error deleting journal entry:', error);
+      console.error('[API] Error deleting journal entry:', error);
       return NextResponse.json({ error: 'Failed to delete entry' }, { status: 500 });
     }
 
+    console.log('[API] Entry deleted successfully');
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Unexpected error in DELETE /api/journal/entries/[id]:', error);
+    console.error('[API] DELETE /api/journal/entries/[id] error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 } 

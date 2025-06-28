@@ -73,6 +73,15 @@ async function importPrompts() {
 
   console.log(`Attempting to insert ${promptsToInsert.length} prompts...`);
 
+  // Clear existing content selections first to avoid foreign key constraints
+  console.log('Clearing existing content selections...');
+  const { error: clearSelectionsError } = await supabase.from('daily_content_selections').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+  if (clearSelectionsError) {
+    console.error('Error clearing content selections:', clearSelectionsError);
+    return;
+  }
+  console.log('Content selections cleared.');
+
   // Clear existing prompts to avoid duplicates
   console.log('Clearing existing prompts from daily_prompts table...');
   const { error: deleteError } = await supabase.from('daily_prompts').delete().neq('id', '00000000-0000-0000-0000-000000000000'); // Delete all

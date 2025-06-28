@@ -19,68 +19,71 @@ export function useFrameSDK() {
   useEffect(() => {
     let mounted = true;
 
-    const initSDK = async () => {
-      if (typeof window === "undefined") return;
-
+    const initializeSDK = async () => {
       try {
-        // Initialize SDK
+        console.log('[useFrameSDK] Initializing SDK...');
         await sdk.actions.ready({ disableNativeGestures: true });
-        if (!mounted) return;
-        setIsSDKLoaded(true);
-
-        // Check frame context with retry mechanism
-        let frameContext = await sdk.context;
-        let retryCount = 0;
         
-        // Retry up to 10 times if context is not immediately available
-        while (!frameContext && retryCount < 10 && mounted) {
-          console.log(`[useFrameSDK] Context not available, retrying... (${retryCount + 1}/10)`);
-          await new Promise(resolve => setTimeout(resolve, 500));
-          frameContext = await sdk.context;
-          retryCount++;
+        if (mounted) {
+          setIsSDKLoaded(true);
+          console.log('[useFrameSDK] SDK initialized successfully');
         }
-        
-        if (!mounted) return;
-        
-        console.log('[useFrameSDK] Frame context loaded:', {
+
+        // Get frame context
+        const frameContext = await sdk.context;
+        console.log('[useFrameSDK] Frame context:', {
           hasContext: !!frameContext,
           hasUser: !!frameContext?.user,
           fid: frameContext?.user?.fid,
-          clientAdded: frameContext?.client?.added,
-          retryCount,
+          username: frameContext?.user?.username,
+          displayName: frameContext?.user?.displayName,
           contextDetails: frameContext
         });
-        
-        if (frameContext) {
-          setIsInFrame(true);
+
+        if (mounted && frameContext) {
           setContext(frameContext);
+          setIsInFrame(true);
           setIsFramePinned(frameContext.client.added);
         }
-
-        // Set up frameSDK event listeners
-        const frameSDK = (window as any).frameSDK;
-        if (frameSDK) {
-          frameSDK.on("frameAdded", () => {
-            if (mounted) setIsFramePinned(true);
-          });
-          frameSDK.on("frameRemoved", () => {
-            if (mounted) setIsFramePinned(false);
-          });
-        }
       } catch (err) {
-        console.error("Error initializing SDK:", err);
+        console.error('[useFrameSDK] SDK initialization error:', err);
         if (mounted) {
           setError(err instanceof Error ? err : new Error(String(err)));
         }
       }
     };
 
-    initSDK();
+    initializeSDK();
 
     return () => {
       mounted = false;
     };
   }, []);
+
+  // Auto-sync user profile when context loads with user data
+  useEffect(() => {
+    if (context?.user?.fid && context.user.username) {
+      const syncUserProfile = async () => {
+        try {
+          console.log('[useFrameSDK] Auto-syncing user profile for FID:', context.user.fid);
+          const response = await fetch(`/api/sync-profiles?fid=${context.user.fid}`);
+          const data = await response.json();
+          
+          if (data.status === 'success') {
+            console.log('[useFrameSDK] Profile synced successfully:', data);
+          } else if (data.status === 'success_fallback') {
+            console.log('[useFrameSDK] Profile synced with fallback:', data);
+          } else {
+            console.error('[useFrameSDK] Profile sync failed:', data);
+          }
+        } catch (err) {
+          console.error('[useFrameSDK] Error syncing user profile:', err);
+        }
+      };
+
+      syncUserProfile();
+    }
+  }, [context?.user?.fid, context?.user?.username]);
 
   // Separate effect for wallet connection
   useEffect(() => {
@@ -129,48 +132,16 @@ export function useFrameSDK() {
 
   // Pin frame function
   const pinFrame = useCallback(async () => {
-    if (!isSDKLoaded) return;
-
     try {
-      setLoading(true);
-      setError(null);
-
-      await sdk.actions.addMiniApp();
+      console.log('[useFrameSDK] Attempting to pin frame...');
+      await sdk.actions.ready({ disableNativeGestures: true });
+      console.log('[useFrameSDK] Frame pinned successfully');
       setIsFramePinned(true);
-
-      if (context?.user?.fid) {
-        try {
-          await fetch('/api/milestone-notification', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              fid: context.user.fid,
-              type: 'welcome',
-              message: `Welcome to Solara! You'll now receive milestone notifications as you journey around the sun.`,
-              timestamp: new Date().toISOString()
-            }),
-          });
-        } catch (err) {
-          console.error("Error sending welcome notification:", err);
-        }
-      }
     } catch (err) {
-      console.error("Error pinning frame:", err);
-      if (err instanceof Error) {
-        if (err.message.includes('RejectedByUser')) {
-          setError(new Error('You declined to add Solara to your apps.'));
-        } else if (err.message.includes('InvalidDomainManifestJson')) {
-          setError(new Error('Unable to add Solara: Invalid app configuration.'));
-        } else {
-          setError(err);
-        }
-      } else {
-        setError(new Error('Failed to add Solara to your apps.'));
-      }
-    } finally {
-      setLoading(false);
+      console.error('[useFrameSDK] Error pinning frame:', err);
+      throw err;
     }
-  }, [isSDKLoaded, context]);
+  }, []);
 
   // Manual connection function
   const connectManually = useCallback(async () => {

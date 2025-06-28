@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '~/utils/supabase/server';
 
-export async function GET(
-  req: NextRequest,
-  { params }: { params: Promise<{ userFid: string }> }
-) {
-  const { userFid } = await params;
+type RouteContext = {
+  params: Promise<{ userFid: string }>;
+};
+
+export async function GET(req: NextRequest, context: RouteContext) {
+  const { userFid } = await context.params;
   const userFidNum = parseInt(userFid);
   const supabase = await createClient();
 

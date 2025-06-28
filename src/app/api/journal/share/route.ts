@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient, createServiceRoleClient } from '~/utils/supabase/server';
+import { createServiceRoleClient } from '~/utils/supabase/server';
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
@@ -9,7 +9,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'userFid parameter required' }, { status: 400 });
   }
 
-  const supabase = await createClient();
+  const supabase = createServiceRoleClient();
   
   const { data: shares, error } = await supabase
     .from('journal_shares')
@@ -27,23 +27,21 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   const { entryId, userFid } = await req.json();
   
-  const isDev = process.env.NODE_ENV === 'development';
-  let supabase;
-  let finalUserFid: number;
-
-  if (isDev && userFid) {
-    // Use service role for dev override
-    supabase = createServiceRoleClient();
-    finalUserFid = userFid;
-  } else {
-    // Use regular client with auth
-    supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-    finalUserFid = parseInt(user.id, 10);
+  console.log('[API] POST /api/journal/share called with:', { entryId, userFid });
+  
+  // Use service role client since Farcaster users aren't authenticated with Supabase
+  const supabase = createServiceRoleClient();
+  
+  if (!userFid) {
+    return NextResponse.json({ error: 'userFid required' }, { status: 400 });
   }
+  
+  const finalUserFid = parseInt(userFid, 10);
+  if (isNaN(finalUserFid)) {
+    return NextResponse.json({ error: 'Invalid userFid' }, { status: 400 });
+  }
+  
+  console.log('[API] Using user FID:', finalUserFid);
 
   // Validate entry exists and belongs to user
   const { data: entry, error: entryError } = await supabase
@@ -85,7 +83,7 @@ export async function POST(req: NextRequest) {
     .single();
 
   if (shareError) {
-    console.error('Share creation error:', shareError);
+    console.error('[API] Share creation error:', shareError);
     return NextResponse.json({ error: `Could not create share: ${shareError.message}` }, { status: 500 });
   }
 
@@ -97,12 +95,11 @@ export async function POST(req: NextRequest) {
     .eq('id', share.id);
 
   if (updateError) {
-    console.error('Share URL update error:', updateError);
+    console.error('[API] Share URL update error:', updateError);
     return NextResponse.json({ error: `Could not update share URL: ${updateError.message}` }, { status: 500 });
   }
 
-  // TODO: Trigger notification if first share (see notification endpoint)
-
+  console.log('[API] Share created successfully:', { shareId: share.id, shareUrl });
   return NextResponse.json({
     shareId: share.id,
     shareUrl: shareUrl

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { BookmarkCard } from "../../components/SunCycleAge";
 import { getNextMilestone, getNextNumericalMilestones, getNextMilestoneByType } from "../../lib/milestones";
 import MilestoneCard from "../../components/SunCycleAge/MilestoneCard";
@@ -24,6 +24,7 @@ interface Bookmark {
 
 export default function SolDashPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { isInFrame, sdk } = useFrameSDK();
   const [bookmark, setBookmark] = useState<Bookmark | null>(null);
   const [showMilestoneModal, setShowMilestoneModal] = useState(false);
@@ -34,11 +35,41 @@ export default function SolDashPage() {
   const [ceremony, setCeremony] = useState({ hasPledged: false, vow: "" });
   const { address } = useAccount();
 
+  // Get the tab from URL query parameter and normalize it
+  const getInitialTab = () => {
+    const tabParam = searchParams.get('tab');
+    if (!tabParam) return 'sol age'; // Default to sol age if no tab specified
+    
+    // Normalize the tab parameter
+    const normalizedTab = tabParam.toLowerCase().trim();
+    
+    // Map URL values to tab names
+    if (normalizedTab === 'sol%20age' || normalizedTab === 'sol age' || normalizedTab === 'solage') {
+      return 'sol age';
+    }
+    if (normalizedTab === 'sol%20vows' || normalizedTab === 'sol vows' || normalizedTab === 'solvows') {
+      return 'sol vows';
+    }
+    if (normalizedTab === 'journal') {
+      return 'journal';
+    }
+    if (normalizedTab === 'sol%20sign' || normalizedTab === 'sol sign' || normalizedTab === 'solsign') {
+      return 'sol sign';
+    }
+    
+    // Default fallback
+    return 'sol age';
+  };
+
+  const initialTab = getInitialTab();
+
   console.log('[SolDashPage] Render with:', {
     address,
     onChainHasPledged,
     onChainVow,
-    isLoading
+    isLoading,
+    initialTab,
+    tabParam: searchParams.get('tab')
   });
 
   // Add function to refresh pledge data
@@ -77,16 +108,69 @@ export default function SolDashPage() {
 
   if (!bookmark) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen">
-        <div className="text-center">
-          <p className="text-gray-600 dark:text-gray-400 mb-4">No bookmark found. Calculate your Sol Age first!</p>
-          <button
-            onClick={() => router.push("/")}
-            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-          >
-            Go to Calculator
-          </button>
+      <div className="w-full min-h-screen flex flex-col bg-white relative">
+        <div className="w-full flex flex-col items-center flex-grow" style={{ background: 'rgba(255,252,242,0.5)', borderTop: '1px solid #9CA3AF', borderBottom: '1px solid #9CA3AF' }}>
+          <div className="max-w-md mx-auto w-full px-6 pt-16 pb-8 min-h-[60vh] flex flex-col items-center justify-center">
+            {/* Cosmic-themed error state */}
+            <div className="text-center space-y-6">
+              {/* Sun icon */}
+              <div className="relative">
+                <Image
+                  src="/sunsun.png"
+                  alt="Sun"
+                  width={80}
+                  height={80}
+                  className="object-contain mx-auto opacity-60"
+                  style={{ filter: 'drop-shadow(0 0 20px #FFD700cc)' }}
+                  priority
+                />
+              </div>
+              
+              {/* Title */}
+              <div className="space-y-2">
+                <h1 className="text-2xl font-serif font-bold text-black tracking-tight" style={{ letterSpacing: '-0.04em' }}>
+                  No Cosmic Journey Found
+                </h1>
+                <p className="text-sm font-mono text-gray-600 tracking-wide">
+                  YOU HAVEN&apos;T CALCULATED YOUR SOL AGE YET
+                </p>
+              </div>
+              
+              {/* Description */}
+              <div className="text-sm text-gray-700 leading-relaxed max-w-sm">
+                <p>
+                  To access your Solara dashboard, you need to first calculate your Sol Age and create a bookmark. 
+                  This will unlock your cosmic journey tracking, milestone notifications, and reflection tools.
+                </p>
+              </div>
+              
+              {/* CTA Button */}
+              <div className="pt-4">
+                <button
+                  onClick={() => router.push("/")}
+                  className="w-full py-4 bg-[#d4af37] text-black font-mono text-base tracking-widest uppercase border border-black rounded-none hover:bg-[#e6c75a] transition-colors"
+                >
+                  CALCULATE YOUR SOL AGE
+                </button>
+              </div>
+              
+              {/* Additional info */}
+              <div className="text-xs font-mono text-gray-500 tracking-widest uppercase pt-4">
+                <p>YOUR COSMIC JOURNEY AWAITS</p>
+              </div>
+            </div>
+          </div>
         </div>
+        
+        {/* Footer - same as main page */}
+        <footer className="w-full border-t border-gray-200 bg-white pt-2 pb-12">
+          <div className="flex flex-col items-center justify-center">
+            <div className="text-sm font-mono text-black text-center">
+              Solara is made for <a href="https://farcaster.xyz/~/channel/occulture" className="underline transition-colors hover:text-[#D6AD30] active:text-[#D6AD30] focus:text-[#D6AD30]" target="_blank" rel="noopener noreferrer">/occulture</a> <br />
+              built by <a href="https://farcaster.xyz/sirsu.eth" className="underline transition-colors hover:text-[#D6AD30] active:text-[#D6AD30] focus:text-[#D6AD30]" target="_blank" rel="noopener noreferrer">sirsu</a>
+            </div>
+          </div>
+        </footer>
       </div>
     );
   }
@@ -203,7 +287,7 @@ export default function SolDashPage() {
               }
             }}
             isSharing={isSharing}
-            initialTab="sol vows"
+            initialTab={initialTab}
             hasPledged={hasPledged}
             vow={vow}
             onSolVowsTab={handleSolVowsTab}

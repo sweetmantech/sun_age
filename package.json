@@ -27,9 +27,12 @@
     "@farcaster/frame-node": "^0.0.32",
     "@farcaster/frame-sdk": "0.0.53",
     "@farcaster/frame-wagmi-connector": "^0.0.42",
+    "@neynar/nodejs-sdk": "^3.20.0",
+    "@supabase/postgrest-js": "^1.19.4",
     "@supabase/ssr": "^0.6.1",
     "@supabase/supabase-js": "^2.49.7",
     "@tanstack/react-query": "^5.67.3",
+    "@vercel/analytics": "^1.5.0",
     "@vercel/og": "^0.6.8",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
@@ -66,6 +69,7 @@
     "patch-package": "^8.0.0",
     "prettier": "^3.5.3",
     "tailwindcss": "3.4.3",
+    "ts-node": "^10.9.2",
     "typescript": "^5.8.2",
     "vitest": "^3.2.4"
   }

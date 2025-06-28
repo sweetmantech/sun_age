@@ -76,7 +76,7 @@ export default async function Page() {
         <meta name="twitter:image" content="https://yourdomain.com/suncycles_og.png" />
       </Head>
       <HomeRedirector />
-      <SunCycleAge initialConsentData={userConsent} />
+      <SunCycleAge />
     </>
   );
 }

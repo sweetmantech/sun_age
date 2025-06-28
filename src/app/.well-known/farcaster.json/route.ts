@@ -2,7 +2,7 @@ const PROJECT_TITLE = "Solara—a cosmic age calculator";
 const PROJECT_DESCRIPTION = "Solara is a Farcaster app that allows you to track your sun cycle age and receive milestone notifications.";
 
 export async function GET() {
-  const appUrl = "https://www.solara.fyi";
+  const appUrl = process.env.NEXT_PUBLIC_URL || "https://www.solara.fyi";
 
   const config = {
       "accountAssociation": {
@@ -36,7 +36,7 @@ export async function GET() {
       ogDescription: "Calculate your age in sun cycles, discover cosmic milestones, and inscribe your Solar Vow.",
       requiredChains: ["eip155:8453"],
       webhookUrl: "https://api.neynar.com/f/app/846d59ed-e2ad-4464-ae2e-35237dfa7b07/event",
-      castShareUrl: `${appUrl}/share`,
+      castShareUrl: `${appUrl}/journal/shared`,
     },
   };
 

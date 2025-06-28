@@ -2,23 +2,30 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient, createServiceRoleClient } from '~/utils/supabase/server';
 
 export async function GET(req: NextRequest) {
-  const isDev = process.env.NODE_ENV === 'development';
+  console.log('[API] GET /api/journal/entries called');
+  console.log('[API] Request URL:', req.url);
+  console.log('[API] Request headers:', Object.fromEntries(req.headers.entries()));
+  
+  // Use service role client since Farcaster users aren't authenticated with Supabase
+  const supabase = createServiceRoleClient();
+  console.log('[API] Service role client created');
+  
+  // Get userFid from query params (for now, we'll need to pass this from the client)
   const userFidParam = req.nextUrl.searchParams.get('userFid');
-
-  let userFid: number | null = null;
-  let supabase;
-
-  if (isDev && userFidParam) {
-    supabase = createServiceRoleClient();
-    userFid = parseInt(userFidParam, 10);
-  } else {
-    supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-    userFid = parseInt(user.id, 10);
+  console.log('[API] UserFid from params:', userFidParam);
+  
+  if (!userFidParam) {
+    console.log('[API] No userFid provided, returning 400');
+    return NextResponse.json({ error: 'userFid parameter required' }, { status: 400 });
   }
+  
+  const userFid = parseInt(userFidParam, 10);
+  if (isNaN(userFid)) {
+    console.log('[API] Invalid userFid:', userFidParam);
+    return NextResponse.json({ error: 'Invalid userFid' }, { status: 400 });
+  }
+  
+  console.log('[API] Using user FID:', userFid);
 
   const { data: entries, error } = await supabase
     .from('journal_entries')
@@ -26,12 +33,18 @@ export async function GET(req: NextRequest) {
     .eq('user_fid', userFid)
     .order('created_at', { ascending: false });
 
+  console.log('[API] Database query result:', { 
+    entriesCount: entries?.length || 0, 
+    error: error?.message || null 
+  });
+
   if (error) {
-    console.error('Error fetching journal entries:', error);
+    console.error('[API] Error fetching journal entries:', error);
     return NextResponse.json({ error: 'Failed to fetch journal entries' }, { status: 500 });
   }
 
-  return NextResponse.json({ entries });
+  console.log('[API] Returning entries:', entries?.length || 0);
+  return NextResponse.json({ entries: entries || [] });
 }
 
 export async function POST(req: NextRequest) {
@@ -84,34 +97,31 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: 'Invalid sol_day field' }, { status: 400 });
         }
 
-        // If userFid is provided, use service role to bypass RLS (for migration)
-        // Otherwise, use regular client with auth
-        let supabase;
+        // Always use service role client since Farcaster users aren't authenticated with Supabase
+        console.log('[API] Using service role client');
+        const supabase = createServiceRoleClient();
+        
+        // Get userFid from request body or use authenticated user if available
         let finalUserFid: number;
         
         if (userFid) {
-            // Validate userFid is a number
-            const parsedUserFid = typeof userFid === 'string' ? parseInt(userFid, 10) : userFid;
-            if (isNaN(parsedUserFid)) {
-                console.error('[API] Invalid userFid:', userFid);
-                return NextResponse.json({ error: 'Invalid userFid' }, { status: 400 });
-            }
-            
-            // Use service role for migration
-            console.log('[API] Using service role for migration with userFid:', parsedUserFid);
-            supabase = createServiceRoleClient();
-            finalUserFid = parsedUserFid;
+          // Use provided userFid for migration
+          const parsedUserFid = typeof userFid === 'string' ? parseInt(userFid, 10) : userFid;
+          if (isNaN(parsedUserFid)) {
+            console.error('[API] Invalid userFid:', userFid);
+            return NextResponse.json({ error: 'Invalid userFid' }, { status: 400 });
+          }
+          finalUserFid = parsedUserFid;
+          console.log('[API] Using provided userFid:', finalUserFid);
         } else {
-            // Use regular client with auth
-            console.log('[API] Using regular client with auth');
-            supabase = await createClient();
-            const { data: { user } } = await supabase.auth.getUser();
-            if (!user) {
-                console.error('[API] No authenticated user found');
-                return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-            }
-            finalUserFid = parseInt(user.id);
-            console.log('[API] Using authenticated user FID:', finalUserFid);
+          // Try to get from authenticated user (fallback)
+          const { data: { user } } = await supabase.auth.getUser();
+          if (!user) {
+            console.error('[API] No userFid provided and no authenticated user found');
+            return NextResponse.json({ error: 'userFid required or user must be authenticated' }, { status: 400 });
+          }
+          finalUserFid = parseInt(user.id);
+          console.log('[API] Using authenticated user FID:', finalUserFid);
         }
 
         const newEntry = {
