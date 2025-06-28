@@ -9,7 +9,9 @@ export async function GET(req: Request) {
   const { pathname } = new URL(req.url);
   const match = pathname.match(/\/api\/og\/journal\/([^/]+)/);
   const shareId = match ? match[1] : null;
+  console.log('[OG IMAGE] shareId:', shareId);
   if (!shareId) {
+    console.log('[OG IMAGE] Missing shareId');
     return new Response('Missing shareId', { status: 400 });
   }
 
@@ -21,6 +23,7 @@ export async function GET(req: Request) {
     .select('*, journal_entries(*), user_fid')
     .eq('id', shareId)
     .single();
+  console.log('[OG IMAGE] Supabase share:', share, 'error:', shareError);
 
   // Placeholder data if not found
   const entry = share?.journal_entries || {
@@ -53,6 +56,7 @@ export async function GET(req: Request) {
     const fontRes = await fetch(fontUrl);
     if (!fontRes.ok) throw new Error('Font fetch failed');
     gtAlpinaFont = await fontRes.arrayBuffer();
+    console.log('[OG IMAGE] Font fetch succeeded');
   } catch (e) {
     console.error('[OG IMAGE] Font fetch error:', e);
     // Return a fallback image if font fails
@@ -69,7 +73,7 @@ export async function GET(req: Request) {
             justifyContent: 'center',
             fontSize: 48,
             color: '#D4AF37',
-            fontFamily: 'sans-serif',
+            fontFamily: 'Garamond, Georgia, Times, serif',
           },
         },
         'Solara Reflection'
