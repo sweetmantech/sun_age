@@ -1,12 +1,13 @@
 "use client";
 
 import { useSearchParams } from 'next/navigation';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useFrameSDK } from '~/hooks/useFrameSDK';
 import Image from 'next/image';
 import { useConvergenceStats } from '~/hooks/useConvergenceStats';
 import { SpinnerButton } from "~/components/ui/SpinnerButton";
+import { showScreenshotPrompt } from '~/lib/screenshot';
 import Link from 'next/link';
 
 export default function ResultsPage() {
@@ -43,6 +44,18 @@ export default function ResultsPage() {
 
   // Get convergence stats
   const { daysRemaining } = useConvergenceStats();
+
+  // Show screenshot prompt when user sees their Sol Age
+  useEffect(() => {
+    if (days && birthDate) {
+      // Show screenshot prompt after a short delay
+      const timer = setTimeout(() => {
+        showScreenshotPrompt('Sol Age discovery');
+      }, 2000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [days, birthDate]);
 
   // New combined handler for save and share
   const MINI_APP_LINK = "https://www.solara.fyi";

@@ -4,11 +4,13 @@ import type { Metadata } from "next";
 import { Analytics } from '@vercel/analytics/react';
 import ThemeProviderClient from "~/components/providers/theme-provider-client";
 import { CosmicBackground } from "~/components/ui/cosmic-background";
+import { ScreenshotDetector } from "~/components/ScreenshotDetector";
 import { PROJECT_TITLE, PROJECT_DESCRIPTION } from "../lib/constants";
 import { Providers } from "./providers";
 import { Info } from "lucide-react";
 // import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "~/components/ui/tooltip";
 import HeaderClient from "../components/SunCycleAge/HeaderClient";
+import { SocialTagToastProvider } from "../components/SocialTagToastProvider";
 // import { Inter } from "next/font/google";
 // import { PostHogIdentify } from "~/components/posthog-identify";
 
@@ -91,25 +93,29 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body>
-        <Providers>
-          {/* <PostHogIdentify /> */}
-          {/* Skip to content link */}
-          <a href="#main-content" className="skip-link absolute left-2 top-2 z-50 bg-white text-gray-800 px-4 py-2 rounded focus:block focus:outline-none focus:ring-2 focus:ring-blue-400 sr-only focus:not-sr-only">Skip to content</a>
-          <ThemeProviderClient>
-            {/* Light mode: solid background. Dark mode: gradient. */}
-            <div className="pointer-events-none fixed inset-0 z-0" style={{ background: '#ffffff' }} />
-            {/* Light mode: noise texture overlay */}
-            <div className="pointer-events-none fixed inset-0 z-10 opacity-20 mix-blend-soft-light" aria-hidden="true" style={{ backgroundImage: "url('/noise.png')" }} />
-            <CosmicBackground />
-            {/* App header - now global, with About and $SOLAR icons handled in Header */}
-            <HeaderClient formattedDate={formattedDate} />
-            {/* Main content and footer, flex column, sticky footer */}
-            <div className="min-h-screen flex flex-col bg-white">
-              <main id="main-content" className="flex-1 flex flex-col justify-between min-h-screen">{children}</main>
-            </div>
-            {/* Footer is handled in SunCycleAge.tsx */}
-          </ThemeProviderClient>
-        </Providers>
+        <SocialTagToastProvider>
+          <Providers>
+            {/* <PostHogIdentify /> */}
+            {/* Screenshot detection for @solaracosmos tagging */}
+            <ScreenshotDetector />
+            {/* Skip to content link */}
+            <a href="#main-content" className="skip-link absolute left-2 top-2 z-50 bg-white text-gray-800 px-4 py-2 rounded focus:block focus:outline-none focus:ring-2 focus:ring-blue-400 sr-only focus:not-sr-only">Skip to content</a>
+            <ThemeProviderClient>
+              {/* Light mode: solid background. Dark mode: gradient. */}
+              <div className="pointer-events-none fixed inset-0 z-0" style={{ background: '#ffffff' }} />
+              {/* Light mode: noise texture overlay */}
+              <div className="pointer-events-none fixed inset-0 z-10 opacity-20 mix-blend-soft-light" aria-hidden="true" style={{ backgroundImage: "url('/noise.png')" }} />
+              <CosmicBackground />
+              {/* App header - now global, with About and $SOLAR icons handled in Header */}
+              <HeaderClient formattedDate={formattedDate} />
+              {/* Main content and footer, flex column, sticky footer */}
+              <div className="min-h-screen flex flex-col bg-white">
+                <main id="main-content" className="flex-1 flex flex-col justify-between min-h-screen">{children}</main>
+              </div>
+              {/* Footer is handled in SunCycleAge.tsx */}
+            </ThemeProviderClient>
+          </Providers>
+        </SocialTagToastProvider>
         <Analytics />
       </body>
     </html>

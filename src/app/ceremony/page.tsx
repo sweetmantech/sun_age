@@ -9,6 +9,7 @@ import { useFrameSDK } from '~/hooks/useFrameSDK';
 import { SOLAR_PLEDGE_ADDRESS, SolarPledgeABI } from '../../lib/contracts';
 import { useConvergenceStats } from '~/hooks/useConvergenceStats';
 import { SpinnerButton } from "~/components/ui/SpinnerButton";
+import { showScreenshotPrompt } from '~/lib/screenshot';
 
 const steps = ["prepare", "inscribe", "empower", "sealed"];
 
@@ -183,6 +184,11 @@ export default function CeremonyStepper() {
       console.log('Pledge created successfully');
       autoBookmark(); // <-- Automatically bookmark after successful pledge
       next(); // Move to next step on success
+      
+      // Show screenshot prompt after successful pledge
+      setTimeout(() => {
+        showScreenshotPrompt('Solar Vow completion');
+      }, 1000);
     } catch (err) {
       console.error('Pledge error:', err);
       setUiError(err instanceof Error ? err.message : "Failed to process transaction");
