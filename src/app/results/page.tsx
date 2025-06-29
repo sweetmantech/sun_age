@@ -132,7 +132,7 @@ export default function ResultsPage() {
         }
       }
     }
-  }, []);
+  }, [router]);
 
   if (!days || !birthDate) {
     return (
@@ -168,7 +168,7 @@ export default function ResultsPage() {
         <div className="max-w-md mx-auto w-full px-6 pt-8 pb-6 min-h-[60vh]">
           {/* Sol Age Stats Section */}
           <div className="flex flex-col items-center mb-8 mt-24">
-            <img src="/sunsun.png" alt="Sun" width={120} height={120} className="w-28 h-28 object-contain mb-4" style={{ filter: 'drop-shadow(0 0 40px #FFD700cc) drop-shadow(0 0 16px #FFB30099)' }} />
+            <Image src="/sunsun.png" alt="Sun" width={120} height={120} className="w-28 h-28 object-contain mb-4" style={{ filter: 'drop-shadow(0 0 40px #FFD700cc) drop-shadow(0 0 16px #FFB30099)' }} />
             <div className="text-center text-xs font-mono text-gray-500 uppercase tracking-widest mb-2">DEAR TRAVELER, YOU HAVE MADE</div>
             <div className="text-7xl font-serif font-light tracking-tight text-black text-center mb-0 leading-none">{days.toLocaleString()}</div>
             <div className="text-center text-xs font-mono text-gray-500 uppercase tracking-widest mb-2 mt-2">SOLAR ROTATIONS SINCE {birthDate.replace(/-/g, ".")}</div>

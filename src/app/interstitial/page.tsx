@@ -2,6 +2,7 @@
 import { useRouter, useSearchParams } from 'next/navigation';
 import { getSolarArchetype } from '~/lib/solarIdentity';
 import { useEffect, useState } from 'react';
+import Image from 'next/image';
 
 export default function InterstitialPage() {
   const router = useRouter();
@@ -42,7 +43,7 @@ export default function InterstitialPage() {
 
   // Power phrase mapping (core only for now)
   const powerPhrases: Record<string, string> = {
-    'Solar Innovator': "My innovative spirit transforms tomorrow's possibilities into today's breakthroughs.",
+    'Solar Innovator': "My innovative spirit transforms tomorrow&apos;s possibilities into today&apos;s breakthroughs.",
     'Solar Nurturer': "My nurturing essence creates sanctuaries where every soul can flourish.",
     'Solar Alchemist': "My alchemical power transforms every challenge into evolutionary fuel.",
     'Solar Sage': "My wisdom essence expands consciousness through fearless truth-seeking.",
@@ -85,7 +86,7 @@ export default function InterstitialPage() {
       <div className="flex flex-col items-center w-full pt-10 pb-2">
         {/* Sun with drop-shadow blur */}
         <div className="flex flex-col items-center mb-6 mt-24">
-          <img src="/sunsun.png" alt="Sun" width={100} height={100} className="w-24 h-24 object-contain z-10" style={{ filter: 'drop-shadow(0 0 40px #FFD700cc) drop-shadow(0 0 16px #FFB30099)' }} />
+          <Image src="/sunsun.png" alt="Sun" width={100} height={100} className="w-24 h-24 object-contain z-10" style={{ filter: 'drop-shadow(0 0 40px #FFD700cc) drop-shadow(0 0 16px #FFB30099)' }} />
         </div>
         {/* Title and Sol Age */}
         {showReturning ? (
