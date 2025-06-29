@@ -9,6 +9,7 @@ import { useConvergenceStats } from '~/hooks/useConvergenceStats';
 import { SpinnerButton } from "~/components/ui/SpinnerButton";
 import { showScreenshotPrompt } from '~/lib/screenshot';
 import Link from 'next/link';
+import { getSolarArchetype, solarArchetypeCoreQuotes, solarArchetypeRadiatesWith } from '~/lib/solarIdentity';
 
 export default function ResultsPage() {
   console.log("DEBUG: ResultsPage rendered");
@@ -44,6 +45,11 @@ export default function ResultsPage() {
 
   // Get convergence stats
   const { daysRemaining } = useConvergenceStats();
+
+  // Solar identity logic
+  const solarIdentity = birthDate ? getSolarArchetype(birthDate) : null;
+  const solarQuote = solarIdentity ? solarArchetypeCoreQuotes[solarIdentity] : null;
+  const solarRadiates = solarIdentity ? solarArchetypeRadiatesWith[solarIdentity] : null;
 
   // Show screenshot prompt when user sees their Sol Age
   useEffect(() => {
@@ -109,6 +115,25 @@ export default function ResultsPage() {
     }
   };
 
+  useEffect(() => {
+    // Only auto-redirect if not already on interstitial with all params
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const hasAllParams = params.get('days') && params.get('approxYears') && params.get('birthDate');
+      if (!hasAllParams) {
+        const saved = localStorage.getItem('sunCycleBookmark');
+        if (saved) {
+          try {
+            const bookmark = JSON.parse(saved);
+            if (bookmark.days && bookmark.approxYears && bookmark.birthDate) {
+              router.replace(`/interstitial?days=${bookmark.days}&approxYears=${bookmark.approxYears}&birthDate=${bookmark.birthDate}`);
+            }
+          } catch {}
+        }
+      }
+    }
+  }, []);
+
   if (!days || !birthDate) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-white z-20">
@@ -136,63 +161,61 @@ export default function ResultsPage() {
     day: "2-digit",
   }).replace(/\//g, ".");
 
+  // --- NEW RESULTS PAGE DESIGN ---
   return (
     <div className="w-full min-h-screen flex flex-col items-center bg-white relative z-20">
-      {/* Main content section with background, border, and margin */}
       <div className="w-full flex flex-col items-center justify-center" style={{ background: 'rgba(255,252,242,0.5)', borderTop: '1px solid #9CA3AF', borderBottom: '1px solid #9CA3AF' }}>
         <div className="max-w-md mx-auto w-full px-6 pt-8 pb-6 min-h-[60vh]">
-          {/* Stats Card */}
-          <div className="flex flex-col items-center mb-8 mt-32">
-            <Image src="/sunsun.png" alt="Sun" width={96} height={96} className="w-24 h-24 object-contain mb-4" style={{ filter: 'drop-shadow(0 0 40px #FFD700cc) drop-shadow(0 0 16px #FFB30099)' }} priority />
+          {/* Sol Age Stats Section */}
+          <div className="flex flex-col items-center mb-8 mt-24">
+            <img src="/sunsun.png" alt="Sun" width={120} height={120} className="w-28 h-28 object-contain mb-4" style={{ filter: 'drop-shadow(0 0 40px #FFD700cc) drop-shadow(0 0 16px #FFB30099)' }} />
             <div className="text-center text-xs font-mono text-gray-500 uppercase tracking-widest mb-2">DEAR TRAVELER, YOU HAVE MADE</div>
-            <div className="text-6xl font-serif font-light tracking-tight text-black text-center mb-0">{days.toLocaleString()}</div>
-            <div className="text-center text-xs font-mono text-gray-500 uppercase tracking-widest mb-2">SOLAR ROTATIONS SINCE {birthDate.replace(/-/g, ".")}</div>
-            <div className="text-lg font-serif italic text-gray-700 text-center mb-0">~ {approxYears} years old</div>
+            <div className="text-7xl font-serif font-light tracking-tight text-black text-center mb-0 leading-none">{days.toLocaleString()}</div>
+            <div className="text-center text-xs font-mono text-gray-500 uppercase tracking-widest mb-2 mt-2">SOLAR ROTATIONS SINCE {birthDate.replace(/-/g, ".")}</div>
+            <div className="text-lg font-serif italic text-gray-700 text-center mb-0 mt-1">~ {approxYears} years old</div>
           </div>
-          {/* Cosmic Convergence Callout Card */}
-          <div className="w-full flex flex-col items-center border border-gray-500 bg-white rounded-none p-4 mb-4 shadow mx-6" style={{ marginLeft: 0, marginRight: 0 }}>
-            <Image src="/cosmicConverge_small.svg" alt="Cosmic Convergence" width={80} height={40} className="mb-2" />
-            <div className="font-mono font-base text-sm text-gray-900 uppercase tracking-base text-center mb-3">THE COSMIC CONVERGENCE APPROACHES IN</div>
-            <div className="flex items-center justify-center gap-2 text-2xl font-serif font-light text-black mb-2">
-              <span role="img" aria-label="star">⭐</span>
-              {daysRemaining !== undefined ? `${daysRemaining} days` : '...'}
-              <span role="img" aria-label="star">⭐</span>
+          {/* Solar Identity Card */}
+          <div className="w-full flex flex-col items-center border border-[#e6d8b4] bg-[#fcf7e8] rounded-none p-6 mb-4 shadow mx-0" style={{ marginLeft: 0, marginRight: 0 }}>
+            <div className="text-center text-base font-mono text-[#bfa12e] uppercase tracking-widest mb-2 font-semibold">your solar identity is</div>
+            <div className="text-2xl font-serif font-bold text-black text-center mb-3 flex items-center justify-center gap-2">
+              <span role="img" aria-label="sun">🌞</span>
+              {solarIdentity}
+              <span role="img" aria-label="sun">🌞</span>
             </div>
-            <div className="text-yellow-700 font-mono text-sm font-semibold mt-2 text-center">Your {days.toLocaleString()} rotations qualify <br /> for $SOLAR tokens</div>
+            <div className="w-full border border-gray-400 bg-white rounded-none p-4 my-2 shadow text-center">
+              <div
+                className="font-serif italic text-black mb-0"
+                style={{ fontSize: '23px', lineHeight: '23px', letterSpacing: '-0.02em' }}
+              >
+                {solarQuote}
+              </div>
+            </div>
+            {solarRadiates && (
+              <div className="text-xs font-mono text-gray-500 uppercase tracking-widest mt-4 text-center w-full">{solarRadiates}</div>
+            )}
           </div>
         </div>
       </div>
       {/* CTA section below main content, on white */}
       <div className="w-full bg-white flex flex-col items-center pt-6 pb-4">
-        <div className="max-w-md mx-auto w-full px-6 flex flex-col items-center">
-          {/* Main CTA: Share or Bookmark */}
-          {!shared ? (
-            <button
-              onClick={handleShareInternal}
-              className="w-full py-4 mb-4 bg-[#d4af37] text-black font-mono text-base tracking-widest uppercase border border-black rounded-none hover:bg-[#e6c75a] transition-colors"
-            >
-              SHARE SOL AGE
-            </button>
-          ) : (
-            <button
-              onClick={() => setShowBookmarkModal(true)}
-              className="w-full py-4 mb-4 bg-[#d4af37] text-black font-mono text-base tracking-widest uppercase border border-black rounded-none hover:bg-[#e6c75a] transition-colors"
-            >
-              BOOKMARK SOL AGE
-            </button>
-          )}
-          {/* Secondary CTA: Cosmic Convergence */}
+        <div className="max-w-md mx-auto w-full px-6 flex flex-row items-center gap-4">
           <button
-            className="w-full py-4 mb-4 bg-white text-black font-mono text-medium tracking-base uppercase border border-black rounded-none hover:bg-[#f5e7b2] transition-colors"
-            style={{ borderWidth: 2, borderColor: '#d4af37' }}
-            onClick={() => setShowCeremonyModal(true)}
+            onClick={() => router.push(`/interstitial?days=${days}&approxYears=${approxYears}&birthDate=${birthDate}`)}
+            className="flex-1 h-16 py-0 px-0 bg-[#d4af37] text-black font-mono text-base tracking-widest uppercase border border-black rounded-none hover:bg-[#e6c75a] transition-colors flex items-center justify-center"
+            style={{ minWidth: 0 }}
           >
-            WHAT IS THE COSMIC CONVERGENCE?
+            EXPLORE YOUR INNER SOL
           </button>
-          <div className="flex w-full justify-between items-center mt-2 mb-6">
-            <span></span>
-            <button onClick={handleRecalculate} className="font-mono text-sm text-base underline underline-offset-2">CALCULATE AGAIN ↗</button>
-          </div>
+          <button
+            onClick={handleShareInternal}
+            className="flex-1 h-16 py-0 px-0 bg-white text-black font-mono text-base tracking-widest uppercase border border-black rounded-none hover:bg-[#f5e7b2] transition-colors flex items-center justify-center"
+            style={{ borderWidth: 2, borderColor: '#d4af37', minWidth: 0 }}
+          >
+            SHARE SOL AGE
+          </button>
+        </div>
+        <div className="flex w-full justify-center items-center mt-6 mb-2">
+          <button onClick={handleRecalculate} className="font-mono text-base underline underline-offset-2 tracking-wide">CALCULATE AGAIN ↗</button>
         </div>
       </div>
       {/* Ceremony Modal */}

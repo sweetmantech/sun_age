@@ -1,0 +1,167 @@
+'use client';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { getSolarArchetype } from '~/lib/solarIdentity';
+import { useEffect, useState } from 'react';
+
+export default function InterstitialPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const birthDate = searchParams?.get('birthDate') || '';
+  const solarIdentity = birthDate ? getSolarArchetype(birthDate) : null;
+  const days = searchParams?.get('days');
+  const approxYears = searchParams?.get('approxYears');
+  const [returningUser, setReturningUser] = useState(false);
+  const [lastVisitRotations, setLastVisitRotations] = useState<number | null>(null);
+  const [bookmark, setBookmark] = useState<any>(null);
+  const [todayDays, setTodayDays] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('sunCycleBookmark');
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          setBookmark(parsed);
+          if (parsed.lastVisitDate && parsed.birthDate) {
+            const lastVisit = new Date(parsed.lastVisitDate);
+            const now = new Date();
+            const msPerDay = 1000 * 60 * 60 * 24;
+            const rotationsSinceLast = Math.floor((now.getTime() - lastVisit.getTime()) / msPerDay);
+            setLastVisitRotations(rotationsSinceLast);
+            // Calculate total days since birthDate to today
+            const birth = new Date(parsed.birthDate);
+            const totalDays = Math.floor((now.getTime() - birth.getTime()) / msPerDay);
+            setTodayDays(totalDays);
+            // Always mark as returning user if bookmark exists
+            setReturningUser(true);
+          }
+        } catch {}
+      }
+    }
+  }, []);
+
+  // Power phrase mapping (core only for now)
+  const powerPhrases: Record<string, string> = {
+    'Solar Innovator': "My innovative spirit transforms tomorrow's possibilities into today's breakthroughs.",
+    'Solar Nurturer': "My nurturing essence creates sanctuaries where every soul can flourish.",
+    'Solar Alchemist': "My alchemical power transforms every challenge into evolutionary fuel.",
+    'Solar Sage': "My wisdom essence expands consciousness through fearless truth-seeking.",
+    'Solar Builder': "My building essence creates lasting structures that elevate collective achievement.",
+    'Solar Artist': "My artistic essence weaves beauty and harmony into the fabric of existence.",
+  };
+
+  // Use bookmark data if returning user, else use params
+  const showReturning = returningUser && bookmark && todayDays !== null && lastVisitRotations !== null;
+  const displayDays = showReturning ? todayDays : days;
+  const displayBirthDate = showReturning ? bookmark.birthDate : birthDate;
+  const displaySolarIdentity = showReturning ? getSolarArchetype(bookmark.birthDate) : solarIdentity;
+  const displayAffirmation = displaySolarIdentity ? powerPhrases[displaySolarIdentity] : null;
+
+  // Card color mapping
+  const cardColors = [
+    'bg-[#FFF7B0]', // yellow
+    'bg-[#E9D6FF]', // purple
+    'bg-[#C7E6FF]', // blue
+    'bg-[#D6FFE6]', // green
+  ];
+
+  const handleBookmark = () => {
+    if (days && approxYears && birthDate) {
+      const now = new Date();
+      const data = {
+        days: Number(days),
+        approxYears: Number(approxYears),
+        birthDate,
+        lastVisitDays: Number(days),
+        lastVisitDate: now.toISOString(),
+      };
+      localStorage.setItem('sunCycleBookmark', JSON.stringify(data));
+    }
+  };
+
+  return (
+    <div className="w-full min-h-screen flex flex-col items-center bg-[#FFFCF2] relative z-20">
+      {/* Sun and Title */}
+      <div className="flex flex-col items-center w-full pt-10 pb-2">
+        {/* Sun with drop-shadow blur */}
+        <div className="flex flex-col items-center mb-6 mt-24">
+          <img src="/sunsun.png" alt="Sun" width={100} height={100} className="w-24 h-24 object-contain z-10" style={{ filter: 'drop-shadow(0 0 40px #FFD700cc) drop-shadow(0 0 16px #FFB30099)' }} />
+        </div>
+        {/* Title and Sol Age */}
+        {showReturning ? (
+          <>
+            <div className="text-base font-mono text-gray-700 text-center mb-2 tracking-widest uppercase">WELCOME BACK TRAVELER...</div>
+            <div className="text-6xl font-serif font-bold text-black text-center mb-2">{displayDays?.toLocaleString()}</div>
+            <div className="text-sm font-mono text-gray-700 text-center mb-4 tracking-widest uppercase">{lastVisitRotations} ROTATIONS SINCE YOUR LAST VISIT. YOUR ENERGY HAS BEEN CHARGING...</div>
+            {/* Affirmation Card */}
+            <div className="w-full max-w-sm mx-auto flex flex-col items-center bg-[#FFF7E0] border border-[#E6D6AD] px-4 py-6 mb-6">
+              <div className="text-xs font-mono text-[#bfa12e] uppercase tracking-widest mb-2 font-semibold">INNER SOL AFFIRMATION</div>
+              <div className="font-serif italic text-black text-xl text-center">{displayAffirmation}</div>
+            </div>
+          </>
+        ) : (
+          <>
+            <div className="text-2xl font-serif font-bold text-black text-center mb-6" style={{letterSpacing: '-0.01em'}}>Your solar power awaits...</div>
+            {/* Solar Identity Card */}
+            <div className="w-full max-w-sm mx-auto flex flex-col items-center bg-[#FFF7E0] border border-[#E6D6AD] px-4 py-6 mb-6">
+              <div className="text-2xl font-serif font-bold text-black text-center flex items-center justify-center gap-2 mb-1">
+                <span role="img" aria-label="sun" style={{ fontFamily: 'Apple Color Emoji, Segoe UI Emoji, Noto Color Emoji, EmojiOne Color, Twemoji, sans-serif' }}>🌞</span>
+                {solarIdentity}
+                <span role="img" aria-label="sun" style={{ fontFamily: 'Apple Color Emoji, Segoe UI Emoji, Noto Color Emoji, EmojiOne Color, Twemoji, sans-serif' }}>🌞</span>
+              </div>
+            </div>
+          </>
+        )}
+        {/* Arrow Divider with vertical line */}
+        <div className="flex flex-col items-center mb-2" style={{height: '40px'}}>
+          <div className="w-px h-6 bg-gray-200" />
+          <span className="text-gray-300 text-xl" style={{marginTop: '-2px'}}>&#8595;</span>
+        </div>
+        <div className="text-sm font-mono text-gray-500 uppercase tracking-widest text-center mb-6 mt-2" style={{letterSpacing: '0.08em'}}>How do you want to channel this energy?</div>
+      </div>
+      {/* Options */}
+      <div className="w-full max-w-sm mx-auto flex flex-col gap-4 px-2 pb-8">
+        <button
+          className={`w-full ${cardColors[0]} border border-gray-300 px-4 py-6 text-center`}
+          onClick={() => {
+            handleBookmark();
+            router.push('/soldash?tab=sol%20sign');
+          }}
+        >
+          <div className="font-serif font-bold text-lg text-black mb-2">Dive into your inner sol</div>
+          <div className="font-mono text-sm uppercase text-gray-600 leading-tight">DISCOVER THE LAYERS OF YOUR SOLAR POWER AND BECOME MORE RADIANT WITH TIME.</div>
+        </button>
+        <button
+          className={`w-full ${cardColors[1]} border border-gray-300 px-4 py-6 text-center`}
+          onClick={() => {
+            handleBookmark();
+            router.push('/soldash?tab=sol%20age');
+          }}
+        >
+          <div className="font-serif font-bold text-lg text-black mb-2">Track your milestones</div>
+          <div className="font-mono text-sm uppercase text-gray-600 leading-tight">THE COSMOS KNOWS WHERE YOU'RE HEADED. FOLLOW YOUR THREADS IN THE STARS.</div>
+        </button>
+        <button
+          className={`w-full ${cardColors[2]} border border-gray-300 px-4 py-6 text-center`}
+          onClick={() => {
+            handleBookmark();
+            router.push('/soldash?tab=journal');
+          }}
+        >
+          <div className="font-serif font-bold text-lg text-black mb-2">Inscribe what inspires you</div>
+          <div className="font-mono text-sm uppercase text-gray-600 leading-tight">TRANSMUTE YOUR INNER WISDOM INTO WORDS. SHARE THEM FOR OTHERS TO LEARN FROM.</div>
+        </button>
+        <button
+          className={`w-full ${cardColors[3]} border border-gray-300 px-4 py-6 text-center`}
+          onClick={() => {
+            handleBookmark();
+            router.push('/soldash?tab=sol%20vows');
+          }}
+        >
+          <div className="font-serif font-bold text-lg text-black mb-2">Make a sacred vow</div>
+          <div className="font-mono text-sm uppercase text-gray-600 leading-tight">THE BEGINNING TO YOUR BRIGHTEST SELF. A PLEDGE TO BECOME BETTER, TOGETHER.</div>
+        </button>
+      </div>
+    </div>
+  );
+} 

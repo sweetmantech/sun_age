@@ -8,11 +8,14 @@ export default function HomeRedirector() {
   useEffect(() => {
     // Check for bookmark in localStorage
     const bookmark = typeof window !== 'undefined' && localStorage.getItem("sunCycleBookmark");
-    // Optionally, you could also check for a ceremony or other localStorage keys
     if (bookmark) {
-      router.replace("/soldash");
+      try {
+        const parsed = JSON.parse(bookmark);
+        if (parsed.days && parsed.approxYears && parsed.birthDate) {
+          router.replace(`/interstitial?days=${parsed.days}&approxYears=${parsed.approxYears}&birthDate=${parsed.birthDate}`);
+        }
+      } catch {}
     }
-    // If you want to check for on-chain pledge, you could enhance this with a context/hook
   }, [router]);
 
   return null;
