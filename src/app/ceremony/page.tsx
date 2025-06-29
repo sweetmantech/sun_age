@@ -187,7 +187,7 @@ export default function CeremonyStepper() {
       
       // Show screenshot prompt after successful pledge
       setTimeout(() => {
-        showScreenshotPrompt('Solar Vow completion');
+        showScreenshotPrompt();
       }, 1000);
     } catch (err) {
       console.error('Pledge error:', err);

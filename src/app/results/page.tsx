@@ -50,7 +50,7 @@ export default function ResultsPage() {
     if (days && birthDate) {
       // Show screenshot prompt after a short delay
       const timer = setTimeout(() => {
-        showScreenshotPrompt('Sol Age discovery');
+        showScreenshotPrompt();
       }, 2000);
       
       return () => clearTimeout(timer);
