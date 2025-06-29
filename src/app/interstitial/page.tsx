@@ -43,7 +43,7 @@ export default function InterstitialPage() {
 
   // Power phrase mapping (core only for now)
   const powerPhrases: Record<string, string> = {
-    'Solar Innovator': "My innovative spirit transforms tomorrow&apos;s possibilities into today&apos;s breakthroughs.",
+    'Solar Innovator': "My innovative spirit transforms tomorrow's possibilities into today's breakthroughs.",
     'Solar Nurturer': "My nurturing essence creates sanctuaries where every soul can flourish.",
     'Solar Alchemist': "My alchemical power transforms every challenge into evolutionary fuel.",
     'Solar Sage': "My wisdom essence expands consciousness through fearless truth-seeking.",
@@ -81,7 +81,7 @@ export default function InterstitialPage() {
   };
 
   return (
-    <div className="w-full min-h-screen flex flex-col items-center bg-[#FFFCF2] relative z-20">
+    <div className="w-full min-h-screen flex flex-col items-center bg-[#FFFCF2] relative z-20 px-4">
       {/* Sun and Title */}
       <div className="flex flex-col items-center w-full pt-10 pb-2">
         {/* Sun with drop-shadow blur */}
@@ -163,6 +163,15 @@ export default function InterstitialPage() {
           <div className="font-mono text-sm uppercase text-gray-600 leading-tight">THE BEGINNING TO YOUR BRIGHTEST SELF. A PLEDGE TO BECOME BETTER, TOGETHER.</div>
         </button>
       </div>
+      {/* Footer - same as main page */}
+      <footer className="w-full border-t border-gray-200 bg-white pt-2 pb-12 mt-8">
+        <div className="flex flex-col items-center justify-center">
+          <div className="text-sm font-mono text-black text-center">
+            Solara is made for <a href="https://farcaster.xyz/~/channel/occulture" className="underline transition-colors hover:text-[#D6AD30] active:text-[#D6AD30] focus:text-[#D6AD30]" target="_blank" rel="noopener noreferrer">/occulture</a> <br />
+            built by <a href="https://farcaster.xyz/sirsu.eth" className="underline transition-colors hover:text-[#D6AD30] active:text-[#D6AD30] focus:text-[#D6AD30]" target="_blank" rel="noopener noreferrer">sirsu</a>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 } 
