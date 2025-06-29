@@ -140,7 +140,7 @@ export default function InterstitialPage() {
           }}
         >
           <div className="font-serif font-bold text-lg text-black mb-2">Track your milestones</div>
-          <div className="font-mono text-sm uppercase text-gray-600 leading-tight">THE COSMOS KNOWS WHERE YOU'RE HEADED. FOLLOW YOUR THREADS IN THE STARS.</div>
+          <div className="font-mono text-sm uppercase text-gray-600 leading-tight">THE COSMOS KNOWS WHERE YOU&apos;RE HEADED. FOLLOW YOUR THREADS IN THE STARS.</div>
         </button>
         <button
           className={`w-full ${cardColors[2]} border border-gray-300 px-4 py-6 text-center`}
