@@ -32,7 +32,10 @@ export async function POST() {
       ...shareFids.map(s => s.user_fid),
     ].filter(Boolean));
 
-    const results = [];
+    type Result =
+      | { fid: any; status: 'error'; message: string }
+      | { fid: any; status: 'success'; username: string; display_name: string };
+    const results: Result[] = [];
     for (const fid of allFids) {
       const username = `soluser_${fid}`;
       const display_name = `soluser_${fid}`;
@@ -40,7 +43,7 @@ export async function POST() {
       // Upsert profile
       const { error } = await supabase
         .from('profiles')
-        .upsert([{ fid, username, display_name }], { onConflict: ['fid'] });
+        .upsert([{ fid, username, display_name }], { onConflict: 'fid' });
       
       if (error) {
         results.push({ fid, status: 'error', message: error.message });
