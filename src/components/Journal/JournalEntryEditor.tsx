@@ -41,6 +41,17 @@ function DailyPromptDisplay({ onDismiss }: DailyPromptDisplayProps) {
     );
 }
 
+// Utility to decode HTML entities (minimal for apostrophe, can expand as needed)
+function decodeHtmlEntities(str: string) {
+  if (!str) return str;
+  return str
+    .replace(/&apos;/g, "'")
+    .replace(/&quot;/g, '"')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>');
+}
+
 export function JournalEntryEditor({ entry, onSave, onAutoSave, onFinish, onEdit, mode = 'edit' }: JournalEntryEditorProps) {
   const [content, setContent] = useState(entry.content || '');
   const [isSaving, setIsSaving] = useState(false);
@@ -108,18 +119,27 @@ export function JournalEntryEditor({ entry, onSave, onAutoSave, onFinish, onEdit
     const generateResponseStarter = (prompt: string): string => {
         const starters: { [key: string]: string } = {
             "How did this Sol day shape me?": "This Sol day shaped me by ",
-            "What patterns am I noticing in my cosmic journey?": "In my cosmic journey, I&apos;m noticing a pattern of ",
-            "What wisdom emerged from today's orbit?": "From today&apos;s orbit, the wisdom that emerged was ",
+            "What patterns am I noticing in my cosmic journey?": "In my cosmic journey, I'm noticing a pattern of ",
+            "What wisdom emerged from today's orbit?": "From today's orbit, the wisdom that emerged was ",
         };
         return starters[prompt] || prompt;
     }
 
     setContent(prevContent => {
-        const starter = generateResponseStarter(promptText);
-        if (prevContent.trim() === '') {
+        // Decode and clean prompt and starter
+        const starterRaw = generateResponseStarter(promptText);
+        const starter = decodeHtmlEntities(starterRaw)
+          .replace(/\\n/g, '\n') // Replace literal \n with real newline
+          .replace(/\n/g, '\n')   // Replace literal \n with real newline (if any)
+          .trim();
+        let prev = decodeHtmlEntities(prevContent)
+          .replace(/\\n/g, '\n')
+          .replace(/\n/g, '\n')
+          .trimEnd();
+        if (prev === '') {
             return starter;
         }
-        return prevContent + '\\n\\n' + starter;
+        return prev + '\n\n' + starter;
     });
     setShowPrompts(false);
   };

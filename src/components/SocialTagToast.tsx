@@ -23,7 +23,7 @@ export function SocialTagToast({ onClose }: { onClose: () => void }) {
           POSTING TO SOCIAL?
         </div>
         <div style={{ fontSize: 36, fontWeight: 400, color: '#222', lineHeight: 1.1 }}>
-          Tag us, we're <span style={{ textDecoration: 'underline', cursor: 'pointer' }}>@solaracosmos</span>!
+          Tag us, we&rsquo;re <span style={{ textDecoration: 'underline', cursor: 'pointer' }}>@solaracosmos</span>!
         </div>
       </div>
       <button
