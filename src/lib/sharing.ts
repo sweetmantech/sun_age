@@ -67,7 +67,8 @@ export async function shareSolAge(
   isInFrame?: boolean
 ) {
   const url = process.env.NEXT_PUBLIC_URL || window.location.origin;
-  const ogImageUrl = `${url}/api/og/solage?solAge=${days}` +
+  const baseUrl = url.endsWith('/') ? url.slice(0, -1) : url;
+  const ogImageUrl = `${baseUrl}/api/og/solage?solAge=${days}` +
     (archetype ? `&archetype=${encodeURIComponent(archetype)}` : '') +
     (quote ? `&quote=${encodeURIComponent(quote)}` : '');
   const miniAppUrl = 'https://www.solara.fyi';
