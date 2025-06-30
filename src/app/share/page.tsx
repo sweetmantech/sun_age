@@ -2,17 +2,22 @@ import { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
 
-interface SharePageProps {
-  searchParams: {
-    solAge?: string;
-    archetype?: string;
-    quote?: string;
-  };
+// Safely extract string values from searchParams
+function getStringParam(param: string | string[] | undefined): string | undefined {
+  if (typeof param === 'string') return param;
+  if (Array.isArray(param)) return param[0];
+  return undefined;
 }
 
-export async function generateMetadata({ searchParams }: { searchParams: { solAge?: string; archetype?: string; quote?: string } }): Promise<Metadata> {
-  const { solAge, archetype, quote } = searchParams;
-  
+export async function generateMetadata({
+  searchParams,
+}: {
+  searchParams: { [key: string]: string | string[] | undefined }
+}): Promise<Metadata> {
+  const solAge = getStringParam(searchParams.solAge);
+  const archetype = getStringParam(searchParams.archetype);
+  const quote = getStringParam(searchParams.quote);
+
   if (!solAge) {
     return {
       title: 'Solara - Discover Your Solar Identity',
@@ -21,7 +26,7 @@ export async function generateMetadata({ searchParams }: { searchParams: { solAg
   }
 
   const appUrl = process.env.NEXT_PUBLIC_URL || 'https://www.solara.fyi';
-  const ogImageUrl = `${appUrl}/api/og/solage?solAge=${solAge}` +
+  const ogImageUrl = `${appUrl}/api/og/solage?solAge=${encodeURIComponent(solAge)}` +
     (archetype ? `&archetype=${encodeURIComponent(archetype)}` : '') +
     (quote ? `&quote=${encodeURIComponent(quote)}` : '');
 
@@ -34,7 +39,7 @@ export async function generateMetadata({ searchParams }: { searchParams: { solAg
     openGraph: {
       title,
       description,
-      url: `${appUrl}/share?solAge=${solAge}&archetype=${encodeURIComponent(archetype || '')}&quote=${encodeURIComponent(quote || '')}`,
+      url: `${appUrl}/share?solAge=${encodeURIComponent(solAge)}&archetype=${encodeURIComponent(archetype || '')}&quote=${encodeURIComponent(quote || '')}`,
       siteName: 'Solara',
       images: [
         {
@@ -56,9 +61,15 @@ export async function generateMetadata({ searchParams }: { searchParams: { solAg
   };
 }
 
-export default function SharePage({ searchParams }: { searchParams: { solAge?: string; archetype?: string; quote?: string } }) {
-  const { solAge, archetype, quote } = searchParams;
-  
+export default function SharePage({
+  searchParams,
+}: {
+  searchParams: { [key: string]: string | string[] | undefined }
+}) {
+  const solAge = getStringParam(searchParams.solAge);
+  const archetype = getStringParam(searchParams.archetype);
+  const quote = getStringParam(searchParams.quote);
+
   if (!solAge) {
     redirect('/');
   }
@@ -78,7 +89,7 @@ export default function SharePage({ searchParams }: { searchParams: { solAge?: s
           </div>
         )}
         <div className="pt-8">
-          <Link 
+          <Link
             href="/"
             className="inline-block px-8 py-4 bg-[#d4af37] text-black font-mono text-base tracking-widest uppercase border border-black hover:bg-[#e6c75a] transition-colors"
           >
