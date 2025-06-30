@@ -12,11 +12,12 @@ function getStringParam(param: string | string[] | undefined): string | undefine
 export async function generateMetadata({
   searchParams,
 }: {
-  searchParams: { [key: string]: string | string[] | undefined }
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>
 }): Promise<Metadata> {
-  const solAge = getStringParam(searchParams.solAge);
-  const archetype = getStringParam(searchParams.archetype);
-  const quote = getStringParam(searchParams.quote);
+  const resolvedSearchParams = await searchParams;
+  const solAge = getStringParam(resolvedSearchParams.solAge);
+  const archetype = getStringParam(resolvedSearchParams.archetype);
+  const quote = getStringParam(resolvedSearchParams.quote);
 
   if (!solAge) {
     return {
@@ -61,14 +62,15 @@ export async function generateMetadata({
   };
 }
 
-export default function SharePage({
+export default async function SharePage({
   searchParams,
 }: {
-  searchParams: { [key: string]: string | string[] | undefined }
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>
 }) {
-  const solAge = getStringParam(searchParams.solAge);
-  const archetype = getStringParam(searchParams.archetype);
-  const quote = getStringParam(searchParams.quote);
+  const resolvedSearchParams = await searchParams;
+  const solAge = getStringParam(resolvedSearchParams.solAge);
+  const archetype = getStringParam(resolvedSearchParams.archetype);
+  const quote = getStringParam(resolvedSearchParams.quote);
 
   if (!solAge) {
     redirect('/');
