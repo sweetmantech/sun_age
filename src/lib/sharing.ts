@@ -61,14 +61,17 @@ export async function shareSolAge(
   birthDate: string, 
   userName: string = 'TRAVELLER',
   profilePicUrl?: string,
+  archetype?: string,
+  quote?: string,
   sdk?: any,
   isInFrame?: boolean
 ) {
   const url = process.env.NEXT_PUBLIC_URL || window.location.origin;
-  const ogImageUrl = `${url}/api/og/solage?userName=${encodeURIComponent(userName)}&solAge=${days}&birthDate=${encodeURIComponent(birthDate)}&age=${approxYears}` +
-    (profilePicUrl ? `&profilePicUrl=${encodeURIComponent(profilePicUrl)}` : '');
+  const ogImageUrl = `${url}/api/og/solage?solAge=${days}` +
+    (archetype ? `&archetype=${encodeURIComponent(archetype)}` : '') +
+    (quote ? `&quote=${encodeURIComponent(quote)}` : '');
   const miniAppUrl = 'https://www.solara.fyi';
-  const message = `Forget birthdays—I've completed ${days} rotations around the sun ☀️🌎 What's your Sol Age?\n\nTry it yourself: ${miniAppUrl}`;
+  const message = `I'm a ${archetype || 'Solar Being'} powered by ${days} days of pure sunlight ☀️\n\nDiscover your Solar Identity: https://www.solara.fyi`;
   
   return await composeWithBotReference({
     text: message,
