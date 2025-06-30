@@ -10,7 +10,7 @@ interface SharePageProps {
   };
 }
 
-export async function generateMetadata({ searchParams }: SharePageProps): Promise<Metadata> {
+export async function generateMetadata({ searchParams }: { searchParams: { solAge?: string; archetype?: string; quote?: string } }): Promise<Metadata> {
   const { solAge, archetype, quote } = searchParams;
   
   if (!solAge) {
@@ -56,7 +56,7 @@ export async function generateMetadata({ searchParams }: SharePageProps): Promis
   };
 }
 
-export default function SharePage({ searchParams }: SharePageProps) {
+export default function SharePage({ searchParams }: { searchParams: { solAge?: string; archetype?: string; quote?: string } }) {
   const { solAge, archetype, quote } = searchParams;
   
   if (!solAge) {
