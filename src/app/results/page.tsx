@@ -85,6 +85,8 @@ export default function ResultsPage() {
         birthDate,
         userName,
         profilePicUrl,
+        solarIdentity || undefined,
+        solarQuote || undefined,
         sdk,
         isInFrame
       );
