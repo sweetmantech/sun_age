@@ -34,6 +34,22 @@ export async function generateMetadata({
   const title = `${solAge} Days - ${archetype || 'Solar Being'} | Solara`;
   const description = quote || `I'm a ${archetype || 'Solar Being'} powered by ${solAge} days of pure sunlight ☀️`;
 
+  // Create the fc:frame metadata for proper mini app embedding
+  const frameData = {
+    version: "1",
+    imageUrl: ogImageUrl,
+    button: {
+      title: "🌞 Calculate Your Sol Age",
+      action: {
+        type: "launch_frame",
+        url: `${appUrl}/`,
+        name: "Solara",
+        splashImageUrl: `${appUrl}/logo.png`,
+        splashBackgroundColor: "#FDF8EC"
+      }
+    }
+  };
+
   return {
     title,
     description,
@@ -58,6 +74,9 @@ export async function generateMetadata({
       title,
       description,
       images: [ogImageUrl],
+    },
+    other: {
+      'fc:frame': JSON.stringify(frameData),
     },
   };
 }
