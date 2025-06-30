@@ -16,8 +16,9 @@ function decodeShareId(id: string) {
   }
 }
 
-export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
-  const { solAge, archetype, quote } = decodeShareId(params.id);
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const { id } = await params;
+  const { solAge, archetype, quote } = decodeShareId(id);
   if (!solAge) {
     return {
       title: 'Solara - Discover Your Solar Identity',
@@ -36,7 +37,7 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
     openGraph: {
       title,
       description,
-      url: `${appUrl}/share/${encodeURIComponent(params.id)}`,
+      url: `${appUrl}/share/${encodeURIComponent(id)}`,
       siteName: 'Solara',
       images: [
         {
@@ -58,8 +59,9 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
   };
 }
 
-export default function ShareDynamicPage({ params }: { params: { id: string } }) {
-  const { solAge, archetype, quote } = decodeShareId(params.id);
+export default async function ShareDynamicPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const { solAge, archetype, quote } = decodeShareId(id);
   if (!solAge) {
     notFound();
   }
