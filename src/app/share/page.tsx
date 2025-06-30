@@ -1,5 +1,6 @@
 import { Metadata } from 'next';
 import { redirect } from 'next/navigation';
+import Link from 'next/link';
 
 interface SharePageProps {
   searchParams: {
@@ -73,16 +74,16 @@ export default function SharePage({ searchParams }: SharePageProps) {
         </div>
         {quote && (
           <div className="text-lg font-serif italic text-gray-700 max-w-md mx-auto">
-            "{quote}"
+            &quot;{quote}&quot;
           </div>
         )}
         <div className="pt-8">
-          <a 
+          <Link 
             href="/"
             className="inline-block px-8 py-4 bg-[#d4af37] text-black font-mono text-base tracking-widest uppercase border border-black hover:bg-[#e6c75a] transition-colors"
           >
             Calculate Your Sol Age
-          </a>
+          </Link>
         </div>
       </div>
     </div>

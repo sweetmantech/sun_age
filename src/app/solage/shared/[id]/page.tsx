@@ -102,7 +102,7 @@ export default async function SharedSolAgePage({ params }: { params: Promise<{ i
             {quote && (
               <div className="mb-8">
                 <blockquote className="text-xl italic text-gray-700 leading-relaxed">
-                  "{quote}"
+                  &quot;{quote}&quot;
                 </blockquote>
               </div>
             )}
