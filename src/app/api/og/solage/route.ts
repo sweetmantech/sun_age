@@ -144,6 +144,11 @@ export async function GET(req: Request) {
         width: 1200,
         height: 630,
         ...fontConfig,
+        headers: {
+          'Cache-Control': 'public, max-age=0, must-revalidate',
+          'CDN-Cache-Control': 'public, max-age=0, must-revalidate',
+          'Vercel-CDN-Cache-Control': 'public, max-age=0, must-revalidate',
+        },
       }
     );
   } catch (err: any) {
