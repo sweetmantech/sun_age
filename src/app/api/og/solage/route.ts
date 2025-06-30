@@ -14,33 +14,53 @@ export async function GET(req: Request) {
     const baseUrl = process.env.NEXT_PUBLIC_URL || 'https://www.solara.fyi';
     console.log('[OG IMAGE] Using baseUrl:', baseUrl);
 
-    // Try to load the font from the public directory (same as journal OG asset)
+    // Try to load the fonts from the public directory
     let gtAlpinaFont: ArrayBuffer | null = null;
+    let gtAlpinaItalicFont: ArrayBuffer | null = null;
+    
     try {
       const fontUrl = `${baseUrl}/fonts/GT-Alpina.ttf`;
-      console.log('[OG IMAGE] Attempting to load font from:', fontUrl);
+      const italicFontUrl = `${baseUrl}/fonts/GT-Alpina-Standard-Regular-Italic-Trial.otf`;
+      console.log('[OG IMAGE] Attempting to load fonts from:', fontUrl, italicFontUrl);
       
-      const fontRes = await fetch(fontUrl);
+      const [fontRes, italicFontRes] = await Promise.all([
+        fetch(fontUrl),
+        fetch(italicFontUrl)
+      ]);
+      
       if (fontRes.ok) {
         gtAlpinaFont = await fontRes.arrayBuffer();
-        console.log('[OG IMAGE] Font loaded successfully, size:', gtAlpinaFont.byteLength);
+        console.log('[OG IMAGE] Regular font loaded successfully, size:', gtAlpinaFont.byteLength);
       } else {
-        console.log('[OG IMAGE] Font fetch failed with status:', fontRes.status);
+        console.log('[OG IMAGE] Regular font fetch failed with status:', fontRes.status);
+      }
+      
+      if (italicFontRes.ok) {
+        gtAlpinaItalicFont = await italicFontRes.arrayBuffer();
+        console.log('[OG IMAGE] Italic font loaded successfully, size:', gtAlpinaItalicFont.byteLength);
+      } else {
+        console.log('[OG IMAGE] Italic font fetch failed with status:', italicFontRes.status);
       }
     } catch (e) {
       console.error('[OG IMAGE] Font loading error:', e);
     }
 
-    const fontConfig = gtAlpinaFont ? {
+    const fontConfig = {
       fonts: [
-        {
+        ...(gtAlpinaFont ? [{
           name: 'GT Alpina',
           data: gtAlpinaFont,
           style: 'normal' as const,
           weight: 600 as const,
-        },
+        }] : []),
+        ...(gtAlpinaItalicFont ? [{
+          name: 'GT Alpina Italic',
+          data: gtAlpinaItalicFont,
+          style: 'normal' as const,
+          weight: 400 as const,
+        }] : []),
       ],
-    } : {};
+    };
 
     return new ImageResponse(
       React.createElement(
@@ -103,14 +123,14 @@ export async function GET(req: Request) {
               style: { display: 'block' },
             }),
           ]),
-          // Quote (two lines, italic, centered, with flex, system font)
+          // Quote (two lines, italic, centered, with GT Alpina Italic font)
           React.createElement('div', {
             style: {
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
               justifyContent: 'center',
-              fontFamily: 'serif',
+              fontFamily: gtAlpinaItalicFont ? 'GT Alpina Italic, Georgia, serif' : 'serif',
               fontSize: 38,
               fontStyle: 'italic',
               color: '#222',
