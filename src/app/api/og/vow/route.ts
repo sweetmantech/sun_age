@@ -21,7 +21,7 @@ export async function GET(req: Request) {
     // Try to load the font from the public directory
     let gtAlpinaFont: ArrayBuffer | null = null;
     try {
-      const fontUrl = `${baseUrl}/fonts/GT%20Alpina.ttf`;
+      const fontUrl = `${baseUrl}/fonts/GT-Alpina.ttf`;
       console.log('[OG IMAGE] Attempting to load font from:', fontUrl);
       
       const fontRes = await fetch(fontUrl);

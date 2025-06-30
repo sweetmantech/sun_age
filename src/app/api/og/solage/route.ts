@@ -17,7 +17,7 @@ export async function GET(req: Request) {
     // Try to load the font from the public directory (same as journal OG asset)
     let gtAlpinaFont: ArrayBuffer | null = null;
     try {
-      const fontUrl = `${baseUrl}/fonts/GT%20Alpina.ttf`;
+      const fontUrl = `${baseUrl}/fonts/GT-Alpina.ttf`;
       console.log('[OG IMAGE] Attempting to load font from:', fontUrl);
       
       const fontRes = await fetch(fontUrl);
@@ -129,7 +129,7 @@ export async function GET(req: Request) {
           React.createElement('div', { style: { flex: 1 } }),
           // SOLARA logo image (bottom center)
           React.createElement('img', {
-            src: `${baseUrl}/logo 2.png`,
+            src: `${baseUrl}/logo.png`,
             width: 300,
             style: {
               display: 'block',

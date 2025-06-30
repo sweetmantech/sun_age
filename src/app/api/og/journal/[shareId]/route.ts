@@ -52,7 +52,7 @@ export async function GET(req: Request) {
     let gtAlpinaFont: ArrayBuffer | null = null;
     try {
       const baseUrl = req.headers.get('host') ? `https://${req.headers.get('host')}` : 'http://localhost:3000';
-      const fontUrl = `${baseUrl}/fonts/GT%20Alpina.ttf`;
+      const fontUrl = `${baseUrl}/fonts/GT-Alpina.ttf`;
       console.log('[OG IMAGE] Attempting to load font from:', fontUrl);
       
       const fontRes = await fetch(fontUrl);
