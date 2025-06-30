@@ -10,9 +10,9 @@ export async function GET(req: Request) {
     const archetype = searchParams.get('archetype') || 'Sol Seeker';
     const quote = searchParams.get('quote') || 'I am a seeker of solar wisdom';
 
-    const baseUrl = process.env.VERCEL_URL 
-      ? `https://${process.env.VERCEL_URL}` 
-      : 'http://localhost:3000';
+    // More reliable baseUrl construction
+    const baseUrl = process.env.NEXT_PUBLIC_URL || 'https://www.solara.fyi';
+    console.log('[OG IMAGE] Using baseUrl:', baseUrl);
 
     // Try to load the font from the public directory (same as journal OG asset)
     let gtAlpinaFont: ArrayBuffer | null = null;
