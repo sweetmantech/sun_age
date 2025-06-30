@@ -1,0 +1,90 @@
+import { Metadata } from 'next';
+import { redirect } from 'next/navigation';
+
+interface SharePageProps {
+  searchParams: {
+    solAge?: string;
+    archetype?: string;
+    quote?: string;
+  };
+}
+
+export async function generateMetadata({ searchParams }: SharePageProps): Promise<Metadata> {
+  const { solAge, archetype, quote } = searchParams;
+  
+  if (!solAge) {
+    return {
+      title: 'Solara - Discover Your Solar Identity',
+      description: 'Calculate your Sol Age and discover your cosmic archetype',
+    };
+  }
+
+  const appUrl = process.env.NEXT_PUBLIC_URL || 'https://www.solara.fyi';
+  const ogImageUrl = `${appUrl}/api/og/solage?solAge=${solAge}` +
+    (archetype ? `&archetype=${encodeURIComponent(archetype)}` : '') +
+    (quote ? `&quote=${encodeURIComponent(quote)}` : '');
+
+  const title = `${solAge} Days - ${archetype || 'Solar Being'} | Solara`;
+  const description = quote || `I'm a ${archetype || 'Solar Being'} powered by ${solAge} days of pure sunlight ☀️`;
+
+  return {
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      url: `${appUrl}/share?solAge=${solAge}&archetype=${encodeURIComponent(archetype || '')}&quote=${encodeURIComponent(quote || '')}`,
+      siteName: 'Solara',
+      images: [
+        {
+          url: ogImageUrl,
+          width: 1200,
+          height: 630,
+          alt: `${solAge} Days - ${archetype || 'Solar Being'}`,
+        },
+      ],
+      locale: 'en_US',
+      type: 'website',
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+      images: [ogImageUrl],
+    },
+  };
+}
+
+export default function SharePage({ searchParams }: SharePageProps) {
+  const { solAge, archetype, quote } = searchParams;
+  
+  if (!solAge) {
+    redirect('/');
+  }
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-white">
+      <div className="text-center space-y-6 p-8">
+        <div className="text-6xl font-serif font-bold text-black">
+          {solAge} days
+        </div>
+        <div className="text-2xl font-mono text-gray-600 uppercase tracking-widest">
+          {archetype || 'Solar Being'}
+        </div>
+        {quote && (
+          <div className="text-lg font-serif italic text-gray-700 max-w-md mx-auto">
+            "{quote}"
+          </div>
+        )}
+        <div className="pt-8">
+          <a 
+            href="/"
+            className="inline-block px-8 py-4 bg-[#d4af37] text-black font-mono text-base tracking-widest uppercase border border-black hover:bg-[#e6c75a] transition-colors"
+          >
+            Calculate Your Sol Age
+          </a>
+        </div>
+      </div>
+    </div>
+  );
+} 
