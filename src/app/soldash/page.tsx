@@ -11,6 +11,7 @@ import { SpinnerButton } from "~/components/ui/SpinnerButton";
 import { useAccount } from 'wagmi';
 import Image from "next/image";
 import { PulsingStarSpinner } from "~/components/ui/PulsingStarSpinner";
+import { getSolarArchetype, solarArchetypeCoreQuotes } from '~/lib/solarIdentity';
 
 // Bookmark type
 interface Bookmark {
@@ -271,12 +272,16 @@ export default function SolDashPage() {
               setIsSharing(true);
               try {
                 const { shareSolAge } = await import('~/lib/sharing');
+                const archetype = bookmark.birthDate ? getSolarArchetype(bookmark.birthDate) : undefined;
+                const quote = archetype ? solarArchetypeCoreQuotes[archetype] : undefined;
                 await shareSolAge(
                   bookmark.days,
                   bookmark.approxYears,
                   bookmark.birthDate,
                   bookmark.userName || 'TRAVELLER',
                   undefined, // No profile pic in bookmark
+                  archetype,
+                  quote,
                   sdk,
                   isInFrame
                 );
