@@ -21,6 +21,7 @@ import { PulsingStarSpinner } from "~/components/ui/PulsingStarSpinner";
 import { useAccount, useReadContract } from 'wagmi';
 import { erc20Abi } from 'viem';
 import { createClient } from '~/utils/supabase/client';
+import { getSolarArchetype, solarArchetypeCoreQuotes } from '~/lib/solarIdentity';
 // import { revokeUserConsent } from "~/lib/consent";
 
 function WarpcastEmbed({ url }: { url: string }) {
@@ -537,12 +538,16 @@ export default function SunCycleAge() {
     
     try {
       const { shareSolAge } = await import('~/lib/sharing');
+      const archetype = birthDate ? getSolarArchetype(birthDate) : undefined;
+      const quote = archetype ? solarArchetypeCoreQuotes[archetype] : undefined;
       await shareSolAge(
         days,
         approxYears || 0,
         birthDate,
         userName,
         profilePicUrl,
+        archetype,
+        quote,
         sdk,
         isInFrame
       );
