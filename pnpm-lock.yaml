@@ -101,7 +101,7 @@ importers:
     devDependencies:
       '@nomicfoundation/hardhat-toolbox':
         specifier: ^4.0.0
-        version: 4.0.0(38e9e951ef11b0c693b6bb180cb6dd3e)
+        version: 4.0.0(hdccufbinvum4fjdsnesbbsaiq)
       '@openzeppelin/contracts':
         specifier: ^5.3.0
         version: 5.3.0
@@ -8284,7 +8284,7 @@ snapshots:
       ethereumjs-util: 7.1.5
       hardhat: 2.25.0(bufferutil@4.0.9)(ts-node@10.9.2(@types/node@22.15.33)(typescript@5.8.3))(typescript@5.8.3)(utf-8-validate@5.0.10)
 
-  '@nomicfoundation/hardhat-toolbox@4.0.0(38e9e951ef11b0c693b6bb180cb6dd3e)':
+  '@nomicfoundation/hardhat-toolbox@4.0.0(hdccufbinvum4fjdsnesbbsaiq)':
     dependencies:
       '@nomicfoundation/hardhat-chai-matchers': 2.0.9(@nomicfoundation/hardhat-ethers@3.0.9(ethers@6.14.4(bufferutil@4.0.9)(utf-8-validate@5.0.10))(hardhat@2.25.0(bufferutil@4.0.9)(ts-node@10.9.2(@types/node@22.15.33)(typescript@5.8.3))(typescript@5.8.3)(utf-8-validate@5.0.10)))(chai@5.2.0)(ethers@6.14.4(bufferutil@4.0.9)(utf-8-validate@5.0.10))(hardhat@2.25.0(bufferutil@4.0.9)(ts-node@10.9.2(@types/node@22.15.33)(typescript@5.8.3))(typescript@5.8.3)(utf-8-validate@5.0.10))
       '@nomicfoundation/hardhat-ethers': 3.0.9(ethers@6.14.4(bufferutil@4.0.9)(utf-8-validate@5.0.10))(hardhat@2.25.0(bufferutil@4.0.9)(ts-node@10.9.2(@types/node@22.15.33)(typescript@5.8.3))(typescript@5.8.3)(utf-8-validate@5.0.10))
